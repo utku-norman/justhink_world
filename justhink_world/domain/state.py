@@ -12,20 +12,13 @@ class State(pomdp_py.State):
     A class used to represent a world state
     for a minimum-spanning tree problem
 
-    Args:
+    Attributes:
         graph (networkx.Graph):
            the background graph with a cost function on edges
-        edges (set):
-           the set of selected edges in the network
-        terminal (str)
-           the sound that the animal makes
-        num_legs : int
-           the number of legs the animal has (default 4)
-
-    Methods
-    -------
-    says(sound=None)
-       Prints the animals name and what sound it makes
+        edges (set, optional):
+           the set of selected edges in the network (default frozenset())
+        terminal (bool, optional)
+           whether the state is a final/terminal state (default False)
     """
 
     def __init__(self,
@@ -34,6 +27,7 @@ class State(pomdp_py.State):
                  suggested=None,
                  submit_suggested=False,
                  terminal=False):
+        """Initialise a world state for a minimum-spanning tree problem."""
         self.graph = graph
         self.edges = edges
         self.suggested = suggested
@@ -66,11 +60,16 @@ class State(pomdp_py.State):
             self.terminal)
 
     def clear_selection(self):
-        """Clears the selected edges."""
+        """Clear the selected edges."""
         self.edges = frozenset()
 
     def get_cost(self) -> float:
-        """Computes the total cost on the selected edges."""
+        """
+        Compute the total cost on the selected edges.
+
+        Returns:
+            float: the cost.
+        """
         return get_edgelist_cost(self.graph, self.edges)
 
     def get_mst_cost(self) -> float:
@@ -79,17 +78,16 @@ class State(pomdp_py.State):
 
         Returns:
             bool: The return value. True for success, False otherwise.
-
         """
         subgraph = find_mst(self.graph)
         return get_graph_cost(subgraph)
 
     def get_max_cost(self) -> float:
         """
-        Computes the total cost on the state's graph.
+        Compute the total cost on the state's graph.
 
         Returns:
-            float: Cost 
+            float: the cost .
         """
         return get_graph_cost(self.graph)
 
@@ -105,7 +103,7 @@ class State(pomdp_py.State):
         return nx.is_connected(subgraph)
 
     def is_mst(self) -> bool:
-        """Checks if the selected edges is an MST (minimum-spanning tree).
+        """Check if the selected edges is an MST (minimum-spanning tree).
 
         Returns:
             bool: True for MST, False otherwise.

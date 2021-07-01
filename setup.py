@@ -12,7 +12,6 @@ setup(
    license='LICENSE.txt',
    long_description=open('README.md').read(),
    install_requires=[
-       "pyglet",
        "pathlib",
        "networkx",
        "pomdp_py",

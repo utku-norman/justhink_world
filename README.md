@@ -7,6 +7,15 @@ Python package for representing the problem and the state in the JUSThink human-
 
 ## Installation
 
+This package exclusively targets Python 3. 
+The main Python dependencies are:
+
+* [pomdp_py](https://h2r.github.io/pomdp-py/html/) for describing the problem, state transitions etc.
+* [networkx](https://networkx.org/) for representing and reasoning with the networks in the activity
+
+
+### Steps to Install from Source
+
 1) Clone [JUSThink World](https://github.com/utku-norman/justhink_world) package.
 ```
 git clone https://github.com/utku-norman/justhink_world.git
@@ -37,6 +46,6 @@ pip install -e .
 You can check the installation by trying to import the messages and services in a Python interpreter (e.g. by running `python` in a terminal).
 
 ```
-from justhink_world.domain.state import State
 from justhink_world.problem import Problem
+from justhink_world.domain.state import State
 ```
