@@ -30,9 +30,10 @@ def get_edgelist_cost(graph, edges, weight_key='cost'):
     '''compute the total a selected edgelist on the graph'''
     return sum([graph[u][v][weight_key] for u, v in edges])
 
+
 def load_graph_from_edgelist(file, nodetype=int):
     '''load a networkx graph from an edgelist file'''
-    assert Path(file).is_file()
+    assert pl.Path(file).is_file()
     try:
         graph = nx.read_edgelist(file, nodetype=nodetype)
     except Exception as e:
@@ -42,7 +43,7 @@ def load_graph_from_edgelist(file, nodetype=int):
 
 def load_graph_from_json(file):
     '''load a networkx graph from a json file with node-link formatted graph data'''
-    assert Path(file).is_file()
+    assert pl.Path(file).is_file()
     try:
         # Read json data.
         with file.open('r') as f:

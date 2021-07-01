@@ -34,6 +34,7 @@ source venv/bin/activate
 pip install Cython
 pip install pomdp-py
 ```
+If you encounter an error regarding Pygraphviz while installing pomdp-py, try installing it following [here](https://pygraphviz.github.io/documentation/stable/install.html).
 
 4) Install this package with the remaining dependencies via `pip` (in '-e' i.e. editable mode for "developer mode": if you intend to edit the library)
 ```

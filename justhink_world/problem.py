@@ -2,17 +2,14 @@ import copy
 
 import pomdp_py
 
-from .env.env import *
-# from justhink.env.visual import *
-from .agent.agent import *
-from .domain.action import *
-from .domain.observation import Observation
+from .domain.state import State
+from .env.env import MstEnvironment
+from .domain.observation import NullObservation
 from .models.policy_model import MstPolicyModel
 from .models.transition_model import MstTransitionModel
 from .models.observation_model import MstObservationModel
 from .models.reward_model import MstRewardModel
 
-# from justhink.env.visual import MstViz
 from .utils.graph_utils import \
     load_graph_from_edgelist, load_graph_from_json
 
@@ -23,13 +20,10 @@ class Problem(pomdp_py.POMDP):
                  init_state,
                  action_types=['pick', 'submit'],
                  submit_mode='mst',
-                 # planner=None,
-                 # states, actions, observations,
                  ):
         """init_belief is a Distribution."""
         init_belief = pomdp_py.Histogram({init_state: 1})  # fully observable
 
-        # self._solution = find_mst(self._layout_graph)
         self.layout_graph = layout_graph
 
         self.planner = None
@@ -41,14 +35,11 @@ class Problem(pomdp_py.POMDP):
         reward_model = MstRewardModel()
         agent = pomdp_py.Agent(init_belief,
                                MstPolicyModel(),
-                               transition_model,  # states),
-                               MstObservationModel(),  # observations),
+                               transition_model,
+                               MstObservationModel(),
                                MstRewardModel())
-        # env = pomdp_py.Environment(init_state,
-        #                            TransitionModel(states),
-        #                            RewardModel())
         env = MstEnvironment(init_state, transition_model,
-                             reward_model)  # , states)
+                             reward_model)
         super().__init__(agent, env, name="Problem")
 
 
@@ -82,15 +73,15 @@ def init_problem(network_file, edges=frozenset(),
     # Construct the initial state.
     # Clean up the layout for nodes with no edges.
     for u in list(layout_graph.nodes()):
-        l = list(layout_graph.neighbors(u))
-        if len(l) == 0:
+        neighbors = list(layout_graph.neighbors(u))
+        if len(neighbors) == 0:
             layout_graph.remove_node(u)
     init_state = State(graph=graph, edges=edges)
 
     # Construct the problem.
     problem = Problem(layout_graph, init_state,
-                         action_types=action_types,
-                         submit_mode=submit_mode)
+                      action_types=action_types,
+                      submit_mode=submit_mode)
 
     if verbose:
         print('Done!')
@@ -123,7 +114,7 @@ def init_planner(problem, verbose=False):
                              num_sims=1000, exploration_const=110,  # 4096
                              rollout_policy=problem.agent.policy_model)
     # Attach the planner to the problem. Not the best practice.
-    action = planner.plan(problem.agent)
+    _ = planner.plan(problem.agent)
     problem.planner = planner
 
     if verbose:
@@ -171,8 +162,8 @@ def execute_action(problem, action, planner=None, verbose=False):
         env_reward = problem.env.state_transition(action, execute=True)
         # true_next_state = copy.deepcopy(problem.env.state)
 
-        # real_observation = problem.env.provide_observation(problem.agent.observation_model,
-        #                                                          action)
+        # real_observation = problem.env.provide_observation(
+        #     problem.agent.observation_model, action)
         real_observation = NullObservation
         problem.agent.update_history(action, real_observation)
         if planner is not None:
@@ -193,11 +184,12 @@ def execute_action(problem, action, planner=None, verbose=False):
 
         # # if isinstance(tiger_problem.agent.cur_belief, pomdp_py.Histogram):
         # belief = problem.agent.cur_belief
-        # # new_belief = pomdp_py.update_histogram_belief(problem.agent.cur_belief,
-        # #                                               action, real_observation,
-        # #                                               problem.agent.observation_model,
-        # #                                               problem.agent.transition_model,
-        # #                                               next_state_space={problem.env.state})
+        # new_belief = pomdp_py.update_histogram_belief(
+        #     problem.agent.cur_belief,
+        #     action, real_observation,
+        #     problem.agent.observation_model,
+        #     problem.agent.transition_model,
+        #     next_state_space={problem.env.state})
         new_belief = pomdp_py.Histogram(
             {problem.env.state: 1})  # fully observable
         problem.agent.set_belief(new_belief)
@@ -255,15 +247,18 @@ def execute_action(problem, action, planner=None, verbose=False):
 #           planning_time=1.,       # amount of time (s) to plan each step
 #           exploration_const=1000,  # exploration constant
 #           visualize=True,
-#           max_time=120,  # maximum amount of time allowed to solve the problem
-#           max_steps=500):  # maximum number of planning steps the agent can take.
+#          max_time=120,
+#          # maximum amount of time allowed to solve the problem
+#           max_steps=500),
+#            # maximum number of planning steps the agent can take.
 
 #     # Use POUCT
 #     planner = pomdp_py.POUCT(max_depth=max_depth,
 #                              discount_factor=discount_factor,
 #                              planning_time=planning_time,
 #                              exploration_const=exploration_const,
-#                              rollout_policy=problem.agent.policy_model)  # Random by default
+#                              rollout_policy=problem.agent.policy_model)
+# Random by default
 
 #     # Plan action
 #     real_action = planner.plan(problem.agent)

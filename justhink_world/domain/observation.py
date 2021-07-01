@@ -22,6 +22,7 @@ class Observation(pomdp_py.Observation):
     def __repr__(self):
         return "Observation(%s)" % self.name
 
+
 NullObservation = Observation('No-Obs')
 
 # class Observation(pomdp_py.Observation):
