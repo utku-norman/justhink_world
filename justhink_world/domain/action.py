@@ -24,11 +24,11 @@ class Action(pomdp_py.Action):
         return 'Action({},{})'.format(self.name, self.agent_name)
 
 
-NullAction = Action(name='no-op', agent_name='robot')
+NullAction = Action(name='no-op', agent_name='human')
 
 
 class PickAction(Action):
-    def __init__(self, edge, agent_name='robot'):
+    def __init__(self, edge, agent_name='human'):
         # self.edge = tuple(list(edge))
         self.edge = edge
         super().__init__('pick({},{})'.format(
@@ -36,7 +36,7 @@ class PickAction(Action):
 
 
 class UnpickAction(Action):
-    def __init__(self, edge, agent_name='robot'):  # , quality='sub-optimal'):
+    def __init__(self, edge, agent_name='human'):  # , quality='sub-optimal'):
         # self.edge = tuple(sorted(edge))
         # self.edge = tuple(list(edge))
         self.edge = edge
@@ -46,37 +46,37 @@ class UnpickAction(Action):
 
 
 class AgreeAction(Action):
-    def __init__(self, agent_name='robot'):
+    def __init__(self, agent_name='human'):
         super().__init__('agree', agent_name)
 
 
 class ClearAction(Action):
-    def __init__(self, agent_name='robot'):
+    def __init__(self, agent_name='human'):
         super().__init__('clear', agent_name)
 
 
 class DisagreeAction(Action):
-    def __init__(self, agent_name='robot'):
+    def __init__(self, agent_name='human'):
         super().__init__('disagree', agent_name)
 
 
 class SubmitAction(Action):
-    def __init__(self, agent_name='robot'):
+    def __init__(self, agent_name='human'):
         super().__init__('submit', agent_name)
 
 
 class SuggestPickAction(Action):
-    def __init__(self, edge, agent_name='robot'):
+    def __init__(self, edge, agent_name='human'):
         self.edge = edge
         super().__init__('suggest-pick({},{})'.format(
             self.edge[0], self.edge[1]), agent_name)
 
 
 class SuggestSubmitAction(Action):
-    def __init__(self, agent_name='robot'):
+    def __init__(self, agent_name='human'):
         super().__init__('suggest-submit', agent_name)
 
 
 class ClearSuggestSubmitAction(Action):
-    def __init__(self, agent_name='robot'):
+    def __init__(self, agent_name='human'):
         super().__init__('clear-suggest-submit', agent_name)

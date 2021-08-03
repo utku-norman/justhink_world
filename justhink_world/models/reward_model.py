@@ -1,17 +1,18 @@
 import pomdp_py
 from ..domain.action import PickAction, SubmitAction
 
+EPSILON = 1e-9
+
 
 class MstRewardModel(pomdp_py.RewardModel):
 
     def _reward_func(self, state, action, next_state):
-
-        reward = 0  # 10
+        reward = 0
 
         if isinstance(action, PickAction):
             u, v = action.edge
-            if (u, v) not in state.edges and state.graph.has_edge(u, v):
-                reward = -state.graph[u][v]['cost']
+            if (u, v) not in state.edges and state.network.has_edge(u, v):
+                reward = -state.network[u][v]['cost']
             else:
                 reward = 0
 
@@ -20,13 +21,6 @@ class MstRewardModel(pomdp_py.RewardModel):
                 reward = 1000
             else:
                 reward = state.get_cost()
-            # if not state.terminal:
-            #     if next_state.terminal:
-            #         reward = 1000
-            #     elif state.is_spanning():
-            #         reward = state.get_cost()
-            # else:
-            #     reward = 0
 
         return reward
 
@@ -38,7 +32,8 @@ class MstRewardModel(pomdp_py.RewardModel):
         """Returns the most likely reward"""
         return self._reward_func(state, action, next_state)
 
-    def probability(self, reward, state, action, next_state, normalized=False, **kwargs):
+    def probability(self, reward, state, action, next_state,
+                    normalized=False, **kwargs):
         if reward == self._reward_func(state, action, next_state):
             return 1.0 - EPSILON
         else:

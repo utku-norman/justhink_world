@@ -1,8 +1,7 @@
 import pomdp_py
-import networkx as nx
 
-from ..utils.graph_utils import find_mst, get_graph_cost, \
-    get_edgelist_cost
+from ..tools.networks import find_mst, is_spanning, \
+    compute_total_network_cost, compute_selected_network_cost
 
 
 class State(pomdp_py.State):
@@ -11,8 +10,8 @@ class State(pomdp_py.State):
     for a minimum-spanning tree problem
 
     Attributes:
-        graph (networkx.Graph):
-           the background graph with a cost function on edges
+        network (networkx.Graph):
+           the background network with a cost function on edges
         edges (set, optional):
            the set of selected edges in the network (default frozenset())
         terminal (bool, optional)
@@ -20,20 +19,20 @@ class State(pomdp_py.State):
     """
 
     def __init__(self,
-                 graph,
+                 network,
                  edges=frozenset(),
                  suggested=None,
                  submit_suggested=False,
                  terminal=False):
         """Initialise a world state for a minimum-spanning tree problem."""
-        self.graph = graph
+        self.network = network
         self.edges = edges
         self.suggested = suggested
         self.submit_suggested = submit_suggested
         self.terminal = terminal
 
     def __hash__(self):
-        return hash((self.graph,
+        return hash((self.network,
                      self.edges,
                      self.suggested,
                      self.submit_suggested,
@@ -50,8 +49,8 @@ class State(pomdp_py.State):
 
     def __repr__(self):
         return 'State(n:{},e:{}|e:{},c:{},s:{},t:{})'.format(
-            self.graph.number_of_nodes(),
-            self.graph.number_of_edges(),
+            self.network.number_of_nodes(),
+            self.network.number_of_edges(),
             len(self.edges),
             self.get_cost(),
             self.is_spanning(),
@@ -61,44 +60,44 @@ class State(pomdp_py.State):
         """Clear the selected edges."""
         self.edges = frozenset()
 
+    def reset(self):
+        """Clear the selected edges and the flags."""
+        self.clear_selection()
+        self.terminal = False
+        self.suggested = None
+
     def get_cost(self) -> float:
-        """
-        Compute the total cost on the selected edges.
+        """Compute the total cost on the selected edges.
 
         Returns:
             float: the cost.
         """
-        return get_edgelist_cost(self.graph, self.edges)
+        return compute_selected_network_cost(self.network, self.edges)
 
     def get_mst_cost(self) -> float:
-        """
-        Compute the cost of a minimum-spanning tree of the state's graph.
+        """Compute the cost of a minimum-spanning tree of the state's network.
 
         Returns:
             bool: The return value. True for success, False otherwise.
         """
-        subgraph = find_mst(self.graph)
-        return get_graph_cost(subgraph)
+        mst = find_mst(self.network)
+        return compute_total_network_cost(mst)
 
     def get_max_cost(self) -> float:
-        """
-        Compute the total cost on the state's graph.
+        """Compute the total cost on the state's network.
 
         Returns:
-            float: the cost .
+            float: the cost.
         """
-        return get_graph_cost(self.graph)
+        return compute_total_network_cost(self.network)
 
     def is_spanning(self) -> bool:
-        """Check if the selected edges spans the state's graph.
+        """Check if the selected edges spans the state's network.
 
         Returns:
             bool: True for spanning, False otherwise.
         """
-        subgraph = self.graph.edge_subgraph(self.edges).copy()
-        for u in self.graph.nodes():
-            subgraph.add_node(u)
-        return nx.is_connected(subgraph)
+        return is_spanning(self.network, self.edges)
 
     def is_mst(self) -> bool:
         """Check if the selected edges is an MST (minimum-spanning tree).

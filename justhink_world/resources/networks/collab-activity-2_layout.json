@@ -1,0 +1,112 @@
+{
+  "directed": false,
+  "graph": {
+    "background_image_file": "background-plain.png",
+    "edge_default": {},
+    "node_default": {}
+  },
+  "links": [],
+  "multigraph": false,
+  "nodes": [
+    {
+      "gold_file": "gold.gif",
+      "gold_y": 697.0,
+      "higlight_image_file": "mountain1_selected.png",
+      "id": 3,
+      "image_file": "mountain1.png",
+      "text": "Mount Luzern",
+      "x": 1036.0,
+      "y": 544.0
+    },
+    {
+      "gold_file": "gold.gif",
+      "gold_y": 593.0,
+      "higlight_image_file": "mountain2_selected.png",
+      "id": 1,
+      "image_file": "mountain2.png",
+      "text": "Mount Bern",
+      "x": 823.0,
+      "y": 655.0
+    },
+    {
+      "gold_file": "gold.gif",
+      "gold_y": 852.0,
+      "higlight_image_file": "mountain3_selected.png",
+      "id": 0,
+      "image_file": "mountain3.png",
+      "text": "Mount Zermatt",
+      "x": 1217.0,
+      "y": 412.0
+    },
+    {
+      "gold_file": "gold.gif",
+      "gold_y": 885.0,
+      "higlight_image_file": "mountain7_selected.png",
+      "id": 2,
+      "image_file": "mountain7.png",
+      "text": "Mount Interlaken",
+      "x": 880.0,
+      "y": 406.0
+    },
+    {
+      "gold_file": "gold.gif",
+      "gold_y": 526.0,
+      "higlight_image_file": "mountain5_selected.png",
+      "id": 5,
+      "image_file": "mountain5.png",
+      "text": "Mount Zurich",
+      "x": 1219.0,
+      "y": 736.0
+    },
+    {
+      "gold_file": "gold.gif",
+      "gold_y": 415.0,
+      "higlight_image_file": "mountain6e_selected.png",
+      "id": 4,
+      "image_file": "mountain6e.png",
+      "text": "Mount Basel",
+      "x": 851.0,
+      "y": 842.0
+    },
+    {
+      "gold_file": "gold.gif",
+      "gold_y": 653.0,
+      "higlight_image_file": "mountain1_selected.png",
+      "id": 7,
+      "image_file": "mountain1.png",
+      "text": "Mount Davos",
+      "x": 1477.0,
+      "y": 601.0
+    },
+    {
+      "gold_file": "gold.gif",
+      "gold_y": 356.0,
+      "higlight_image_file": "mountain2_selected.png",
+      "id": 6,
+      "image_file": "mountain2.png",
+      "text": "Mount St. Gallen",
+      "x": 1362.0,
+      "y": 894.0
+    },
+    {
+      "gold_file": "gold.gif",
+      "gold_y": 455.0,
+      "higlight_image_file": "mountain3_selected.png",
+      "id": 9,
+      "image_file": "mountain3.png",
+      "text": "Mount Neuchatel",
+      "x": 429.0,
+      "y": 769.0
+    },
+    {
+      "gold_file": "gold.gif",
+      "gold_y": 819.0,
+      "higlight_image_file": "mountain4_selected.png",
+      "id": 8,
+      "image_file": "mountain4.png",
+      "text": "Mount Montreux",
+      "x": 509.0,
+      "y": 413.0
+    }
+  ]
+}

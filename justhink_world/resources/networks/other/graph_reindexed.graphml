@@ -1,0 +1,193 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><key attr.name="cost" attr.type="int" for="edge" id="d10"/>
+<key attr.name="gold_file" attr.type="string" for="node" id="d9"/>
+<key attr.name="label_y" attr.type="double" for="node" id="d8"/>
+<key attr.name="label_x" attr.type="double" for="node" id="d7"/>
+<key attr.name="image_file" attr.type="string" for="node" id="d6"/>
+<key attr.name="x" attr.type="double" for="node" id="d5"/>
+<key attr.name="y" attr.type="double" for="node" id="d4"/>
+<key attr.name="gold_x" attr.type="double" for="node" id="d3"/>
+<key attr.name="gold_y" attr.type="double" for="node" id="d2"/>
+<key attr.name="text" attr.type="string" for="node" id="d1"/>
+<key attr.name="higlight_image_file" attr.type="string" for="node" id="d0"/>
+<graph edgedefault="undirected"><node id="3">
+  <data key="d0">mountain1_selected.png</data>
+  <data key="d1">Mount Bern</data>
+  <data key="d2">697.0</data>
+  <data key="d3">892.0</data>
+  <data key="d4">730.0</data>
+  <data key="d5">845.0</data>
+  <data key="d6">mountain1.png</data>
+  <data key="d7">839.0</data>
+  <data key="d8">659.0</data>
+  <data key="d9">gold.gif</data>
+</node>
+<node id="1">
+  <data key="d0">mountain2_selected.png</data>
+  <data key="d1">Mount Luzern</data>
+  <data key="d2">593.0</data>
+  <data key="d3">1011.0</data>
+  <data key="d4">625.0</data>
+  <data key="d5">1066.0</data>
+  <data key="d6">mountain2.png</data>
+  <data key="d7">1055.0</data>
+  <data key="d8">576.0</data>
+  <data key="d9">gold.gif</data>
+</node>
+<node id="0">
+  <data key="d0">mountain3_selected.png</data>
+  <data key="d1">Mount Basel</data>
+  <data key="d2">852.0</data>
+  <data key="d3">689.0</data>
+  <data key="d4">890.0</data>
+  <data key="d5">675.0</data>
+  <data key="d6">mountain3.png</data>
+  <data key="d7">614.0</data>
+  <data key="d8">829.0</data>
+  <data key="d9">gold.gif</data>
+</node>
+<node id="2">
+  <data key="d0">mountain7_selected.png</data>
+  <data key="d1">Mount Zurich</data>
+  <data key="d2">885.0</data>
+  <data key="d3">1070.0</data>
+  <data key="d4">899.0</data>
+  <data key="d5">1015.0</data>
+  <data key="d6">mountain7.png</data>
+  <data key="d7">1005.0</data>
+  <data key="d8">858.0</data>
+  <data key="d9">gold.gif</data>
+</node>
+<node id="5">
+  <data key="d0">mountain5_selected.png</data>
+  <data key="d1">Mount Interlaken</data>
+  <data key="d2">526.0</data>
+  <data key="d3">671.0</data>
+  <data key="d4">556.0</data>
+  <data key="d5">639.0</data>
+  <data key="d6">mountain5.png</data>
+  <data key="d7">616.0</data>
+  <data key="d8">494.0</data>
+  <data key="d9">gold.gif</data>
+</node>
+<node id="4">
+  <data key="d0">mountain6e_selected.png</data>
+  <data key="d1">Mount Zermatt</data>
+  <data key="d2">415.0</data>
+  <data key="d3">1077.0</data>
+  <data key="d4">457.0</data>
+  <data key="d5">1024.0</data>
+  <data key="d6">mountain6e.png</data>
+  <data key="d7">969.0</data>
+  <data key="d8">370.0</data>
+  <data key="d9">gold.gif</data>
+</node>
+<node id="7">
+  <data key="d0">mountain1_selected.png</data>
+  <data key="d1">Mount Neuchatel</data>
+  <data key="d2">653.0</data>
+  <data key="d3">468.0</data>
+  <data key="d4">686.0</data>
+  <data key="d5">418.0</data>
+  <data key="d6">mountain1.png</data>
+  <data key="d7">220.0</data>
+  <data key="d8">686.0</data>
+  <data key="d9">gold.gif</data>
+</node>
+<node id="6">
+  <data key="d0">mountain2_selected.png</data>
+  <data key="d1">Mount Montreux</data>
+  <data key="d2">356.0</data>
+  <data key="d3">483.0</data>
+  <data key="d4">389.0</data>
+  <data key="d5">529.0</data>
+  <data key="d6">mountain2.png</data>
+  <data key="d7">349.0</data>
+  <data key="d8">372.0</data>
+  <data key="d9">gold.gif</data>
+</node>
+<node id="9">
+  <data key="d0">mountain3_selected.png</data>
+  <data key="d1">Mount Davos</data>
+  <data key="d2">455.0</data>
+  <data key="d3">1473.0</data>
+  <data key="d4">492.0</data>
+  <data key="d5">1454.0</data>
+  <data key="d6">mountain3.png</data>
+  <data key="d7">1445.0</data>
+  <data key="d8">421.0</data>
+  <data key="d9">gold.gif</data>
+</node>
+<node id="8">
+  <data key="d0">mountain4_selected.png</data>
+  <data key="d1">Mount St. Gallen</data>
+  <data key="d2">819.0</data>
+  <data key="d3">1393.0</data>
+  <data key="d4">855.0</data>
+  <data key="d5">1390.0</data>
+  <data key="d6">mountain4.png</data>
+  <data key="d7">1366.0</data>
+  <data key="d8">781.0</data>
+  <data key="d9">gold.gif</data>
+</node>
+<edge source="3" target="1">
+  <data key="d10">3</data>
+</edge>
+<edge source="3" target="0">
+  <data key="d10">3</data>
+</edge>
+<edge source="3" target="2">
+  <data key="d10">3</data>
+</edge>
+<edge source="3" target="5">
+  <data key="d10">4</data>
+</edge>
+<edge source="3" target="7">
+  <data key="d10">5</data>
+</edge>
+<edge source="1" target="9">
+  <data key="d10">3</data>
+</edge>
+<edge source="1" target="2">
+  <data key="d10">2</data>
+</edge>
+<edge source="1" target="5">
+  <data key="d10">4</data>
+</edge>
+<edge source="1" target="4">
+  <data key="d10">3</data>
+</edge>
+<edge source="0" target="2">
+  <data key="d10">5</data>
+</edge>
+<edge source="0" target="7">
+  <data key="d10">4</data>
+</edge>
+<edge source="2" target="9">
+  <data key="d10">4</data>
+</edge>
+<edge source="2" target="8">
+  <data key="d10">3</data>
+</edge>
+<edge source="5" target="4">
+  <data key="d10">2</data>
+</edge>
+<edge source="5" target="7">
+  <data key="d10">3</data>
+</edge>
+<edge source="5" target="6">
+  <data key="d10">4</data>
+</edge>
+<edge source="4" target="9">
+  <data key="d10">3</data>
+</edge>
+<edge source="4" target="6">
+  <data key="d10">2</data>
+</edge>
+<edge source="7" target="6">
+  <data key="d10">2</data>
+</edge>
+<edge source="9" target="8">
+  <data key="d10">2</data>
+</edge>
+</graph></graphml>

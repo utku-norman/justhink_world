@@ -1,0 +1,38 @@
+{
+  "directed": false,
+  "graph": {
+    "background_image_file": "background-plain.png",
+    "edge_default": {},
+    "node_default": {}
+  },
+  "links": [],
+  "multigraph": false,
+  "nodes": [
+    {
+      "gold_file": "gold.gif",
+      "gold_x": 1011.0,
+      "gold_y": 593.0,
+      "higlight_image_file": "mountain2_selected.png",
+      "id": 1,
+      "image_file": "mountain2.png",
+      "label_x": 1055.0,
+      "label_y": 576.0,
+      "text": "Mount Luzern",
+      "x": 1066.0,
+      "y": 625.0
+    },
+    {
+      "gold_file": "gold.gif",
+      "gold_x": 1473.0,
+      "gold_y": 455.0,
+      "higlight_image_file": "mountain3_selected.png",
+      "id": 9,
+      "image_file": "mountain3.png",
+      "label_x": 1445.0,
+      "label_y": 421.0,
+      "text": "Mount Davos",
+      "x": 1454.0,
+      "y": 492.0
+    }
+  ]
+}

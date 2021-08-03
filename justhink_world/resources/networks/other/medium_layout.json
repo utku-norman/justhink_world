@@ -1,0 +1,103 @@
+{
+  "directed": false,
+  "graph": {
+    "background_image_file": "switzerland.png",
+    "edge_default": {},
+    "node_default": {}
+  },
+  "links": [],
+  "multigraph": false,
+  "nodes": [
+    {
+      "gold_file": "gold.gif",
+      "gold_x": 892.0,
+      "gold_y": 697.0,
+      "higlight_image_file": "mountain1_selected.png",
+      "id": 3,
+      "image_file": "mountain1.png",
+      "label_x": 839.0,
+      "label_y": 659.0,
+      "text": "Mount Bern",
+      "x": 845.0,
+      "y": 730.0
+    },
+    {
+      "gold_file": "gold.gif",
+      "gold_x": 1011.0,
+      "gold_y": 593.0,
+      "higlight_image_file": "mountain2_selected.png",
+      "id": 1,
+      "image_file": "mountain2.png",
+      "label_x": 1055.0,
+      "label_y": 576.0,
+      "text": "Mount Luzern",
+      "x": 1066.0,
+      "y": 625.0
+    },
+    {
+      "gold_file": "gold.gif",
+      "gold_x": 689.0,
+      "gold_y": 852.0,
+      "higlight_image_file": "mountain3_selected.png",
+      "id": 0,
+      "image_file": "mountain3.png",
+      "label_x": 614.0,
+      "label_y": 829.0,
+      "text": "Mount Basel",
+      "x": 675.0,
+      "y": 890.0
+    },
+    {
+      "gold_file": "gold.gif",
+      "gold_x": 671.0,
+      "gold_y": 526.0,
+      "higlight_image_file": "mountain5_selected.png",
+      "id": 5,
+      "image_file": "mountain5.png",
+      "label_x": 616.0,
+      "label_y": 494.0,
+      "text": "Mount Interlaken",
+      "x": 639.0,
+      "y": 556.0
+    },
+    {
+      "gold_file": "gold.gif",
+      "gold_x": 1077.0,
+      "gold_y": 415.0,
+      "higlight_image_file": "mountain6e_selected.png",
+      "id": 4,
+      "image_file": "mountain6e.png",
+      "label_x": 969.0,
+      "label_y": 370.0,
+      "text": "Mount Zermatt",
+      "x": 1024.0,
+      "y": 457.0
+    },
+    {
+      "gold_file": "gold.gif",
+      "gold_x": 468.0,
+      "gold_y": 653.0,
+      "higlight_image_file": "mountain1_selected.png",
+      "id": 7,
+      "image_file": "mountain1.png",
+      "label_x": 220.0,
+      "label_y": 686.0,
+      "text": "Mount Neuchatel",
+      "x": 418.0,
+      "y": 686.0
+    },
+    {
+      "gold_file": "gold.gif",
+      "gold_x": 483.0,
+      "gold_y": 356.0,
+      "higlight_image_file": "mountain2_selected.png",
+      "id": 6,
+      "image_file": "mountain2.png",
+      "label_x": 349.0,
+      "label_y": 372.0,
+      "text": "Mount Montreux",
+      "x": 529.0,
+      "y": 389.0
+    }
+  ]
+}
