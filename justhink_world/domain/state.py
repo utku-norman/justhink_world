@@ -1,45 +1,62 @@
 import pomdp_py
 
 from ..tools.networks import find_mst, is_spanning, \
-    compute_total_network_cost, compute_selected_network_cost
+    compute_total_cost, compute_selected_cost
+
+from ..agent.agent import HumanAgent, RobotAgent
 
 
-class State(pomdp_py.State):
-    """
-    A class used to represent a world state
-    for a minimum-spanning tree problem
+class Button(object):
+    """for button states"""
+    NA = 'N'
+    ENABLED = 'E'
+    DISABLED = 'D'
+    SELECTED = 'S'
+
+
+class EnvironmentState(pomdp_py.State):
+    """TODO
 
     Attributes:
-        network (networkx.Graph):
-           the background network with a cost function on edges
-        edges (set, optional):
-           the set of selected edges in the network (default frozenset())
-        terminal (bool, optional)
-           whether the state is a final/terminal state (default False)
+        TODO
+        is_terminal (bool, optional)
+           whether the state is a final or terminal state,
+           to designate the end of the activity (default False)
     """
 
     def __init__(self,
                  network,
-                 edges=frozenset(),
-                 suggested=None,
-                 submit_suggested=False,
-                 terminal=False):
-        """Initialise a world state for a minimum-spanning tree problem."""
+                 layout,
+                 active_agents={HumanAgent, RobotAgent},
+                 submit_button=Button.NA,
+                 clear_button=Button.NA,
+                 yes_button=Button.NA,
+                 no_button=Button.NA,
+                 is_paused=False,
+                 is_terminal=False):
         self.network = network
-        self.edges = edges
-        self.suggested = suggested
-        self.submit_suggested = submit_suggested
-        self.terminal = terminal
+        self.layout = layout
+
+        self.active_agents = active_agents
+
+        self.submit_button = submit_button
+        self.clear_button = clear_button
+        self.yes_button = yes_button
+        self.no_button = no_button
+
+        self.is_paused = is_paused
+        self.is_terminal = is_terminal
 
     def __hash__(self):
         return hash((self.network,
-                     self.edges,
-                     self.suggested,
-                     self.submit_suggested,
-                     self.terminal))
+                     self.layout,
+                     self.submit_button,
+                     self.clear_button,
+                     self.yes_button,
+                     self.no_button))
 
     def __eq__(self, other):
-        if isinstance(other, State):
+        if isinstance(other, NetworkState):
             return (self.edges == other.edges)
         else:
             return False
@@ -48,23 +65,75 @@ class State(pomdp_py.State):
         return self.__repr__()
 
     def __repr__(self):
-        return 'State(n:{},e:{}|e:{},c:{},s:{},t:{})'.format(
-            self.network.number_of_nodes(),
-            self.network.number_of_edges(),
+        s = 'EnvState({},a:{},s:{},c:{},y:{},n:{};p:{:d},t:{:d})'.format(
+            self.network,
+            self.active_agents,
+            self.submit_button,
+            self.clear_button,
+            self.yes_button,
+            self.no_button,
+            self.is_paused,
+            self.is_terminal)
+        return s
+
+
+class NetworkState(object):
+    """A class used to represent the network's state.
+
+    Attributes:
+        graph (networkx.Graph):
+           the background network with a cost function on edges
+        edges (set, optional):
+           the set of selected edges in the network
+           (default to an empty set: frozenset())
+        suggested_edge (tuple or None, optional)
+            a suggested edge, e.g. (1, 2) (default None)
+        is_submitting (bool, optional)
+            True if an agent suggested to submit, False otherwise
+            (default False)
+    """
+
+    def __init__(self,
+                 graph,
+                 edges=frozenset(),
+                 suggested_edge=None):
+        """Initialise a world state for a minimum-spanning tree problem."""
+        self.graph = graph
+        self.edges = edges
+        self.suggested_edge = suggested_edge
+
+    def __hash__(self):
+        return hash((self.graph,
+                     self.edges,
+                     self.suggested_edge))
+
+    def __eq__(self, other):
+        if isinstance(other, NetworkState):
+            return (self.edges == other.edges)
+        else:
+            return False
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return 'NetworkState(e:{}+{},c:{}|n:{},e:{};s:{:d})'.format(
             len(self.edges),
+            0 if self.suggested_edge is None else 1,
             self.get_cost(),
-            self.is_spanning(),
-            self.terminal)
+            self.graph.number_of_nodes(),
+            self.graph.number_of_edges(),
+            self.is_spanning())
 
-    def clear_selection(self):
-        """Clear the selected edges."""
-        self.edges = frozenset()
+    # def clear_selection(self):
+    #     """Clear the selected edges."""
+    #     self.edges = frozenset()
 
-    def reset(self):
+    def clear(self):  # reset
         """Clear the selected edges and the flags."""
-        self.clear_selection()
-        self.terminal = False
-        self.suggested = None
+        # self.clear_selection()
+        self.edges = frozenset()
+        self.suggested_edge = None
 
     def get_cost(self) -> float:
         """Compute the total cost on the selected edges.
@@ -72,7 +141,7 @@ class State(pomdp_py.State):
         Returns:
             float: the cost.
         """
-        return compute_selected_network_cost(self.network, self.edges)
+        return compute_selected_cost(self.graph, self.edges)
 
     def get_mst_cost(self) -> float:
         """Compute the cost of a minimum-spanning tree of the state's network.
@@ -80,8 +149,8 @@ class State(pomdp_py.State):
         Returns:
             bool: The return value. True for success, False otherwise.
         """
-        mst = find_mst(self.network)
-        return compute_total_network_cost(mst)
+        mst = find_mst(self.graph)
+        return compute_total_cost(mst)
 
     def get_max_cost(self) -> float:
         """Compute the total cost on the state's network.
@@ -89,7 +158,7 @@ class State(pomdp_py.State):
         Returns:
             float: the cost.
         """
-        return compute_total_network_cost(self.network)
+        return compute_total_cost(self.graph)
 
     def is_spanning(self) -> bool:
         """Check if the selected edges spans the state's network.
@@ -97,7 +166,7 @@ class State(pomdp_py.State):
         Returns:
             bool: True for spanning, False otherwise.
         """
-        return is_spanning(self.network, self.edges)
+        return is_spanning(self.graph, self.edges)
 
     def is_mst(self) -> bool:
         """Check if the selected edges is an MST (minimum-spanning tree).

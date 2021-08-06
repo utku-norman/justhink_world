@@ -3,7 +3,7 @@ import networkx as nx
 import pathlib as pl
 
 
-def load_network_from_edgelist(file, nodetype=int):
+def load_graph_from_edgelist(file, nodetype=int):
     """Load a networkx networkx from an edgelist file."""
     assert pl.Path(file).is_file()
     try:
@@ -13,7 +13,7 @@ def load_network_from_edgelist(file, nodetype=int):
     return network
 
 
-def load_network_from_json(file):
+def load_graph_from_json(file):
     """Load a network from a json file with node-link data format."""
     assert pl.Path(file).is_file()
     try:

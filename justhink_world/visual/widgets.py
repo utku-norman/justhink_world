@@ -1,5 +1,7 @@
 import pyglet
 
+from ..domain.state import Button
+
 
 def center_image(image):
     """Sets an image's anchor point to its center"""
@@ -7,7 +9,7 @@ def center_image(image):
     image.anchor_y = image.height // 2
 
 
-class TextWidget(object):
+class TextInput(object):
     # built on https://pythonhosted.org/pyglet/programming_guide/text_input.py
     def __init__(self, text, x, y, width, name,
                  valid_func=lambda text: True,
@@ -61,7 +63,7 @@ class TextWidget(object):
         self.document.text = value
 
 
-class ButtonWidget:
+class ButtonWidget(Button):
     def __init__(self, x, y,
                  paths,  #
                  state,
@@ -86,7 +88,8 @@ class ButtonWidget:
         self.dist = (s.width**2 + s.height**2) / 4
 
     def set_state(self, state):
-        assert state in self.sprites, "Undefined state for button widget."
+        assert state in self.sprites or state == Button.NA, \
+            "Undefined state '{}' for button.".format(state)
 
         self.state = state
         for state, sprite in self.sprites.items():

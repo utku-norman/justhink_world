@@ -8,28 +8,39 @@ from .widgets import ButtonWidget
 from ..domain.action import \
     PickAction, SuggestSubmitAction, SuggestPickAction, \
     AgreeAction, DisagreeAction, ClearAction
-from ..tools.networks import in_edges, compute_selected_network_cost
+from ..tools.networks import in_edges, compute_selected_cost
+
+from ..agent.agent import HumanAgent, RobotAgent
+
+# def update_scene_buttons(scene, all_actions):
+#     # Update submit button state.
+#     is_submitting = hasattr(scene, '_is_submitting') \
+#         and scene._is_submitting
+#     if scene._terminal or is_submitting:
+#         scene._submit_button.set_state('selected')
+#     else:
+#         scene._submit_button.set_state(Button.ENABLED)
+
+#     # Update clear button state.
+#     if len(scene._edges) > 0:
+#         scene._erase_button.set_state(Button.ENABLED)
+#     else:
+#         scene._erase_button.set_state(ButtonWidget.DISABLED)
+
+#     # TODO: Update agree disagree from available actions.
 
 
-def update_scene_buttons(scene):
-    # Update submit button state.
-    submit_suggested = hasattr(scene, '_submit_suggested') \
-        and scene._submit_suggested
-    if scene._terminal or submit_suggested:
-        scene._submit_button.set_state('selected')
-    else:
-        scene._submit_button.set_state('enabled')
+# def update_scene_paused(scene, paused):
+#     scene._paused = paused
+#     scene._paused_rect.visible = paused
 
-    # Update clear button state.
-    if len(scene._edges) > 0:
-        scene._erase_button.set_state('enabled')
-    else:
-        scene._erase_button.set_state('disabled')
+
+####################
 
 
 def update_cost_label(graph, edges, label, highlight=False):
     if edges is not None:
-        cost = compute_selected_network_cost(graph, edges)
+        cost = compute_selected_cost(graph, edges)
     else:
         cost = 0
     label.text = 'Spent: {:2d} francs'.format(cost)
@@ -39,11 +50,6 @@ def update_cost_label(graph, edges, label, highlight=False):
     else:
         label.color = (0, 0, 0, 255)
         label.bold = False
-
-
-def update_scene_paused(scene, paused):
-    scene._paused = paused
-    scene._paused_rect.visible = paused
 
 
 def update_scene_press(scene, x, y, submit_action_type=SuggestSubmitAction):
@@ -58,20 +64,20 @@ def update_scene_press(scene, x, y, submit_action_type=SuggestSubmitAction):
 def check_buttons(scene, x, y, submit_action_type=SuggestPickAction):
     action = None
     if hasattr(scene, '_submit_button') \
-        and scene._submit_button.state != 'disabled' \
+        and scene._submit_button.state != ButtonWidget.DISABLED \
             and scene._submit_button.check_hit(x, y):
-        action = submit_action_type(agent_name='human')
+        action = submit_action_type(agent=HumanAgent)
 
-    elif hasattr(scene, '_yes_button') \
-        and scene._yes_button.state == 'enabled' \
-            and scene._yes_button.check_hit(x, y):
-        action = AgreeAction(agent_name='human')
+    elif hasattr(scene, '_check_button') \
+        and scene._check_button.state == ButtonWidget.ENABLED \
+            and scene._check_button.check_hit(x, y):
+        action = AgreeAction(agent=HumanAgent)
 
-    elif hasattr(scene, '_no_button') \
-        and scene._no_button.state == 'enabled' \
-            and scene._no_button.check_hit(x, y):
-        action = DisagreeAction(agent_name='human')
-        # scene._no_button.set_state('selected')
+    elif hasattr(scene, '_cross_button') \
+        and scene._cross_button.state == ButtonWidget.ENABLED \
+            and scene._cross_button.check_hit(x, y):
+        action = DisagreeAction(agent=HumanAgent)
+        # scene._cross_button.set_state('selected')
 
     return action
 
@@ -142,11 +148,11 @@ def update_scene_drag(scene, x, y, temp_suggested_image=None):
                 scene.temp_from[0], scene.temp_from[1],
                 x, y)
 
-        # if scene._submit_button.state == 'enabled' \
+        # if scene._submit_button.state == ButtonWidget.ENABLED \
         #         and scene._submit_button.check_hit(x, y):
         #     scene._submit_button.set_state('selected')
 
-        if scene._erase_button.state == 'enabled' \
+        if scene._erase_button.state == ButtonWidget.ENABLED \
                 and scene._erase_button.check_hit(x, y):
             scene._erase_button.set_state('selected')
         elif scene._erase_button.state == 'selected' \
@@ -164,18 +170,18 @@ def update_scene_release(scene, x, y, win, action_type=PickAction):
         #     if edge not in scene._edges:
         #         e = scene._layout.edges[edge]
         #         if e['selected_sprite'].visible:
-        #             # action = PickAction(edge, agent_name='human')
+        #             # action = PickAction(edge, agent=HumanAgent)
         #             if action_type == 'pick':
-        #                 action = PickAction(edge, agent_name='human')
+        #                 action = PickAction(edge, agent=HumanAgent)
         #             elif action_type == 'suggest-pick':
-        #                 action = SuggestPickAction(edge, agent_name='human')
+        #                 action = SuggestPickAction(edge, agent=HumanAgent)
         #             else:
         #                 print('Unknown action type')
         #             # print('Action:', action)
         #             win.execute_action_in_app(action)
         #     elif edge in scene._edges:
-        #         action = UnpickAction(edge, agent_name='human')
-        #         # , agent_name='human')
+        #         action = UnpickAction(edge, agent=HumanAgent)
+        #         # , agent=HumanAgent)
         #         win.execute_action_in_app(action)
 
         # Apply action if edge is drawn.
@@ -193,9 +199,9 @@ def update_scene_release(scene, x, y, win, action_type=PickAction):
                     # print(scene._layout.edges)
                     # print(edge)
                     # e = scene._layout.edges[edge]
-                    # action = PickAction(edge, agent_name='human')
+                    # action = PickAction(edge, agent=HumanAgent)
                     # if action_type == 'pick':
-                    action = action_type(edge, agent_name='human')
+                    action = action_type(edge)  # , agent=HumanAgent)
                     # else:
                     # print('Unknown action type')
                     # print('Action:', action)
@@ -209,14 +215,14 @@ def update_scene_release(scene, x, y, win, action_type=PickAction):
             #     # e = scene._layout.edges[edge]
             #     if in_edges(edge[0], edge[1], scene._edges):
             #         # if e['selected_sprite'].visible:
-            #         action = UnpickAction(edge, agent_name='human')
+            #         action = UnpickAction(edge, agent=HumanAgent)
             #         # print('Action:', action)
             #         # win.execute_action_in_app(action)
             # enabled
             if scene._erase_button.state == 'selected' \
                     and scene._erase_button.check_hit(x, y):
-                action = ClearAction(agent_name='human')
-                scene._erase_button.set_state('disabled')
+                action = ClearAction(agent=HumanAgent)
+                scene._erase_button.set_state(ButtonWidget.DISABLED)
 
         # Clear selection.
         selected = [u for e in scene._edges for u in e]
@@ -244,53 +250,53 @@ def update_scene_release(scene, x, y, win, action_type=PickAction):
     return action
 
 
-def update_scene_graph(scene, edges, terminal=None,
-                       suggested=None, highlight=False):
+# def update_scene_graph(scene, edges, terminal=None,
+#                        suggested=None, highlight=False):
 
-    if terminal is not None:
-        scene._terminal = terminal
+#     if terminal is not None:
+#         scene._terminal = terminal
 
-    added_nodes = set()
-    if edges is not None:
-        scene._edges = edges
+#     added_nodes = set()
+#     if edges is not None:
+#         scene._edges = edges
 
-        for u, v, d in scene._layout.edges(data=True):
-            is_added = in_edges(u, v, edges)
-            is_suggested = (suggested == (u, v)) or (suggested == (v, u))
-            d['added_sprite'].visible = is_added
-            d['selectable_sprite'].visible = not is_added
-            d['selected_sprite'].visible = False
-            # if is_suggested:
-            #     print('Suggested', suggested)
-            d['suggested_sprite'].visible = is_suggested
+#         for u, v, d in scene._layout.edges(data=True):
+#             is_added = in_edges(u, v, edges)
+#             is_suggested = (suggested == (u, v)) or (suggested == (v, u))
+#             d['added_sprite'].visible = is_added
+#             d['selectable_sprite'].visible = not is_added
+#             d['selected_sprite'].visible = False
+#             # if is_suggested:
+#             #     print('Suggested', suggested)
+#             d['suggested_sprite'].visible = is_suggested
 
-            if is_added:
-                added_nodes.update((u, v))
+#             if is_added:
+#                 added_nodes.update((u, v))
 
-        for u, d in scene._layout.nodes(data=True):
-            d['added_sprite'].visible = u in added_nodes
-            # d['sprite'].visible = True # not u in added_nodes
+#         for u, d in scene._layout.nodes(data=True):
+#             d['added_sprite'].visible = u in added_nodes
+#             # d['sprite'].visible = True # not u in added_nodes
 
-    # Following are inefficient; to improve.
-    # Process highlights for edges.
-    for u, v, d in scene._layout.edges(data=True):
-        if highlight:
-            d['cost_label'].color = (255, 0, 0, 255)
-            d['cost_label'].bold = True
-        else:
-            d['cost_label'].color = (0, 0, 0, 255)
-            d['cost_label'].bold = False
+#     # Following are inefficient; to improve.
+#     # Process highlights for edges.
+#     for u, v, d in scene._layout.edges(data=True):
+#         if highlight:
+#             d['cost_label'].color = (255, 0, 0, 255)
+#             d['cost_label'].bold = True
+#         else:
+#             d['cost_label'].color = (0, 0, 0, 255)
+#             d['cost_label'].bold = False
 
-    # Process highlights for nodes.
-    for u, d in scene._layout.nodes(data=True):
-        if highlight:
-            d['label'].color = (255, 0, 0, 255)
-            d['label'].bold = True
-        else:
-            d['label'].color = (0, 0, 0, 255)
-            d['label'].bold = False
+#     # Process highlights for nodes.
+#     for u, d in scene._layout.nodes(data=True):
+#         if highlight:
+#             d['label'].color = (255, 0, 0, 255)
+#             d['label'].bold = True
+#         else:
+#             d['label'].color = (0, 0, 0, 255)
+#             d['label'].bold = False
 
-    update_scene_paused(scene, scene._terminal)
+#     update_scene_paused(scene, scene._terminal)
 
 
 def read_image_from_reference(ref):
@@ -304,8 +310,8 @@ def init_graphics(layout, width, height, image_container,
                   show_edge_costs=True,
                   show_submit_button=True,
                   show_erase_button=True,
-                  show_node_names=True,
-                  show_yes_no_buttons=False):
+                  show_node_names=True):
+    # show_yes_cross_buttons=False
 
     if batch is None:
         batch = pyglet.graphics.Batch()
@@ -519,63 +525,63 @@ def init_graphics(layout, width, height, image_container,
 
     # Initialise the submit button.
     button_pads, scale = (200, 200), 0.3
+    c = image_container
     if show_submit_button:
         d = {
-            'enabled': image_container.joinpath('submit_enabled.png'),
-            'disabled': image_container.joinpath('submit_disabled.png'),
-            'selected': image_container.joinpath('submit_selected.png'),
+            ButtonWidget.ENABLED: c.joinpath('submit_enabled.png'),
+            ButtonWidget.DISABLED: c.joinpath('submit_disabled.png'),
+            ButtonWidget.SELECTED: c.joinpath('submit_selected.png'),
         }
         graphics['_submit_button'] = ButtonWidget(
             x=width-button_pads[0], y=height-button_pads[1],
-            paths=d, state='disabled',
+            paths=d, state=ButtonWidget.DISABLED,
             scale=scale, batch=batch, group=groups[4])
 
     if show_erase_button:
         button_pads, scale = (200, height//2), 0.25
         d = {
-            'enabled': image_container.joinpath('erase_enabled.png'),
-            'disabled': image_container.joinpath('erase_disabled.png'),
-            'selected': image_container.joinpath('erase_selected.png'),
+            ButtonWidget.ENABLED: c.joinpath('erase_enabled.png'),
+            ButtonWidget.DISABLED: c.joinpath('erase_disabled.png'),
+            ButtonWidget.SELECTED: c.joinpath('erase_selected.png'),
         }
         graphics['_erase_button'] = ButtonWidget(
             x=width-button_pads[0], y=height-button_pads[1],
-            paths=d, state='disabled',
+            paths=d, state=ButtonWidget.DISABLED,
             scale=scale, batch=batch, group=groups[4])
 
     # Yes button.
     button_pads, scale = (290, 160), 0.3
-    if show_yes_no_buttons:
-        d = {
-            'enabled': image_container.joinpath('check_enabled.png'),
-            'disabled': image_container.joinpath('check_disabled.png'),
-            'selected': image_container.joinpath('check_selected.png'),
-        }
-        graphics['_yes_button'] = ButtonWidget(
-            x=button_pads[0], y=button_pads[1],
-            paths=d, state='disabled',
-            scale=scale, batch=batch, group=groups[4])
+    d = {
+        ButtonWidget.ENABLED: c.joinpath('check_enabled.png'),
+        ButtonWidget.DISABLED: c.joinpath('check_disabled.png'),
+        ButtonWidget.SELECTED: c.joinpath('check_selected.png'),
+    }
+    graphics['_check_button'] = ButtonWidget(
+        x=button_pads[0], y=button_pads[1],
+        paths=d, state=ButtonWidget.DISABLED,
+        scale=scale, batch=batch, group=groups[4])
 
-        # No button.
-        d = {
-            'enabled': image_container.joinpath('cross_enabled.png'),
-            'disabled': image_container.joinpath('cross_disabled.png'),
-            'selected': image_container.joinpath('cross_selected.png'),
-        }
-        graphics['_no_button'] = ButtonWidget(
-            x=width-button_pads[0], y=button_pads[1],
-            paths=d, state='disabled',
-            scale=scale, batch=batch, group=groups[4])
+    # No button.
+    d = {
+        ButtonWidget.ENABLED: c.joinpath('cross_enabled.png'),
+        ButtonWidget.DISABLED: c.joinpath('cross_disabled.png'),
+        ButtonWidget.SELECTED: c.joinpath('cross_selected.png'),
+    }
+    graphics['_cross_button'] = ButtonWidget(
+        x=width-button_pads[0], y=button_pads[1],
+        paths=d, state=ButtonWidget.DISABLED,
+        scale=scale, batch=batch, group=groups[4])
 
     # # Repeat button.
     # d = {
-    #     'enabled': image_container.joinpath('repeat_enabled.png'),
-    #     'disabled': image_container.joinpath('repeat_disabled.png'),
-    #     'selected': image_container.joinpath('repeat_selected.png'),
+    #     ButtonWidget.ENABLED: c.joinpath('repeat_enabled.png'),
+    #     ButtonWidget.DISABLED: c.joinpath('repeat_disabled.png'),
+    #     ButtonWidget.SELECTED: c.joinpath('repeat_selected.png'),
     # }
     # scale = 0.1
     # graphics['_repeat_button'] = ButtonWidget(
     #     x=width-100, y=height-100,
-    #     paths=d, state='disabled',
+    #     paths=d, state=ButtonWidget.DISABLED,
     #     scale=scale, batch=batch, group=groups[8])
 
     return batch, graphics

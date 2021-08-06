@@ -46,22 +46,75 @@ pip install -e .
 
 You can check the installation by trying to import the messages and services in a Python interpreter (e.g. by running `python` in a terminal).
 
+Print a list of available worlds, try to initialise all of the worlds.
 ```
-from justhink_world.world import init_world, init_all_worlds
+from justhink_world.world import list_worlds, init_all_worlds
+
+print(list_worlds())
+
+worlds = init_all_worlds()
+
+for name, world in worlds.items():
+    print(name, world)
+```
+
+Try out an individual (i.e. a test) world.
+```
+from justhink_world.world import init_world
 from justhink_world.visual import WorldWindow
-from justhink_world.domain.action import PickAction, SubmitAction
+from justhink_world.domain.action import PickAction, ClearAction, SubmitAction
 
-
-# Visualise a world.
-# world = init_world('collab-activity')
+# Create a world.
 world = init_world('pretest-1')
+
+# Act on the world.
+world.act(PickAction((3, 1)))
+world.act(PickAction((1, 4)))
+world.act(ClearAction())
+world.act(PickAction((5, 6)))
+world.act(SubmitAction())
+
+# Print state information. 
 state = world.env.state
+print(state, state.network.get_mst_cost())
+# Print available actions at the current state.
+print(world.agent.all_actions)
 
-state.get_mst_cost()  # state.network.edges
-
-action = PickAction((3, 1))
-world.act(action)
-
+# Visualise the world.
 WorldWindow(world)
 
 ```
+
+
+Try out a collaborative world.
+```
+from justhink_world.world import init_world, init_all_worlds, list_worlds
+from justhink_world.visual import WorldWindow
+from justhink_world.domain.action import SuggestPickAction, SuggestSubmitAction, \
+	AgreeAction, DisagreeAction
+from justhink_world.agent.agent import HumanAgent, RobotAgent
+
+# Print a list of available worlds.
+print(list_worlds())
+
+# Create a world.
+world = init_world('collab-activity')
+
+# Act on the world.
+world.act(SuggestPickAction((3, 1), agent=RobotAgent))
+world.act(AgreeAction(agent=HumanAgent))
+world.act(SuggestPickAction((1, 4), agent=HumanAgent))
+
+# Print state information.
+state = world.env.state
+print(state, state.network.get_mst_cost())
+# Print available actions at the current state.
+print(world.agent.all_actions)
+
+# Visualise the world.
+WorldWindow(world)
+
+print(world.history)
+```
+
+

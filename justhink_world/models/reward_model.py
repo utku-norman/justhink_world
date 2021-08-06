@@ -8,19 +8,20 @@ class MstRewardModel(pomdp_py.RewardModel):
 
     def _reward_func(self, state, action, next_state):
         reward = 0
+        network = state.network
 
         if isinstance(action, PickAction):
             u, v = action.edge
-            if (u, v) not in state.edges and state.network.has_edge(u, v):
-                reward = -state.network[u][v]['cost']
+            if (u, v) not in network.edges and network.graph.has_edge(u, v):
+                reward = -network.graph[u][v]['cost']
             else:
                 reward = 0
 
         elif isinstance(action, SubmitAction):
-            if next_state.terminal:
+            if next_state.is_terminal:
                 reward = 1000
             else:
-                reward = state.get_cost()
+                reward = network.get_cost()
 
         return reward
 
