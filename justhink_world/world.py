@@ -9,7 +9,7 @@ from .domain.state import EnvironmentState, NetworkState, Button
 
 # from .env.env import MstEnvironment
 
-from .domain.observation import NullObservation
+from .domain.observation import Observation
 
 from .models.policy_model import IndivPolicyModel, CollabPolicyModel
 from .models.transition_model import IndivTransitionModel, \
@@ -138,9 +138,12 @@ class World(pomdp_py.POMDP):
 
         # Update the agent.
         # Observations are not implemented.
-        real_observation = NullObservation
-        # real_observation = self.env.provide_observation(
-        #     self.agent.observation_model, action)
+        # real_observation = NullObservation
+
+        # real_observation = Observation(next_state)
+        real_observation = self.env.provide_observation(
+            self.agent.observation_model, action)
+
         self.agent.update_history(action, real_observation)
         self.agent.policy_model.update(state, next_state, action)
         # Fully observable: immediate access to the state.
@@ -297,7 +300,7 @@ def load_world(graph_file,
             clear_button=Button.DISABLED,
             yes_button=Button.DISABLED,
             no_button=Button.DISABLED,
-            is_paused=True,
+            is_paused=False,
         )
     else:
         raise NotImplementedError

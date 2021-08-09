@@ -36,7 +36,7 @@ class WorldWindow(pyglet.window.Window):
         # History label.
         self._hist_label = pyglet.text.Label(
             self.make_hist_label_text(),
-            x=20, y=height-140,
+            x=20, y=height-120,
             anchor_y='center',
             color=(0, 0, 0, 255),
             font_name='monospace',  # 'Sans',
@@ -50,12 +50,24 @@ class WorldWindow(pyglet.window.Window):
         return self.__repr__()
 
     def __repr__(self):
-        return 'WorldWindow({}, width={}, height={})'.format(
+        return 'WorldWindow({},w={},h={})'.format(
             self.world.env.state, self.width, self.height)
 
     def on_draw(self):
         self.scene.on_draw()
         self._hist_label.draw()
+
+    def on_mouse_press(self, x, y, button, modifiers):
+        self.scene.on_mouse_press(
+            x, y, button, modifiers, win=self)
+
+    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+        self.scene.on_mouse_drag(
+            x, y, dx, dy, buttons, modifiers, win=self)
+
+    def on_mouse_release(self, x, y, button, modifiers):
+        self.scene.on_mouse_release(
+            x, y, button, modifiers, win=self)
 
     def on_key_press(self, symbol, modifiers):
         state = None
@@ -70,29 +82,15 @@ class WorldWindow(pyglet.window.Window):
             state = self.world.get_prev_state(first=True)
         elif symbol == key.END:
             state = self.world.get_next_state(last=True)
+        elif symbol == key.TAB:
+            self.scene.toggle_role()
 
         if state is not None:
             self.scene.update(state)
             self._hist_label.text = self.make_hist_label_text()
 
     # Helper methods.
-
     def make_hist_label_text(self):
-        return 'State : {}/{}'.format(
+        return 'State: {}/{}'.format(
             self.world.state_no,
             self.world.get_state_count())
-
-    # def update_scene(self, verbose=False):
-    #     # Get the indexed state.
-    #     i = self.world.state_no
-    #     if i == 0:  # initial state.
-    #         state = self.world.init_state
-    #     else:  # next state of the transition.
-    #         state = self.world.history[i-1][2]
-
-    #     # Update the scene with the indexed state.
-    #     # self.scene.update(state)
-    #     self.scene.update(state)
-
-    #     if verbose:
-    #         print('Updated state to {}'.format(state))

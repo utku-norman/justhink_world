@@ -106,6 +106,7 @@ world.act(AgreeAction(agent=HumanAgent))
 world.act(SuggestPickAction((1, 4), agent=HumanAgent))
 
 # Print state information.
+print(world.history)
 state = world.env.state
 print(state, state.network.get_mst_cost())
 # Print available actions at the current state.
@@ -114,7 +115,7 @@ print(world.agent.all_actions)
 # Visualise the world.
 WorldWindow(world)
 
-print(world.history)
+
 ```
 
 

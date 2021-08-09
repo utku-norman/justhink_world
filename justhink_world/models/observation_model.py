@@ -1,13 +1,14 @@
 import pomdp_py
 
-from ..domain.observation import NullObservation
+from ..domain.observation import Observation
 
 
 class MstObservationModel(pomdp_py.ObservationModel):
     """Observations are not implemented."""
 
     def __init__(self):
-        self.observations = [NullObservation]
+        pass
+        # self.observations = [NullObservation]
 
     def probability(self, observation, next_state, action,
                     normalized=False, **kwargs):
@@ -15,16 +16,18 @@ class MstObservationModel(pomdp_py.ObservationModel):
         return 1.0
 
     def sample(self, next_state, action, normalized=False, **kwargs):
-        return self.observations[0]
+        return Observation(next_state)
+        # return self.observations[0]
 
     def argmax(self, next_state, action, normalized=False, **kwargs):
         """Returns the most likely observation"""
-        return self.observations[0]
+        return Observation(next_state)
+        # return self.observations[0]
 
     def get_distribution(self, next_state, action, **kwargs):
         """Returns the underlying distribution of the model.
         In this case, it's just a histogram"""
-        return pomdp_py.Histogram({self.observations[0]: 1.0})
+        return pomdp_py.Histogram({Observation(next_state): 1.0})
 
-    def get_all_observations(self):
-        return self.observations
+    # def get_all_observations(self):
+    #     return self.observations

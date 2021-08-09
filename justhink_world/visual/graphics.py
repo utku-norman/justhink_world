@@ -8,7 +8,7 @@ from .widgets import ButtonWidget
 from ..domain.action import \
     PickAction, SuggestSubmitAction, SuggestPickAction, \
     AgreeAction, DisagreeAction, ClearAction
-from ..tools.networks import in_edges, compute_selected_cost
+from ..tools.networks import in_edges
 
 from ..agent.agent import HumanAgent, RobotAgent
 
@@ -37,30 +37,6 @@ from ..agent.agent import HumanAgent, RobotAgent
 
 ####################
 
-
-def update_cost_label(graph, edges, label, highlight=False):
-    if edges is not None:
-        cost = compute_selected_cost(graph, edges)
-    else:
-        cost = 0
-    label.text = 'Spent: {:2d} francs'.format(cost)
-    if highlight:
-        label.color = (255, 0, 0, 255)
-        label.bold = True
-    else:
-        label.color = (0, 0, 0, 255)
-        label.bold = False
-
-
-def update_scene_press(scene, x, y, submit_action_type=SuggestSubmitAction):
-    action = None
-    if not scene._terminal and not scene._paused:
-        action = check_buttons(
-            scene, x, y, submit_action_type=submit_action_type)
-        update_scene_drag(scene, x, y)
-    return action
-
-
 def check_buttons(scene, x, y, submit_action_type=SuggestPickAction):
     action = None
     if hasattr(scene, '_submit_button') \
@@ -79,6 +55,15 @@ def check_buttons(scene, x, y, submit_action_type=SuggestPickAction):
         action = DisagreeAction(agent=HumanAgent)
         # scene._cross_button.set_state('selected')
 
+    return action
+
+
+def update_scene_press(scene, x, y, submit_action_type=SuggestSubmitAction):
+    action = None
+    if not scene._terminal and not scene._paused:
+        action = check_buttons(
+            scene, x, y, submit_action_type=submit_action_type)
+        update_scene_drag(scene, x, y)
     return action
 
 
@@ -326,15 +311,28 @@ def init_graphics(layout, width, height, image_container,
     # Cost label.
     label = pyglet.text.Label(
         '',
-        x=20, y=height-290,  # -180,  # 120, 40
+        x=20, y=height-290,
         anchor_y='center',
         color=(0, 0, 0, 255),
         font_name='Sans',
-        # font_name='monospace',
-        font_size=30,
-        batch=batch)
+        font_size=32,
+        batch=batch,
+        group=groups[8])
     # label.font_size = 30  # 36
     graphics['_cost_label'] = label
+
+    # Cost label.
+    label = pyglet.text.Label(
+        '',
+        x=20, y=height-40,
+        anchor_y='center',
+        color=(0, 0, 0, 255),
+        font_name='Sans',
+        font_size=32,
+        batch=batch,
+        group=groups[8])
+    # label.font_size = 30  # 36
+    graphics['_role_label'] = label
 
     # Bottom label.
     label = pyglet.text.Label(

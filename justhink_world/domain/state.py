@@ -1,4 +1,8 @@
+import copy
+
 import pomdp_py
+
+import networkx as nx
 
 from ..tools.networks import find_mst, is_spanning, \
     compute_total_cost, compute_selected_cost
@@ -60,6 +64,21 @@ class EnvironmentState(pomdp_py.State):
             return (self.edges == other.edges)
         else:
             return False
+
+    def __deepcopy__(self, memo, shared_attribute_names={'layout'}):
+        """Create a copy of the state with shared attributes.
+
+        Specifically, the layout is shared.
+        Overriding follows https://stackoverflow.com/a/15774013"""
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k in shared_attribute_names:
+                setattr(result, k, copy.copy(v))
+            else:
+                setattr(result, k, copy.deepcopy(v, memo))
+        return result
 
     def __str__(self):
         return self.__repr__()
@@ -149,8 +168,16 @@ class NetworkState(object):
         Returns:
             bool: The return value. True for success, False otherwise.
         """
-        mst = find_mst(self.graph)
+        mst = self.get_mst()
         return compute_total_cost(mst)
+
+    def get_mst(self) -> nx.Graph:
+        """Get the minimum-spanning tree of the state's network.
+
+        Returns:
+            bool: The return value. True for success, False otherwise.
+        """
+        return find_mst(self.graph)
 
     def get_max_cost(self) -> float:
         """Compute the total cost on the state's network.

@@ -36,9 +36,14 @@ class IndivTransitionModel(pomdp_py.TransitionModel):
         # Deepcopy the network only.
         # Rest are either button states (string) or
         # the layout (which is not changing and can stay the same).
-        next_state = copy.copy(state)
+
+        # next_state = copy.copy(state)
+        # network = state.network
+        # next_network = copy.deepcopy(network)
+
+        next_state = copy.deepcopy(state)
         network = state.network
-        next_network = copy.deepcopy(network)
+        next_network = next_state.network
 
         # Pick action.
         if isinstance(action, PickAction):
@@ -61,19 +66,21 @@ class IndivTransitionModel(pomdp_py.TransitionModel):
 
                 next_network.is_submitting = False
 
-                if len(network.edges) == 0:
-                    next_state.clear_button = Button.DISABLED
-
         # Clear action.
         elif isinstance(action, ClearAction):
             next_network.suggested_edge = None
             next_network.edges = frozenset()
-            next_state.clear_button = Button.DISABLED
 
         # Submit action.
         elif isinstance(action, SubmitAction):
             next_state.is_terminal = True
             next_state.submit_button = Button.SELECTED
+
+        # # Update clear button.
+        if next_network.suggested_edge is None and len(next_network.edges) > 0:
+            next_state.clear_button = Button.ENABLED
+        else:
+            next_state.clear_button = Button.DISABLED
 
         next_state.network = next_network
 
@@ -137,9 +144,13 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
             return EPSILON
 
     def sample(self, state, action):
-        next_state = copy.copy(state)
+        # next_state = copy.copy(state)
+        # network = state.network
+        # next_network = copy.deepcopy(network)
+
+        next_state = copy.deepcopy(state)
         network = state.network
-        next_network = copy.deepcopy(network)
+        next_network = next_state.network
 
         # If the agent can act.
         if action.agent not in state.active_agents:
@@ -182,7 +193,6 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
         elif isinstance(action, ClearAction):
             next_network.suggested_edge = None
             next_network.edges = frozenset()
-            next_state.clear_button = Button.DISABLED
 
         # Agree action.
         elif isinstance(action, AgreeAction):
@@ -215,7 +225,14 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
                 next_network.edges = frozenset()
                 next_network.suggested_edge = None
 
-        next_state.is_paused = HumanAgent not in next_state.active_agents
+        # Update paused.
+        # next_state.is_paused = HumanAgent not in next_state.active_agents
+
+        # Update clear button.
+        if next_network.suggested_edge is None and len(next_network.edges) > 0:
+            next_state.clear_button = Button.ENABLED
+        else:
+            next_state.clear_button = Button.DISABLED
 
         next_state.network = next_network
 
