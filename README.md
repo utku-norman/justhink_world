@@ -25,7 +25,7 @@ git clone https://github.com/utku-norman/justhink_world.git
 ```
 cd justhink_world
 rm -rf venv    # Delete if there is an existing virtual environment for a clean install
-virtualenv venv
+python3 -m venv venv
 source venv/bin/activate
 ```
 
