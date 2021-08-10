@@ -50,6 +50,7 @@ Print a list of available worlds, try to initialise all of the worlds.
 ```
 from justhink_world.world import list_worlds, init_all_worlds
 
+# Print a list of available worlds.
 print(list_worlds())
 
 worlds = init_all_worlds()
@@ -58,11 +59,26 @@ for name, world in worlds.items():
     print(name, world)
 ```
 
-Try out an individual (i.e. a test) world.
+Render an environment state (non-interactive).
+```
+from justhink_world.world import init_world
+from justhink_world.env.visual import EnvironmentWindow
+from justhink_world.domain.action import PickAction
+
+world = init_world('pretest-1')
+world.act(PickAction((3, 1)))
+world.act(PickAction((1, 4)))
+
+EnvironmentWindow(world.env.state)
+```
+
+
+Try out an individual (i.e. a test) world (interactive).
 ```
 from justhink_world.world import init_world
 from justhink_world.visual import WorldWindow
-from justhink_world.domain.action import PickAction, ClearAction, SubmitAction
+from justhink_world.domain.action import PickAction, ClearAction, \
+AttemptSubmitAction, ContinueAction, SubmitAction
 
 # Create a world.
 world = init_world('pretest-1')
@@ -70,32 +86,34 @@ world = init_world('pretest-1')
 # Act on the world.
 world.act(PickAction((3, 1)))
 world.act(PickAction((1, 4)))
+world.act(AttemptSubmitAction())
+world.act(ContinueAction())
 world.act(ClearAction())
 world.act(PickAction((5, 6)))
+world.act(AttemptSubmitAction())
 world.act(SubmitAction())
-
-# Print state information. 
-state = world.env.state
-print(state, state.network.get_mst_cost())
-# Print available actions at the current state.
-print(world.agent.all_actions)
 
 # Visualise the world.
 WorldWindow(world)
 
+### Printing info.
+# Print current state, and MST cost.
+state = world.env.state
+print(state, state.network.get_mst_cost())
+
+# Print available actions at the current state.
+print(world.agent.all_actions)
 ```
 
 
 Try out a collaborative world.
 ```
-from justhink_world.world import init_world, init_all_worlds, list_worlds
+from justhink_world.world import init_world
 from justhink_world.visual import WorldWindow
-from justhink_world.domain.action import SuggestPickAction, SuggestSubmitAction, \
+from justhink_world.domain.action import SuggestPickAction, \
 	AgreeAction, DisagreeAction
 from justhink_world.agent.agent import HumanAgent, RobotAgent
 
-# Print a list of available worlds.
-print(list_worlds())
 
 # Create a world.
 world = init_world('collab-activity')

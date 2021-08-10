@@ -1,6 +1,6 @@
 import pyglet
 
-from ..domain.state import Button
+from justhink_world.domain.state import Button
 
 
 def center_image(image):
@@ -17,8 +17,6 @@ class TextInput(object):
                  batch=None, group=None, font_size=50):
 
         self.document = pyglet.text.document.FormattedDocument(text)
-        # self.font_name = self.document.get_style('font_name', 0)
-        # font_size = 50
         self.document.set_style(0, len(self.document.text),
                                 dict(font_name='Times New Roman',
                                      font_size=font_size,
@@ -82,10 +80,10 @@ class ButtonWidget(Button):
             s = pyglet.sprite.Sprite(
                 image, x=x, y=y, batch=batch, group=group)
             s.scale = scale
+            self.dist = (s.width**2 + s.height**2) / 4
             self.sprites[state] = s
 
-        s = self.sprites[self.state]
-        self.dist = (s.width**2 + s.height**2) / 4
+        self.set_state(self.state)
 
     def set_state(self, state):
         assert state in self.sprites or state == Button.NA, \
@@ -99,9 +97,10 @@ class ButtonWidget(Button):
                 sprite.visible = False
 
     def check_hit(self, x, y):
-        s = self.sprites[self.state]
-        d = (s.x - x)**2 + (s.y - y)**2
-        return d < self.dist
+        if self.state != Button.NA:
+            s = self.sprites[self.state]
+            d = (s.x - x)**2 + (s.y - y)**2
+            return d < self.dist
 
 
 class Rectangle(object):

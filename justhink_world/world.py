@@ -6,10 +6,11 @@ import importlib_resources
 import pomdp_py
 
 from .domain.state import EnvironmentState, NetworkState, Button
+from .domain.action import SetStateAction
 
 # from .env.env import MstEnvironment
 
-from .domain.observation import Observation
+# from .domain.observation import Observation
 
 from .models.policy_model import IndivPolicyModel, CollabPolicyModel
 from .models.transition_model import IndivTransitionModel, \
@@ -50,10 +51,6 @@ class World(pomdp_py.POMDP):
         # Create a reward model.
         reward_model = MstRewardModel()
 
-        # Update the available actions in the policy model
-        # to access agent.all_actions even at the initial state.
-        policy_model.update_available_actions(cur_state)
-
         # Initialise an agent.
         # The state is fully observable.
         init_belief = pomdp_py.Histogram({cur_state: 1.0})
@@ -62,6 +59,9 @@ class World(pomdp_py.POMDP):
                                transition_model,
                                MstObservationModel(),
                                reward_model)
+        # Update the available actions in the policy model
+        # to access agent.all_actions even at the initial state.
+        agent.policy_model.update_available_actions(cur_state)
 
         # Initialise an environment.
         # MstEnvironment
@@ -113,12 +113,16 @@ class World(pomdp_py.POMDP):
 
     def get_state(self, state_no=None):
         '''Get the indexed state, or current state if None'''
+        return self.history[self.get_state_index(state_no)]
+
+    def get_state_index(self, state_no=None):
+        '''Get the indexed state, or current state if None'''
         if state_no is None:
             index = (self.state_no - 1) * 2
         else:
             index = (state_no - 1) * 2
 
-        return self.history[index]
+        return index
 
     # def update_scene(self, verbose=False):
     #     # Get the indexed state.
@@ -129,23 +133,36 @@ class World(pomdp_py.POMDP):
     #         state = self.history[i-1][2]
 
     def act(self, action, verbose=False):
+        # print('##### acting', action)
+
+        # Relocate in history if not at the last state.
+        # TODO: also agent's history? possibly drop world history
+        # in favor of agent's history.
+        if self.state_no != self.get_state_count():
+            state = self.get_state()
+            # Rebase.
+            self.env.state_transition(SetStateAction(state))
+            # Clean history.
+            # print('### hist-bef', self.history)
+            self.history = self.history[:self.get_state_index()+1]
+            # print('### hist-aft', self.history)
+
+        # Apply the state transition.
         state = copy.deepcopy(self.env.state)
-        env_reward = self.env.state_transition(action, execute=True)
+        env_reward = self.env.state_transition(action)
         next_state = self.env.state
 
-        # Update the world.
+        # Update the history.
         self.history.extend([action, next_state])
 
         # Update the agent.
-        # Observations are not implemented.
-        # real_observation = NullObservation
-
-        # real_observation = Observation(next_state)
         real_observation = self.env.provide_observation(
             self.agent.observation_model, action)
 
         self.agent.update_history(action, real_observation)
         self.agent.policy_model.update(state, next_state, action)
+
+        # TODO: run a belief update function.
         # Fully observable: immediate access to the state.
         new_belief = pomdp_py.Histogram({next_state: 1.0})
         self.agent.set_belief(new_belief)
@@ -284,22 +301,18 @@ def load_world(graph_file,
         init_state = EnvironmentState(
             network=network,
             layout=layout,
-            active_agents=AgentSet({HumanAgent}),
-            submit_button=Button.ENABLED,
-            clear_button=Button.DISABLED,
-            yes_button=Button.NA,
-            no_button=Button.NA,
+            agents=AgentSet({HumanAgent}),
+            attempt_no=1,
+            max_attempts=None,
             is_paused=False,
         )
     elif world_type is CollaborativeWorld:
         init_state = EnvironmentState(
             network=network,
             layout=layout,
-            active_agents=AgentSet({RobotAgent}),
-            submit_button=Button.ENABLED,
-            clear_button=Button.DISABLED,
-            yes_button=Button.DISABLED,
-            no_button=Button.DISABLED,
+            agents=AgentSet({RobotAgent}),
+            attempt_no=1,
+            max_attempts=4,
             is_paused=False,
         )
     else:

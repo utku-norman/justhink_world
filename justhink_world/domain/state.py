@@ -31,22 +31,21 @@ class EnvironmentState(pomdp_py.State):
     def __init__(self,
                  network,
                  layout,
-                 active_agents={HumanAgent, RobotAgent},
-                 submit_button=Button.NA,
-                 clear_button=Button.NA,
-                 yes_button=Button.NA,
-                 no_button=Button.NA,
+                 agents={HumanAgent, RobotAgent},
+                 attempt_no=1,
+                 max_attempts=None,
+                 is_submitting=False,
                  is_paused=False,
                  is_terminal=False):
         self.network = network
         self.layout = layout
 
-        self.active_agents = active_agents
+        self.agents = agents
 
-        self.submit_button = submit_button
-        self.clear_button = clear_button
-        self.yes_button = yes_button
-        self.no_button = no_button
+        self.attempt_no = attempt_no
+        self.max_attempts = max_attempts
+
+        self.is_submitting = is_submitting
 
         self.is_paused = is_paused
         self.is_terminal = is_terminal
@@ -54,10 +53,12 @@ class EnvironmentState(pomdp_py.State):
     def __hash__(self):
         return hash((self.network,
                      self.layout,
-                     self.submit_button,
-                     self.clear_button,
-                     self.yes_button,
-                     self.no_button))
+                     self.attempt_no,
+                     self.max_attempts,
+                     self.is_submitting,
+                     self.is_paused,
+                     self.is_terminal))
+        # TODO update
 
     def __eq__(self, other):
         if isinstance(other, NetworkState):
@@ -84,15 +85,12 @@ class EnvironmentState(pomdp_py.State):
         return self.__repr__()
 
     def __repr__(self):
-        s = 'EnvState({},a:{},s:{},c:{},y:{},n:{};p:{:d},t:{:d})'.format(
+        s = 'EnvState({},a:{};p:{:d},t:{:d},s:{:d})'.format(
             self.network,
-            self.active_agents,
-            self.submit_button,
-            self.clear_button,
-            self.yes_button,
-            self.no_button,
+            self.agents,
             self.is_paused,
-            self.is_terminal)
+            self.is_terminal,
+            self.is_submitting)
         return s
 
 
@@ -144,6 +142,9 @@ class NetworkState(object):
             self.graph.number_of_edges(),
             self.is_spanning())
 
+    def get_selected_nodes(self):
+        return {u for e in self.edges for u in e}
+
     # def clear_selection(self):
     #     """Clear the selected edges."""
     #     self.edges = frozenset()
@@ -172,10 +173,10 @@ class NetworkState(object):
         return compute_total_cost(mst)
 
     def get_mst(self) -> nx.Graph:
-        """Get the minimum-spanning tree of the state's network.
+        """Get a minimum-spanning tree of the state's network.
 
         Returns:
-            bool: The return value. True for success, False otherwise.
+            nx.Graph: A m
         """
         return find_mst(self.graph)
 

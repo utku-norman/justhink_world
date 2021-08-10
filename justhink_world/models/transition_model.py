@@ -4,10 +4,10 @@ import pomdp_py
 
 from ..tools.networks import in_edges
 from ..domain.action import PickAction, SuggestPickAction, \
-    UnpickAction, SubmitAction, \
+    SubmitAction, \
     AgreeAction, DisagreeAction, \
-    ClearAction
-# ClearSuggestSubmitAction SuggestSubmitAction, \
+    ClearAction, SetStateAction, \
+    AttemptSubmitAction, ContinueAction
 
 from ..domain.state import Button
 from ..agent.agent import AgentSet, HumanAgent, RobotAgent
@@ -33,13 +33,9 @@ class IndivTransitionModel(pomdp_py.TransitionModel):
             return EPSILON
 
     def sample(self, state, action):
-        # Deepcopy the network only.
-        # Rest are either button states (string) or
-        # the layout (which is not changing and can stay the same).
 
-        # next_state = copy.copy(state)
-        # network = state.network
-        # next_network = copy.deepcopy(network)
+        if isinstance(action, SetStateAction):
+            return action.state
 
         next_state = copy.deepcopy(state)
         network = state.network
@@ -55,72 +51,39 @@ class IndivTransitionModel(pomdp_py.TransitionModel):
                 next_network.is_submitting = False
                 next_state.clear_button = Button.ENABLED
 
-        # Unpick i.e. deselect action.
-        elif isinstance(action, UnpickAction):
-            if not state.is_terminal:
-                u, v = action.edge
-                if network.graph.has_edge(u, v) \
-                        and in_edges(u, v, network.edges):
-                    next_network.edges = next_network.edges.difference(
-                        {(u, v), (v, u)})
+        # # Unpick i.e. deselect action.
+        # elif isinstance(action, UnpickAction):
+        #     if not state.is_terminal:
+        #         u, v = action.edge
+        #         if network.graph.has_edge(u, v) \
+        #                 and in_edges(u, v, network.edges):
+        #             next_network.edges = next_network.edges.difference(
+        #                 {(u, v), (v, u)})
 
-                next_network.is_submitting = False
+        #         next_network.is_submitting = False
 
         # Clear action.
         elif isinstance(action, ClearAction):
             next_network.suggested_edge = None
             next_network.edges = frozenset()
 
-        # Submit action.
+        # Attempt to submit action.
+        elif isinstance(action, AttemptSubmitAction):
+            next_state.is_submitting = True
+            next_state.is_paused = True
+
+        elif isinstance(action, ContinueAction):
+            next_state.is_submitting = False
+            next_state.is_paused = False
+
         elif isinstance(action, SubmitAction):
             next_state.is_terminal = True
-            next_state.submit_button = Button.SELECTED
-
-        # # Update clear button.
-        if next_network.suggested_edge is None and len(next_network.edges) > 0:
-            next_state.clear_button = Button.ENABLED
-        else:
-            next_state.clear_button = Button.DISABLED
+            next_state.agents = AgentSet({})
+            next_state.is_submitting = False
 
         next_state.network = next_network
 
         return next_state
-
-        # # Update submit button.
-        # if state.is_terminal or state.is_submitting:
-        #     s = 'selected'
-        # elif SubmitAction() in actions or SuggestSubmitAction() in actions:
-        #     s = Button.ENABLED
-        # else:
-        #     s = Button.DISABLED
-        # self._submit_button.set_state(s)
-
-        # # Update clear button.
-        # if ClearAction() in actions:
-        #     s = Button.ENABLED
-        # else:
-        #     s = Button.DISABLED
-        # self._erase_button.set_state(s)
-
-        # # Update check button from available actions.
-        # if AgreeAction in all_action_types:
-        #     if AgreeAction() in actions:
-        #         s = Button.ENABLED
-        #     else:
-        #         s = Button.DISABLED
-        # else:
-        #     s = None
-        # self._check_button.set_state(s)
-
-        # # Update cross button from available actions.
-        # if DisagreeAction in all_action_types:
-        #     if DisagreeAction() in actions:
-        #         s = Button.ENABLED
-        #     else:
-        #         s = Button.DISABLED
-        # else:
-        #     s = None
-        # self._cross_button.set_state(s)
 
     def argmax(self, state, action):
         """Returns the most likely next state"""
@@ -144,18 +107,17 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
             return EPSILON
 
     def sample(self, state, action):
-        # next_state = copy.copy(state)
-        # network = state.network
-        # next_network = copy.deepcopy(network)
+        if isinstance(action, SetStateAction):
+            return action.state
 
         next_state = copy.deepcopy(state)
         network = state.network
         next_network = next_state.network
 
         # If the agent can act.
-        if action.agent not in state.active_agents:
-            print('Invalid action: agent {} is not an active (in {}).'.format(
-                action.agent.name, [a.name for a in state.active_agents]))
+        if action.agent not in state.agents:
+            print('Invalid action {}: agent {} is not an active ({}).'.format(
+                action, action.agent.name, state.agents))
             raise ValueError
 
         if isinstance(action, SuggestPickAction):
@@ -168,14 +130,7 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
                 if s is None:
                     next_network.suggested_edge = (u, v)
                     # Maintain the agents that can act: suggestions swap turns.
-                    if RobotAgent in state.active_agents:
-                        next_state.active_agents = AgentSet({HumanAgent})
-                        next_state.yes_button = Button.ENABLED
-                        next_state.no_button = Button.ENABLED
-                    else:
-                        next_state.active_agents = AgentSet({RobotAgent})
-                        next_state.yes_button = Button.DISABLED
-                        next_state.no_button = Button.DISABLED
+                    next_state.agents = toggle_agent(state.agents)
 
                 # Accept.
                 elif s == (u, v) or s == (v, u):
@@ -199,14 +154,14 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
             next_network.suggested_edge = None
             s = network.suggested_edge
             next_network.edges = next_network.edges.union({s})
-            next_state.yes_button = Button.DISABLED
-            next_state.no_button = Button.DISABLED
+            # next_state.yes_button = Button.DISABLED
+            # next_state.no_button = Button.DISABLED
 
         # Disagree action.
         elif isinstance(action, DisagreeAction):
             next_network.suggested_edge = None
-            next_state.yes_button = Button.DISABLED
-            next_state.no_button = Button.DISABLED
+            # next_state.yes_button = Button.DISABLED
+            # next_state.no_button = Button.DISABLED
 
         # elif isinstance(action, SuggestSubmitAction):
         #     if next_network.is_submitting:
@@ -217,22 +172,31 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
         # elif isinstance(action, ClearSuggestSubmitAction):
         #     next_state.is_submitting = False
 
+        # Attempt to submit action.
+        elif isinstance(action, AttemptSubmitAction):
+            next_state.is_submitting = True
+            # next_state.is_paused = True
+            # Maintain the agents that can act: suggestions swap turns.
+            next_state.agents = toggle_agent(state.agents)
+
+        elif isinstance(action, ContinueAction):
+            next_state.is_submitting = False
+            # next_state.is_paused = False
+
         elif isinstance(action, SubmitAction):
             if network.is_mst():
                 next_state.is_terminal = True
-                next_state.submit_button = Button.SELECTED
+                next_state.agents = AgentSet({})
+            elif state.attempt_no == state.max_attempts:
+                next_state.is_terminal = True
+                next_state.agents = AgentSet({})
             else:
                 next_network.edges = frozenset()
                 next_network.suggested_edge = None
+                next_state.attempt_no += 1
 
-        # Update paused.
-        # next_state.is_paused = HumanAgent not in next_state.active_agents
-
-        # Update clear button.
-        if next_network.suggested_edge is None and len(next_network.edges) > 0:
-            next_state.clear_button = Button.ENABLED
-        else:
-            next_state.clear_button = Button.DISABLED
+            next_state.is_submitting = False
+            next_state.is_paused = False
 
         next_state.network = next_network
 
@@ -241,3 +205,10 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
     def argmax(self, state, action):
         """Returns the most likely next state"""
         return self.sample(state, action)
+
+
+def toggle_agent(agents):
+    if RobotAgent in agents:
+        return AgentSet({HumanAgent})
+    else:
+        return AgentSet({RobotAgent})

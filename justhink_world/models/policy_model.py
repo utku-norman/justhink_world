@@ -3,11 +3,11 @@ import pomdp_py
 
 from ..tools.networks import in_edges
 from ..domain.action import PickAction, SuggestPickAction, \
-    UnpickAction, SubmitAction, SuggestSubmitAction, \
+    SubmitAction, \
     AgreeAction, DisagreeAction, \
-    ClearAction
+    ClearAction, AttemptSubmitAction, ContinueAction
 
-from ..agent.agent import HumanAgent, RobotAgent
+# from ..agent.agent import HumanAgent, RobotAgent
 
 
 class IndivPolicyModel(pomdp_py.RolloutPolicy):
@@ -36,38 +36,35 @@ class IndivPolicyModel(pomdp_py.RolloutPolicy):
             self.update_available_actions(state)
         return self.actions
 
-    def get_action_space(self):
-        """all actions, only by type"""
-        # Types of actions available in the action space
-        # that are not necessarily feasible.
-        # Available actions are enumerated, while
-        # enumerating the action space is not necessary.
-        return {
-            PickAction,
-            UnpickAction,
-            ClearAction,
-            SubmitAction,
-        }
-
     def rollout(self, state, history=None):
         return self.sample(state, history)
 
     # Helper methods.
     def update_available_actions(self, state):
         actions = set()
+
+        # If it is not the end of the activity.
         if not state.is_terminal:
 
-            # Can pick the remaining edges.
-            for u, v in state.network.graph.edges():
-                if not in_edges(u, v, state.network.edges):
-                    actions.add(PickAction((u, v)))
+            # If not confirming a submission (i.e. normal gameplay).
+            if not state.is_submitting:
 
-            # Can submit anytime.
-            actions.add(SubmitAction())
+                # Can pick the remaining edges.
+                for u, v in state.network.graph.edges():
+                    if not in_edges(u, v, state.network.edges):
+                        actions.add(PickAction((u, v)))
 
-            # Can clear if there is at least one edge.
-            if len(state.network.edges) > 0:
-                actions.add(ClearAction())
+                # Can clear if there is at least one edge.
+                if len(state.network.edges) > 0:
+                    actions.add(ClearAction())
+
+                # Can attempt to submit any time.
+                actions.add(AttemptSubmitAction())
+
+            # Confirming a submission.
+            else:
+                actions.add(ContinueAction())
+                actions.add(SubmitAction())
 
         self.actions = actions
 
@@ -105,35 +102,42 @@ class CollabPolicyModel(pomdp_py.RolloutPolicy):
     def rollout(self, state, history=None):
         return self.sample(state, history)
 
-    # Helper methods.
-    def get_action_space(self):
-        """all actions, only by type"""
-        return {
-            SuggestPickAction,
-            SuggestSubmitAction,
-            ClearAction,
-            AgreeAction,
-            DisagreeAction,
-        }
-
     def update_available_actions(self, state):
         actions = set()
 
         # For each active agent.
-        for agent in state.active_agents:
+        for agent in state.agents:
+
             # If it is not the end of the activity.
             if not state.is_terminal:
 
-                # The agent can suggest picking a non-selected edge.
-                for u, v in state.network.graph.edges():
-                    if not in_edges(u, v, state.network.edges):
-                        actions.add(SuggestPickAction((u, v), agent=agent))
+                # If not confirming a submission (i.e. normal gameplay).
+                if not state.is_submitting:
 
-                # The agent can submit (any time).
-                actions.add(SubmitAction(agent=agent))
+                    # If no edge is currently suggested.
+                    if state.network.suggested_edge is None:
+                        # The agent can suggest picking a non-selected edge.
+                        for u, v in state.network.graph.edges():
+                            if not in_edges(u, v, state.network.edges):
+                                action = SuggestPickAction((u, v), agent=agent)
+                                actions.add(action)
 
-                # The agent can clear, if there is at least one edge.
-                if len(state.network.edges) > 0:
-                    actions.add(ClearAction(agent=agent))
+                        # The agent can submit.
+                        actions.add(AttemptSubmitAction(agent=agent))
+
+                        # The agent can clear, if there is at least one edge.
+                        if len(state.network.edges) > 0:
+                            actions.add(ClearAction(agent=agent))
+
+                    # If there is a suggested edge.
+                    else:
+                        # The agent can (dis)agree with the suggested edge.
+                        actions.add(AgreeAction(agent=agent))
+                        actions.add(DisagreeAction(agent=agent))
+
+                # Confirming a submission.
+                else:
+                    actions.add(ContinueAction(agent=agent))
+                    actions.add(SubmitAction(agent=agent))
 
         self.actions = actions
