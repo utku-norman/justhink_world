@@ -12,7 +12,8 @@ class MstRewardModel(pomdp_py.RewardModel):
 
         if isinstance(action, PickAction):
             u, v = action.edge
-            if (u, v) not in network.edges and network.graph.has_edge(u, v):
+            if not network.subgraph.has_edge(u, v) \
+                    and network.graph.has_edge(u, v):
                 reward = -network.graph[u][v]['cost']
             else:
                 reward = 0

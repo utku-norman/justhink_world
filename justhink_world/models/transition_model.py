@@ -2,7 +2,8 @@ import copy
 
 import pomdp_py
 
-from ..tools.networks import in_edges
+import networkx as nx
+
 from ..domain.action import PickAction, SuggestPickAction, \
     SetPauseAction, SetStateAction, \
     AgreeAction, DisagreeAction, \
@@ -37,6 +38,11 @@ class IndivTransitionModel(pomdp_py.TransitionModel):
         if isinstance(action, SetStateAction):
             return action.state
 
+        elif isinstance(action, SetPauseAction):
+            next_state = copy.deepcopy(state)
+            next_state.is_paused = action.is_paused
+            return next_state
+
         next_state = copy.deepcopy(state)
         network = state.network
         next_network = next_state.network
@@ -46,35 +52,22 @@ class IndivTransitionModel(pomdp_py.TransitionModel):
             if not state.is_terminal:
                 u, v = action.edge
                 if network.graph.has_edge(u, v) \
-                        and not in_edges(u, v, network.edges):
-                    next_network.edges = next_network.edges.union({(u, v)})
+                        and not network.subgraph.has_edge(u, v):
+                    next_network.subgraph.add_edge(u, v)
                 next_network.is_submitting = False
                 next_state.clear_button = Button.ENABLED
-
-        # # Unpick i.e. deselect action.
-        # elif isinstance(action, UnpickAction):
-        #     if not state.is_terminal:
-        #         u, v = action.edge
-        #         if network.graph.has_edge(u, v) \
-        #                 and in_edges(u, v, network.edges):
-        #             next_network.edges = next_network.edges.difference(
-        #                 {(u, v), (v, u)})
-
-        #         next_network.is_submitting = False
 
         # Clear action.
         elif isinstance(action, ClearAction):
             next_network.suggested_edge = None
-            next_network.edges = frozenset()
+            next_network.subgraph = nx.Graph()
 
         # Attempt to submit action.
         elif isinstance(action, AttemptSubmitAction):
             next_state.is_submitting = True
-            next_state.is_paused = True
 
         elif isinstance(action, ContinueAction):
             next_state.is_submitting = False
-            next_state.is_paused = False
 
         elif isinstance(action, SubmitAction):
             next_state.is_terminal = True
@@ -131,7 +124,10 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
         if isinstance(action, SuggestPickAction):
             u, v = action.edge
 
-            if not state.is_terminal and network.graph.has_edge(u, v):
+            # Validity.
+            assert network.graph.has_edge(u, v)
+
+            if not state.is_terminal:
                 s = network.suggested_edge
 
                 # New suggestion.
@@ -142,9 +138,8 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
 
                 # Accept.
                 elif s == (u, v) or s == (v, u):
-                    # if in_edges(u, v, network.edges):
                     next_network.suggested_edge = None
-                    next_network.edges = next_network.edges.union({(u, v)})
+                    next_network.subgraph.add_edge(u, v)
 
                 # Reject and have a new suggestion.
                 else:
@@ -155,13 +150,13 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
         # Clear action.
         elif isinstance(action, ClearAction):
             next_network.suggested_edge = None
-            next_network.edges = frozenset()
+            next_network.subgraph = nx.Graph()
 
         # Agree action.
         elif isinstance(action, AgreeAction):
             next_network.suggested_edge = None
             s = network.suggested_edge
-            next_network.edges = next_network.edges.union({s})
+            next_network.subgraph.add_edge(s[0], s[1])
             # next_state.yes_button = Button.DISABLED
             # next_state.no_button = Button.DISABLED
 
@@ -188,7 +183,6 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
 
         elif isinstance(action, ContinueAction):
             next_state.is_submitting = False
-            # next_state.is_paused = False
 
         elif isinstance(action, SubmitAction):
             if network.is_mst():
@@ -198,7 +192,7 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
                 next_state.is_terminal = True
                 next_state.agents = frozenset()
             else:
-                next_network.edges = frozenset()
+                next_network.subgraph = nx.Graph()
                 next_network.suggested_edge = None
                 next_state.attempt_no += 1
 

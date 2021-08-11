@@ -4,8 +4,8 @@ import pomdp_py
 
 import networkx as nx
 
-from ..tools.networks import find_mst, is_spanning, \
-    compute_total_cost, compute_selected_cost
+from ..tools.networks import find_mst, is_subgraph_spanning, \
+    compute_total_cost, compute_subgraph_cost
 
 from ..agent import HumanAgent, RobotAgent
 
@@ -119,11 +119,16 @@ class EnvironmentState(pomdp_py.State):
         return self.__repr__()
 
     def __repr__(self):
+        if len(self.agents) > 0:
+            agents_string = ''.join([a.name[0] for a in self.agents])
+        else:
+            agents_string = 'x'
+
         s = 'EnvironmentState({}@{}/{},a:{};p:{:d},t:{:d},s:{:d})'.format(
             self.network,
             self.attempt_no,
             'inf' if self.max_attempts is None else self.max_attempts,
-            ''.join([a.name[0] for a in self.agents]),
+            agents_string,
             self.is_paused,
             self.is_terminal,
             self.is_submitting)
@@ -140,10 +145,10 @@ class NetworkState(object):
 
     Attributes:
         graph (networkx.Graph):
-           the background network with a cost function on edges
-        edges (set, optional):
-           the set of selected edges in the network
-           (default to an empty set: frozenset())
+           the background graph with a cost function on edges
+        subgraph (networkx.Graph, optional):
+           the subgraph of the selected edges
+           (default to an empty set: networkx.Graph())
         suggested_edge (tuple or None, optional)
             a suggested edge, e.g. (1, 2) (default None)
         is_submitting (bool, optional)
@@ -153,16 +158,16 @@ class NetworkState(object):
 
     def __init__(self,
                  graph,
-                 edges=frozenset(),
+                 subgraph=nx.Graph(),
                  suggested_edge=None):
         """Initialise a world state for a minimum-spanning tree problem."""
         self.graph = graph
-        self.edges = edges
+        self.subgraph = subgraph
         self.suggested_edge = suggested_edge
 
     def __hash__(self):
         return hash((self.graph,
-                     self.edges,
+                     self.subgraph,
                      self.suggested_edge))
 
     def __eq__(self, other):
@@ -176,7 +181,7 @@ class NetworkState(object):
 
     def __repr__(self):
         return 'NetworkState(e:{}+{},c:{}|n:{},e:{};s:{:d})'.format(
-            len(self.edges),
+            self.subgraph.number_of_edges(),
             0 if self.suggested_edge is None else 1,
             self.get_cost(),
             self.graph.number_of_nodes(),
@@ -184,16 +189,11 @@ class NetworkState(object):
             self.is_spanning())
 
     def get_selected_nodes(self):
-        return {u for e in self.edges for u in e}
-
-    # def clear_selection(self):
-    #     """Clear the selected edges."""
-    #     self.edges = frozenset()
+        return self.subgraph.nodes()
 
     def clear(self):  # reset
         """Clear the selected edges and the flags."""
-        # self.clear_selection()
-        self.edges = frozenset()
+        self.subgraph = nx.Graph()
         self.suggested_edge = None
 
     def get_cost(self) -> float:
@@ -202,7 +202,7 @@ class NetworkState(object):
         Returns:
             float: the cost.
         """
-        return compute_selected_cost(self.graph, self.edges)
+        return compute_subgraph_cost(self.graph, self.subgraph)
 
     def get_mst_cost(self) -> float:
         """Compute the cost of a minimum-spanning tree of the state's network.
@@ -217,7 +217,7 @@ class NetworkState(object):
         """Get a minimum-spanning tree of the state's network.
 
         Returns:
-            nx.Graph: A m
+            nx.Graph: TODO
         """
         return find_mst(self.graph)
 
@@ -235,7 +235,7 @@ class NetworkState(object):
         Returns:
             bool: True for spanning, False otherwise.
         """
-        return is_spanning(self.graph, self.edges)
+        return is_subgraph_spanning(self.graph, self.subgraph)
 
     def is_mst(self) -> bool:
         """Check if the selected edges is an MST (minimum-spanning tree).

@@ -76,32 +76,31 @@ EnvironmentWindow(world.env.state)
 
 
 ### Try out an individual (i.e. a test) world (interactive).
-Use `left`-`right` keys to navigate among states.
+Use `left`-`right` keys to navigate among states, `p` to toggle pause, and `tab` to toggle the role.
 
-Taking an action at a navigated state clears the future history
-and moves the application to the new state.
+Taking an action at a navigated state clears the future history and moves the application to the new state.
 
 ```
-from justhink_world import init_world
-from justhink_world.visual import WorldWindow
-from justhink_world.domain.action import PickAction, ClearAction, \
-AttemptSubmitAction, ContinueAction, SubmitAction
+	from justhink_world import init_world
+	from justhink_world.visual import WorldWindow
+	from justhink_world.domain.action import PickAction, ClearAction, \
+	AttemptSubmitAction, ContinueAction, SubmitAction
 
-# Create a world.
-world = init_world('pretest-1')
+	# Create a world.
+	world = init_world('pretest-1')
 
-# Act on the world.
-world.act(PickAction((3, 1)))
-world.act(PickAction((1, 4)))
-world.act(AttemptSubmitAction())
-world.act(ContinueAction())
-world.act(ClearAction())
-world.act(PickAction((5, 6)))
-world.act(AttemptSubmitAction())
-world.act(SubmitAction())
+	# Act on the world.
+	world.act(PickAction((3, 1)))
+	world.act(PickAction((1, 4)))
+	world.act(AttemptSubmitAction())
+	world.act(ContinueAction())
+	world.act(ClearAction())
+	world.act(PickAction((5, 6)))
+	world.act(AttemptSubmitAction())
+	world.act(SubmitAction())
 
-# Visualise the world.
-WorldWindow(world)
+	# Visualise the world.
+	WorldWindow(world)
 
 
 # Print the current state and MST cost.
@@ -113,10 +112,9 @@ print(world.agent.all_actions)
 
 
 ### Try out a collaborative world (interactive).
-Use `left`-`right` keys to navigate among states and `tab` to toggle the role.
+Use `left`-`right` keys to navigate among states, `p` to toggle pause, and `tab` to toggle the role.
 
-Taking an action at a navigated state clears the future history
-and moves the application to the new state.
+Taking an action at a navigated state clears the future history and moves the application to the new state.
 
 ```
 from justhink_world import init_world

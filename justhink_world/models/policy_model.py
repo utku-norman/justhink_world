@@ -1,7 +1,6 @@
 import random
 import pomdp_py
 
-from ..tools.networks import in_edges
 from ..domain.action import PickAction, SuggestPickAction, \
     SubmitAction, \
     AgreeAction, DisagreeAction, \
@@ -51,11 +50,11 @@ class IndivPolicyModel(pomdp_py.RolloutPolicy):
 
                 # Can pick the remaining edges.
                 for u, v in state.network.graph.edges():
-                    if not in_edges(u, v, state.network.edges):
+                    if not state.network.subgraph.has_edge(u, v):
                         actions.add(PickAction((u, v)))
 
                 # Can clear if there is at least one edge.
-                if len(state.network.edges) > 0:
+                if state.network.subgraph.number_of_edges() > 0:
                     actions.add(ClearAction())
 
                 # Can attempt to submit any time.
@@ -118,7 +117,7 @@ class CollabPolicyModel(pomdp_py.RolloutPolicy):
                     if state.network.suggested_edge is None:
                         # The agent can suggest picking a non-selected edge.
                         for u, v in state.network.graph.edges():
-                            if not in_edges(u, v, state.network.edges):
+                            if not state.network.subgraph.has_edge(u, v):
                                 action = SuggestPickAction((u, v), agent=agent)
                                 actions.add(action)
 
@@ -126,7 +125,7 @@ class CollabPolicyModel(pomdp_py.RolloutPolicy):
                         actions.add(AttemptSubmitAction(agent=agent))
 
                         # The agent can clear, if there is at least one edge.
-                        if len(state.network.edges) > 0:
+                        if state.network.subgraph.number_of_edges() > 0:
                             actions.add(ClearAction(agent=agent))
 
                     # If there is a suggested edge.

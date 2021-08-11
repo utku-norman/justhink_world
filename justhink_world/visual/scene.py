@@ -1,5 +1,4 @@
 from .graphics import check_node_hit
-from ..tools.networks import in_edges
 
 from justhink_world.env.visual import EnvironmentScene
 from justhink_world.env.visual.graphics import create_edge_sprite
@@ -40,19 +39,23 @@ class WorldScene(EnvironmentScene):
         # self._status_rect.draw()
 
     def on_mouse_press(self, x, y, button, modifiers, win):
-        # If can pick or suggest-pick an edge
-        action = self._check_buttons(x, y)
+        if self._state.is_paused:
+            return
+
+        action = None
 
         if self._state.is_submitting:
             if self._check_confirm_hit(x, y):
                 action = SubmitAction(agent=self.role)
             elif self._check_continue_hit(x, y):
                 action = ContinueAction(agent=self.role)
-        # elif not self._is_paused and self.role in self._state.agents:
+        else:
+            # If can pick or suggest-pick an edge
+            action = self._check_buttons(x, y)
 
-        if self.role in self._state.agents and \
-                self._pick_action_type in self._action_types:
-            self._process_drawing(x, y)
+            if self.role in self._state.agents and \
+                    self._pick_action_type in self._action_types:
+                self._process_drawing(x, y)
 
         # if action is not None:
         if action in self._actions:
@@ -60,11 +63,17 @@ class WorldScene(EnvironmentScene):
             # print('Pressed', action)
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers, win):
+        if self._state.is_paused:
+            return
+
         if self._graphics.temp_from is not None:  # i.e. drawing
             self._process_drawing(x, y)
 
     def on_mouse_release(self, x, y, button, modifiers, win):
-        if not self._is_paused and self.role in self._state.agents:
+        if self._state.is_paused:
+            return
+            
+        if self.role in self._state.agents:
             action = self._process_drawing_done(x, y)  # , win)
 
             if action is not None:
@@ -127,8 +136,7 @@ class WorldScene(EnvironmentScene):
             if node is not None:
                 from_node = self._graphics.temp_from[2]
                 edge = from_node, node
-                is_added = in_edges(
-                    edge[0], edge[1], self._state.network.edges)
+                is_added = self._state.network.subgraph.has_edge(*edge)
                 has_edge = layout.has_edge(*edge)
 
                 if has_edge and (from_node != node) and not is_added:
@@ -303,7 +311,7 @@ class CollabWorldScene(WorldScene):
         state = self._state
 
         s = ''
-        if len(state.network.edges) == 0 \
+        if state.network.subgraph.number_of_edges() == 0 \
                 and state.network.suggested_edge is None:
             if state.attempt_no == 1:
                 s += "Let's go!"

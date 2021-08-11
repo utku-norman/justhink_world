@@ -2,7 +2,7 @@ import importlib_resources
 
 from .graphics import init_graphics
 
-from justhink_world.tools.networks import in_edges, compute_selected_cost
+from justhink_world.tools.networks import compute_subgraph_cost
 from justhink_world.domain.state import EnvironmentState
 
 
@@ -54,7 +54,7 @@ class EnvironmentScene(object):
         # Update the selected edges.
         added_nodes = set()
         for u, v, d in self._graphics.layout.edges(data=True):
-            is_added = in_edges(u, v, state.network.edges)
+            is_added = state.network.subgraph.has_edge(u, v)
             e = state.network.suggested_edge
             is_suggested = (e == (u, v)) or (e == (v, u))
             d['added_sprite'].visible = is_added
@@ -107,10 +107,10 @@ class EnvironmentScene(object):
     def _update_cost_label(self, highlight=False):
         state = self._state
         graph = state.network.graph
-        edges = state.network.edges
+        subgraph = state.network.subgraph
 
-        if edges is not None:
-            cost = compute_selected_cost(graph, edges)
+        if subgraph is not None:
+            cost = compute_subgraph_cost(graph, subgraph)
         else:
             cost = 0
         self._graphics.cost_label.text = 'Spent: {:2d} francs'.format(cost)

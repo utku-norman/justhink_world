@@ -5,14 +5,15 @@ from justhink_world.world import IndividualWorld, CollaborativeWorld
 
 from .scene import CollabWorldScene, IndivWorldScene
 
-# from justhink_world.domain.action import SetStateAction
+from justhink_world.domain.action import SetPauseAction
 
 
 class WorldWindow(pyglet.window.Window):
     def __init__(self, world,
                  title='JUSThink World',
                  width=1920,
-                 height=1080):
+                 height=1080,
+                 screen_no=0):
         self._world = world
 
         assert isinstance(world, IndividualWorld) or \
@@ -35,8 +36,8 @@ class WorldWindow(pyglet.window.Window):
         # Move the window to a screen in possibly a dual-monitor setup.
         display = pyglet.canvas.get_display()
         screens = display.get_screens()
-        active_screen = screens[0]  # the laptop screen
-        # active_screen = screens[-1]  # the external screen
+        # 0 for the laptop screen, e.g. 1 for the external screen
+        active_screen = screens[screen_no]
         self.set_location(active_screen.x, active_screen.y)
 
         # History label.
@@ -110,6 +111,9 @@ class WorldWindow(pyglet.window.Window):
         elif symbol == key.TAB:
             self._scene.toggle_role()
             self.update()
+        elif symbol == key.P:
+            is_paused = self._world.get_state().is_paused
+            self.act_via_window(SetPauseAction(not is_paused))
 
     # Maintenance methods.
 
