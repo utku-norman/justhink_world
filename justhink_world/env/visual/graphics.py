@@ -1,3 +1,4 @@
+import copy
 import math
 import pyglet
 
@@ -6,20 +7,29 @@ import importlib_resources
 from .widgets import ButtonWidget
 
 
-def init_graphics(layout, width, height, image_container,
+class Graphics(object):
+    """docstring for Graphics"""
+
+    def __init__(self, from_graph, width, height, batch=None):
+        self.layout = copy.deepcopy(from_graph)
+        self.width = width
+        self.height = height
+
+        if batch is None:
+            self.batch = pyglet.graphics.Batch()
+        else:
+            self.batch = batch
+
+
+def init_graphics(graph, width, height, image_container,
                   batch=None,
                   show_edge_costs=True,
                   show_node_names=True):
 
-    if batch is None:
-        batch = pyglet.graphics.Batch()
+    graphics = Graphics(graph, width, height, batch=batch)
 
     # Create groups: higher the order, the more the foreground.
     groups = [pyglet.graphics.OrderedGroup(i) for i in range(13)]
-
-    graphics = dict()
-    # graphics['_selected_edge'] = None
-    # graphics['_paused'] = False
 
     # Attempt label.
     label = pyglet.text.Label(
@@ -27,11 +37,11 @@ def init_graphics(layout, width, height, image_container,
         x=20, y=height-200,
         anchor_y='center',
         color=(0, 0, 0, 255),
-        font_name='Sans',  # font_name='monospace',
+        font_name='Sans',
         font_size=32,
         group=groups[5],
-        batch=batch)
-    graphics['_attempt_label'] = label
+        batch=graphics.batch)
+    graphics.attempt_label = label
 
     # Create confirm box components.
     label = pyglet.text.Label(
@@ -39,42 +49,51 @@ def init_graphics(layout, width, height, image_container,
         x=width//2, y=height//2+180,
         width=width, height=50,
         color=(0, 0, 0, 255),
-        anchor_x='center', anchor_y='center',
-        font_name='Sans', font_size=48,
-        batch=batch, group=groups[11])
+        anchor_x='center',
+        anchor_y='center',
+        font_name='Sans',
+        font_size=48,
+        batch=graphics.batch,
+        group=groups[11])
     label.visible = False
-    graphics['_confirm_text_label'] = label
+    graphics.confirm_text_label = label
 
     label = pyglet.text.Label(
         '',
         x=width//2-180, y=height//2-20,
         width=width, height=50,
         color=(0, 0, 0, 255),
-        anchor_x='center', anchor_y='center',
-        font_name='Sans', font_size=56,
-        batch=batch, group=groups[11])
+        anchor_x='center',
+        anchor_y='center',
+        font_name='Sans',
+        font_size=56,
+        batch=graphics.batch, group=groups[11])
     label.visible = False
-    graphics['_yes_label'] = label
+    graphics.yes_label = label
 
     label = pyglet.text.Label(
         '',
         x=width//2+180, y=height//2-20,
         width=width, height=50,
         color=(0, 0, 0, 255),
-        anchor_x='center', anchor_y='center',
-        font_name='Sans', font_size=56,
-        batch=batch, group=groups[11])
+        anchor_x='center',
+        anchor_y='center',
+        font_name='Sans',
+        font_size=56,
+        batch=graphics.batch,
+        group=groups[11])
     label.visible = False
-    graphics['_no_label'] = label
+    graphics.no_label = label
 
     rect = pyglet.shapes.Rectangle(
         width//4, height//4 + 140,
         width//2, height//3,
         color=(225, 225, 225),
-        batch=batch, group=groups[10])
+        batch=graphics.batch,
+        group=groups[10])
     rect.opacity = 255
     rect.visible = False
-    graphics['_confirm_rect'] = rect
+    graphics.confirm_rect = rect
 
     # Cost label.
     label = pyglet.text.Label(
@@ -84,9 +103,9 @@ def init_graphics(layout, width, height, image_container,
         color=(0, 0, 0, 255),
         font_name='Sans',
         font_size=32,
-        batch=batch,
+        batch=graphics.batch,
         group=groups[8])
-    graphics['_cost_label'] = label
+    graphics.cost_label = label
 
     # Bottom label.
     label = pyglet.text.Label(
@@ -94,65 +113,79 @@ def init_graphics(layout, width, height, image_container,
         x=width//2, y=20,
         width=width, height=60,
         color=(255, 255, 255, 255),
-        anchor_x='center', anchor_y='center',
-        font_name='monospace', font_size=24,
-        batch=batch, group=groups[8])
-    graphics['_status_label'] = label
+        anchor_x='center',
+        anchor_y='center',
+        font_name='monospace',
+        font_size=24,
+        batch=graphics.batch,
+        group=groups[8])
+    graphics.status_label = label
 
     rect = pyglet.shapes.Rectangle(
         0, 0, width, 60,
         color=(0, 0, 0),
-        batch=batch, group=groups[5])
+        batch=graphics.batch,
+        group=groups[5])
     rect.opacity = 150
     rect.visible = False
-    graphics['_status_rect'] = rect
+    graphics.status_rect = rect
 
     rect = pyglet.shapes.Rectangle(
         0, 0, width, height,
         color=(0, 0, 0),
-        batch=batch, group=groups[6])
+        batch=graphics.batch,
+        group=groups[6])
     rect.opacity = 100
     rect.visible = False
-    graphics['_paused_rect'] = rect
+    graphics.paused_rect = rect
 
     rect = pyglet.shapes.Rectangle(
         0, 0, width, height,
         color=(0, 0, 0),
-        batch=batch, group=groups[12])
+        batch=graphics.batch,
+        group=groups[12])
     rect.opacity = 150
     rect.visible = False
-    graphics['_view_only_rect'] = rect
+    graphics.view_only_rect = rect
 
     # Create a background image sprite.
     key = 'background_image_file'
-    if key in layout.graph:
-        ref = image_container.joinpath(layout.graph[key])
+    if key in graphics.layout.graph:
+        ref = image_container.joinpath(graphics.layout.graph[key])
         image = read_image_from_reference(ref)
-        graphics['_bg_sprite'] = pyglet.sprite.Sprite(
-            image, batch=batch, group=groups[0])
+        graphics.bg_sprite = pyglet.sprite.Sprite(
+            image,
+            batch=graphics.batch,
+            group=groups[0])
 
     # Create node images.
-    for u, d in layout.nodes(data=True):
+    for u, d in graphics.layout.nodes(data=True):
         ref = image_container.joinpath(d['image_file'])
         image = read_image_from_reference(ref)
         center_image(image)
         d['sprite'] = pyglet.sprite.Sprite(
-            image, d['x'], d['y'],
-            batch=batch, group=groups[2])
+            image,
+            d['x'],
+            d['y'],
+            batch=graphics.batch,
+            group=groups[2])
 
         ref = image_container.joinpath(d['higlight_image_file'])
         image = read_image_from_reference(ref)
         center_image(image)
         d['added_sprite'] = pyglet.sprite.Sprite(
-            image, d['x'], d['y'],
-            batch=batch, group=groups[3])
+            image,
+            d['x'],
+            d['y'],
+            batch=graphics.batch,
+            group=groups[3])
         d['added_sprite'].visible = False
 
     # Create edge images.
     ref = image_container.joinpath('railroad_added.png')
     edge_added_image = read_image_from_reference(ref)
     center_image(edge_added_image)
-    graphics['_edge_added_image'] = edge_added_image
+    graphics.edge_added_image = edge_added_image
 
     ref = image_container.joinpath('railroad_selected.png')
     edge_selected_image = read_image_from_reference(ref)
@@ -165,45 +198,57 @@ def init_graphics(layout, width, height, image_container,
     ref = image_container.joinpath('railroad_suggested.png')
     edge_suggested_image = read_image_from_reference(ref)
     center_image(edge_suggested_image)
-    graphics['_edge_suggested_image'] = edge_suggested_image
+    graphics.edge_suggested_image = edge_suggested_image
 
     # graphics['temp_suggested_sprite'] = None
     # graphics['temp_from'] = None
 
-    for u, v, d in layout.edges(data=True):
-        u_node = layout.nodes[u]
-        v_node = layout.nodes[v]
+    for u, v, d in graphics.layout.edges(data=True):
+        u_node = graphics.layout.nodes[u]
+        v_node = graphics.layout.nodes[v]
 
         s = create_edge_sprite(edge_selectable_image,
-                               u_node['x'], u_node['y'],
-                               v_node['x'], v_node['y'],
-                               batch=batch, group=groups[1],
+                               u_node['x'],
+                               u_node['y'],
+                               v_node['x'],
+                               v_node['y'],
+                               batch=graphics.batch,
+                               group=groups[1],
                                visible=True)
         d['selectable_sprite'] = s
 
         s = create_edge_sprite(edge_selected_image,
-                               u_node['x'], u_node['y'],
-                               v_node['x'], v_node['y'],
-                               batch=batch, group=groups[1],
+                               u_node['x'],
+                               u_node['y'],
+                               v_node['x'],
+                               v_node['y'],
+                               batch=graphics.batch,
+                               group=groups[1],
                                visible=False)
         d['selected_sprite'] = s
 
         s = create_edge_sprite(edge_added_image,
-                               u_node['x'], u_node['y'],
-                               v_node['x'], v_node['y'],
-                               batch=batch, group=groups[1],
+                               u_node['x'],
+                               u_node['y'],
+                               v_node['x'],
+                               v_node['y'],
+                               batch=graphics.batch,
+                               group=groups[1],
                                visible=False)
         d['added_sprite'] = s
 
         s = create_edge_sprite(edge_suggested_image,
-                               u_node['x'], u_node['y'],
-                               v_node['x'], v_node['y'],
-                               batch=batch, group=groups[1],
+                               u_node['x'],
+                               u_node['y'],
+                               v_node['x'],
+                               v_node['y'],
+                               batch=graphics.batch,
+                               group=groups[1],
                                visible=False)
         d['suggested_sprite'] = s
 
     # Create node labels.
-    for u, d in layout.nodes(data=True):
+    for u, d in graphics.layout.nodes(data=True):
         if 'label_x' in d and 'label_y' in d:
             x = d['label_x']
             y = d['label_y']
@@ -217,19 +262,19 @@ def init_graphics(layout, width, height, image_container,
         d['label'] = pyglet.text.Label(text,
                                        x=x, y=y,
                                        font_name='Purisa',
-                                       font_size=22, bold=False,
+                                       font_size=22,
+                                       bold=False,
                                        anchor_x='center',
                                        anchor_y='center',
                                        color=(0, 0, 0, 255),
-                                       batch=batch,
+                                       batch=graphics.batch,
                                        group=groups[5])
 
     # Create edge labels.
-    label_x_key = 'label_x'
-    label_y_key = 'label_y'
-    for u, v, d in layout.edges(data=True):
-        u_node = layout.nodes[u]
-        v_node = layout.nodes[v]
+    label_x_key, label_y_key = 'label_x', 'label_y'
+    for u, v, d in graphics.layout.edges(data=True):
+        u_node = graphics.layout.nodes[u]
+        v_node = graphics.layout.nodes[v]
         ux, uy = u_node['x'], u_node['y']
         vx, vy = v_node['x'], v_node['y']
         d[label_x_key] = (ux + vx) / 2
@@ -248,11 +293,15 @@ def init_graphics(layout, width, height, image_container,
             text = ''
         d['cost_label'] = pyglet.text.Label(
             text,
-            font_name='Sans', font_size=29,
-            anchor_x=anchor_x, anchor_y='bottom',
+            font_name='Sans',
+            font_size=28,
+            anchor_x=anchor_x,
+            anchor_y='bottom',
             color=(0, 0, 0, 255),
-            x=d[label_x_key], y=d[label_y_key],
-            batch=batch, group=groups[8])
+            x=d[label_x_key],
+            y=d[label_y_key],
+            batch=graphics.batch,
+            group=groups[8])
 
     # Load gold image/gif.
     ref = image_container.joinpath('gold.gif')
@@ -262,7 +311,7 @@ def init_graphics(layout, width, height, image_container,
     animation.add_to_texture_bin(gold_bin)
 
     # Set gold location if not available.
-    for u, d in layout.nodes(data=True):
+    for u, d in graphics.layout.nodes(data=True):
         if 'gold_x' not in d:
             d['gold_x'] = d['x']
             d['gold_y'] = d['y']
@@ -270,45 +319,58 @@ def init_graphics(layout, width, height, image_container,
             img=animation,
             x=d['gold_x']-animation.get_max_width(),
             y=d['gold_y']-animation.get_max_height(),
-            batch=batch, group=groups[4])
+            batch=graphics.batch,
+            group=groups[4])
         s.scale = 2  # 2.5
 
     # Initialise the submit button.
     button_pads, scale = (200, 200), 0.3
     c = image_container
-    d = {
+    paths = {
         ButtonWidget.ENABLED: c.joinpath('submit_enabled.png'),
         ButtonWidget.DISABLED: c.joinpath('submit_disabled.png'),
         ButtonWidget.SELECTED: c.joinpath('submit_selected.png'),
     }
-    graphics['_submit_button'] = ButtonWidget(
-        x=width-button_pads[0], y=height-button_pads[1],
-        paths=d, state=ButtonWidget.NA,
-        scale=scale, batch=batch, group=groups[4])
+    graphics.submit_button = ButtonWidget(
+        x=width-button_pads[0],
+        y=height-button_pads[1],
+        paths=paths,
+        state=ButtonWidget.NA,
+        scale=scale,
+        batch=graphics.batch,
+        group=groups[4])
 
     # Erase button.
     button_pads, scale = (200, height//2), 0.25
-    d = {
+    paths = {
         ButtonWidget.ENABLED: c.joinpath('erase_enabled.png'),
         ButtonWidget.DISABLED: c.joinpath('erase_disabled.png'),
         ButtonWidget.SELECTED: c.joinpath('erase_selected.png'),
     }
-    graphics['_clear_button'] = ButtonWidget(
-        x=width-button_pads[0], y=height-button_pads[1],
-        paths=d, state=ButtonWidget.NA,
-        scale=scale, batch=batch, group=groups[4])
+    graphics.clear_button = ButtonWidget(
+        x=width-button_pads[0],
+        y=height-button_pads[1],
+        paths=paths,
+        state=ButtonWidget.NA,
+        scale=scale,
+        batch=graphics.batch,
+        group=groups[4])
 
     # Yes button.
     button_pads, scale = (290, 160), 0.3
-    d = {
+    paths = {
         ButtonWidget.ENABLED: c.joinpath('check_enabled.png'),
         ButtonWidget.DISABLED: c.joinpath('check_disabled.png'),
         ButtonWidget.SELECTED: c.joinpath('check_selected.png'),
     }
-    graphics['_yes_button'] = ButtonWidget(
-        x=button_pads[0], y=button_pads[1],
-        paths=d, state=ButtonWidget.NA,
-        scale=scale, batch=batch, group=groups[4])
+    graphics.yes_button = ButtonWidget(
+        x=button_pads[0],
+        y=button_pads[1],
+        paths=paths,
+        state=ButtonWidget.NA,
+        scale=scale,
+        batch=graphics.batch,
+        group=groups[4])
 
     # No button.
     d = {
@@ -316,17 +378,23 @@ def init_graphics(layout, width, height, image_container,
         ButtonWidget.DISABLED: c.joinpath('cross_disabled.png'),
         ButtonWidget.SELECTED: c.joinpath('cross_selected.png'),
     }
-    graphics['_no_button'] = ButtonWidget(
-        x=width-button_pads[0], y=button_pads[1],
-        paths=d, state=ButtonWidget.NA,
-        scale=scale, batch=batch, group=groups[4])
+    graphics.no_button = ButtonWidget(
+        x=width-button_pads[0],
+        y=button_pads[1],
+        paths=d,
+        state=ButtonWidget.NA,
+        scale=scale,
+        batch=graphics.batch,
+        group=groups[4])
 
-    return batch, graphics
+    return graphics
 
 
 def create_edge_sprite(image,
-                       ux, uy, vx, vy,
-                       batch=None, group=None,
+                       ux, uy,
+                       vx, vy,
+                       batch=None,
+                       group=None,
                        visible=True):
     dist = math.sqrt((ux-vx)**2 + (uy-vy)**2)
     w = int(math.floor(dist))

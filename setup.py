@@ -13,9 +13,9 @@ setup(
     long_description=open('README.md').read(),
     install_requires=[
         "pomdp_py",
-        "pathlib",
         "networkx",
         "pyglet",
+        "pathlib",
         "importlib_resources",
     ],
     zip_safe=False,

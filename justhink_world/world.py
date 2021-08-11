@@ -20,7 +20,7 @@ from .models.reward_model import MstRewardModel
 
 from .tools.loaders import load_graph_from_edgelist, load_graph_from_json
 
-from .agent.agent import AgentSet, HumanAgent, RobotAgent
+from .agent import HumanAgent, RobotAgent
 
 
 class World(pomdp_py.POMDP):
@@ -36,7 +36,6 @@ class World(pomdp_py.POMDP):
                  transition_model,
                  policy_model,
                  name='World'):
-        # self.layout = layout
 
         # States.
         if not isinstance(states, list):
@@ -285,23 +284,24 @@ def load_world(graph_file,
 
     # Load the layout.
     layout = load_graph_from_json(layout_file)
-    # Fill in the possible edges and their attributes (e.g. cost).
-    for u, v, d in graph.edges(data=True):
-        layout.add_edge(u, v, **d)
 
     # Print debug message on the graph and the layout.
     if verbose:
         print('Using graph: {} with layout: {}'.format(
             graph_file.name, layout_file.name))
 
+    # Fill in the possible edges and their attributes (e.g. cost).
+    full_graph = copy.deepcopy(layout)
+    for u, v, d in graph.edges(data=True):
+        full_graph.add_edge(u, v, **d)
+
     # Construct the initial state.
     # init_state = graphState(graph=graph)
-    network = NetworkState(graph=graph)
+    network = NetworkState(graph=full_graph)
     if world_type is IndividualWorld:
         init_state = EnvironmentState(
             network=network,
-            layout=layout,
-            agents=AgentSet([HumanAgent]),
+            agents=frozenset({HumanAgent}),
             attempt_no=1,
             max_attempts=None,
             is_paused=False,
@@ -309,8 +309,7 @@ def load_world(graph_file,
     elif world_type is CollaborativeWorld:
         init_state = EnvironmentState(
             network=network,
-            layout=layout,
-            agents=AgentSet([RobotAgent]),
+            agents=frozenset({RobotAgent}),
             attempt_no=1,
             max_attempts=4,
             is_paused=False,

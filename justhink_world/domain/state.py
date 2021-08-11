@@ -7,17 +7,11 @@ import networkx as nx
 from ..tools.networks import find_mst, is_spanning, \
     compute_total_cost, compute_selected_cost
 
-from ..agent.agent import AgentSet, HumanAgent, RobotAgent
+from ..agent import HumanAgent, RobotAgent
 
-
-class Edge(object):
-    """An undirected edge"""
-    def __init__(self, u, v):
-        self.u = u
-        self.v = v
 
 class Button(object):
-    """A class used to represent an abstract button and its possible states.
+    """A class to represent an abstract button and its possible states.
 
     Attributes:
         NA:
@@ -45,12 +39,11 @@ class EnvironmentState(pomdp_py.State):
         network (NetworkState):
             the state of the network, that contains the background graph,
             the selected edges etc.
-        layout (networkx.Graph):
             the layout of the network, that contains the node names, positions,
             and image file names of the nodes etc.
-        agents (AgentSet, optional):
+        agents (frozenset, optional):
             the set of "active" agents that can are allowed to take actions
-            in the environment (default AgentSet(HumanAgent, RobotAgent))
+            in the environment (default frozenset({HumanAgent, RobotAgent}))
         attempt_no (int, optional):
             the current attempt number starting from 1 up to and including
             max_attempts (default 1). Can do infinitely many submissions,
@@ -73,15 +66,13 @@ class EnvironmentState(pomdp_py.State):
 
     def __init__(self,
                  network,
-                 layout,
-                 agents=AgentSet([HumanAgent, RobotAgent]),
+                 agents=frozenset({HumanAgent, RobotAgent}),
                  attempt_no=1,
                  max_attempts=None,
                  is_submitting=False,
                  is_paused=False,
                  is_terminal=False):
         self.network = network
-        self.layout = layout
 
         self.agents = agents
 
@@ -95,7 +86,6 @@ class EnvironmentState(pomdp_py.State):
 
     def __hash__(self):
         return hash((self.network,
-                     self.layout,
                      self.agents,
                      self.attempt_no,
                      self.max_attempts,
@@ -109,10 +99,11 @@ class EnvironmentState(pomdp_py.State):
         else:
             return False
 
-    def __deepcopy__(self, memo, shared_attribute_names={'layout'}):
+    def __deepcopy__(self, memo, shared_attribute_names={}):
         """Create a copy of the state with shared attributes.
 
-        Specifically, the layout is shared.
+
+        Specifically, the layout is shared. #'layout'}):
         Overriding modifies https://stackoverflow.com/a/15774013."""
         cls = self.__class__
         result = cls.__new__(cls)
@@ -128,11 +119,11 @@ class EnvironmentState(pomdp_py.State):
         return self.__repr__()
 
     def __repr__(self):
-        s = 'EnvState({}@{}/{},a:{};p:{:d},t:{:d},s:{:d})'.format(
+        s = 'EnvironmentState({}@{}/{},a:{};p:{:d},t:{:d},s:{:d})'.format(
             self.network,
             self.attempt_no,
             'inf' if self.max_attempts is None else self.max_attempts,
-            self.agents,
+            ''.join([a.name[0] for a in self.agents]),
             self.is_paused,
             self.is_terminal,
             self.is_submitting)

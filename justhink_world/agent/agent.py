@@ -1,17 +1,3 @@
-class AgentSet(frozenset):
-
-    def __new__(cls, data):
-        for a in data:
-            assert a is HumanAgent or a is RobotAgent
-        return super().__new__(cls, data)
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        return ''.join([a.name[0] for a in self])
-
-
 class Agent(object):
     pass
 

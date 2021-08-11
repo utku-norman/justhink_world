@@ -10,7 +10,7 @@ from ..domain.action import PickAction, SuggestPickAction, \
     AttemptSubmitAction, ContinueAction, SubmitAction
 
 from ..domain.state import Button
-from ..agent.agent import AgentSet, HumanAgent, RobotAgent
+from ..agent import HumanAgent, RobotAgent
 
 EPSILON = 1e-9
 
@@ -78,7 +78,7 @@ class IndivTransitionModel(pomdp_py.TransitionModel):
 
         elif isinstance(action, SubmitAction):
             next_state.is_terminal = True
-            next_state.agents = AgentSet([])
+            next_state.agents = frozenset()
             next_state.is_submitting = False
 
         next_state.network = next_network
@@ -193,10 +193,10 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
         elif isinstance(action, SubmitAction):
             if network.is_mst():
                 next_state.is_terminal = True
-                next_state.agents = AgentSet([])
+                next_state.agents = frozenset()
             elif state.attempt_no == state.max_attempts:
                 next_state.is_terminal = True
-                next_state.agents = AgentSet([])
+                next_state.agents = frozenset()
             else:
                 next_network.edges = frozenset()
                 next_network.suggested_edge = None
@@ -216,6 +216,6 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
 
 def toggle_agent(agents):
     if RobotAgent in agents:
-        return AgentSet([HumanAgent])
+        return frozenset({HumanAgent})
     else:
-        return AgentSet([RobotAgent])
+        return frozenset({RobotAgent})
