@@ -4,10 +4,10 @@ import pomdp_py
 
 from ..tools.networks import in_edges
 from ..domain.action import PickAction, SuggestPickAction, \
-    SubmitAction, \
+    SetPauseAction, SetStateAction, \
     AgreeAction, DisagreeAction, \
-    ClearAction, SetStateAction, \
-    AttemptSubmitAction, ContinueAction
+    ClearAction, \
+    AttemptSubmitAction, ContinueAction, SubmitAction
 
 from ..domain.state import Button
 from ..agent.agent import AgentSet, HumanAgent, RobotAgent
@@ -78,7 +78,7 @@ class IndivTransitionModel(pomdp_py.TransitionModel):
 
         elif isinstance(action, SubmitAction):
             next_state.is_terminal = True
-            next_state.agents = AgentSet({})
+            next_state.agents = AgentSet([])
             next_state.is_submitting = False
 
         next_state.network = next_network
@@ -107,19 +107,27 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
             return EPSILON
 
     def sample(self, state, action):
+        # Meta type of actions, intervention-like / god-mode.
         if isinstance(action, SetStateAction):
-            return action.state
+            return copy.deepcopy(action.state)
 
-        next_state = copy.deepcopy(state)
-        network = state.network
-        next_network = next_state.network
+        elif isinstance(action, SetPauseAction):
+            next_state = copy.deepcopy(state)
+            next_state.is_paused = action.is_paused
+            return next_state
 
+        # Validation.
         # If the agent can act.
         if action.agent not in state.agents:
             print('Invalid action {}: agent {} is not an active ({}).'.format(
                 action, action.agent.name, state.agents))
             raise ValueError
 
+        next_state = copy.deepcopy(state)
+        network = state.network
+        next_network = next_state.network
+
+        # Normal actions
         if isinstance(action, SuggestPickAction):
             u, v = action.edge
 
@@ -175,7 +183,6 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
         # Attempt to submit action.
         elif isinstance(action, AttemptSubmitAction):
             next_state.is_submitting = True
-            # next_state.is_paused = True
             # Maintain the agents that can act: suggestions swap turns.
             next_state.agents = toggle_agent(state.agents)
 
@@ -186,10 +193,10 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
         elif isinstance(action, SubmitAction):
             if network.is_mst():
                 next_state.is_terminal = True
-                next_state.agents = AgentSet({})
+                next_state.agents = AgentSet([])
             elif state.attempt_no == state.max_attempts:
                 next_state.is_terminal = True
-                next_state.agents = AgentSet({})
+                next_state.agents = AgentSet([])
             else:
                 next_network.edges = frozenset()
                 next_network.suggested_edge = None
@@ -203,12 +210,12 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
         return next_state
 
     def argmax(self, state, action):
-        """Returns the most likely next state"""
+        """Return the most likely next state."""
         return self.sample(state, action)
 
 
 def toggle_agent(agents):
     if RobotAgent in agents:
-        return AgentSet({HumanAgent})
+        return AgentSet([HumanAgent])
     else:
-        return AgentSet({RobotAgent})
+        return AgentSet([RobotAgent])

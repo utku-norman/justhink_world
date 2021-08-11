@@ -57,7 +57,7 @@ class WorldScene(EnvironmentScene):
         # if action is not None:
         if action in self._actions:
             win.act_via_window(action)
-            print('Pressed', action)
+            # print('Pressed', action)
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers, win):
         if self._temp_from is not None:  # i.e. drawing
@@ -69,7 +69,7 @@ class WorldScene(EnvironmentScene):
 
             if action is not None:
                 win.act_via_window(action)
-                print('Released', action)
+                # print('Released', action)
 
     def _process_drawing(self, x, y):
         layout = self._state.layout
@@ -204,7 +204,8 @@ class WorldScene(EnvironmentScene):
         # Update feasible actions.
         self._update_feasible_actions()
 
-        print('At state {} with actions {}'.format(self._state, self._actions))
+        # print('At state {} with actions {}'.format(
+        # self._state, self._actions))
 
         # Update the buttons.
         self._update_buttons()
@@ -219,7 +220,7 @@ class WorldScene(EnvironmentScene):
         self._action_types = {type(action) for action in self._actions}
 
     def _update_paused(self):
-        """Override EnvironmentScene's update paused"""
+        """Override EnvironmentScene's _update_paused() with 'role'"""
         state = self._state
 
         self._view_only_rect.visible = self.role not in state.agents
@@ -290,7 +291,6 @@ class CollabWorldScene(WorldScene):
             self._no_button.set_state(Button.DISABLED)
 
     def _update_status_label(self):
-        # if edges is not None and terminal is not None:
         state = self._state
 
         s = ''
@@ -301,7 +301,10 @@ class CollabWorldScene(WorldScene):
             else:
                 s += 'Try again!'
         elif state.is_terminal:
-            s += 'Congratulations!'  # Game over?
+            if state.network.is_mst():
+                s += 'Congratulations!'
+            else:
+                s += 'Game over!'
 
         if not state.is_terminal:
             if self.role in state.agents:
@@ -309,13 +312,6 @@ class CollabWorldScene(WorldScene):
             else:
                 s += " (your partner's turn)"
             # TODO: handle simultaneous case
-            # if HumanAgent in state.agents:
-            #     s += ' (your turn)'
-            # elif RobotAgent in state.agents:
-            #     s += " (robot's turn)"
-            # # TODO: handle simultaneous case
-            # else:
-                # s = 'Done!'
 
         is_visible = len(s) != 0
 

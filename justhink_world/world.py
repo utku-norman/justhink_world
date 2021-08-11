@@ -5,7 +5,7 @@ import importlib_resources
 
 import pomdp_py
 
-from .domain.state import EnvironmentState, NetworkState, Button
+from .domain.state import EnvironmentState, NetworkState
 from .domain.action import SetStateAction
 
 # from .env.env import MstEnvironment
@@ -301,7 +301,7 @@ def load_world(graph_file,
         init_state = EnvironmentState(
             network=network,
             layout=layout,
-            agents=AgentSet({HumanAgent}),
+            agents=AgentSet([HumanAgent]),
             attempt_no=1,
             max_attempts=None,
             is_paused=False,
@@ -310,7 +310,7 @@ def load_world(graph_file,
         init_state = EnvironmentState(
             network=network,
             layout=layout,
-            agents=AgentSet({RobotAgent}),
+            agents=AgentSet([RobotAgent]),
             attempt_no=1,
             max_attempts=4,
             is_paused=False,

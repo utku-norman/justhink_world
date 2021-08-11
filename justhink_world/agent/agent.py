@@ -1,3 +1,41 @@
+class AgentSet(frozenset):
+
+    def __new__(cls, data):
+        for a in data:
+            assert a is HumanAgent or a is RobotAgent
+        return super().__new__(cls, data)
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return ''.join([a.name[0] for a in self])
+
+
+class Agent(object):
+    pass
+
+
+class HumanAgent(Agent):
+    name = 'Human'
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return self.name
+
+
+class RobotAgent(Agent):
+    name = 'Robot'
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return self.name
+
+
 # Defines the agent. There's nothing special
 # about the MST agent in fact, except that
 # it uses models defined in ..models, and
@@ -26,37 +64,3 @@
 #                          transition_model=transition_model,
 #                          observation_model=observation_model,
 #                          reward_model=reward_model)
-
-
-class AgentSet(set):
-    def __init__(self, s=[]):
-        set.__init__(self, s)
-        for a in s:
-            assert a is HumanAgent or a is RobotAgent
-
-    def __str__(self):
-        return ''.join([a.name[0] for a in self])
-
-
-class Agent(object):
-    pass
-
-
-class HumanAgent(Agent):
-    name = 'Human'
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        return self.name
-
-
-class RobotAgent(Agent):
-    name = 'Robot'
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        return self.name

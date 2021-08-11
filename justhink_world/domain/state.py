@@ -7,11 +7,31 @@ import networkx as nx
 from ..tools.networks import find_mst, is_spanning, \
     compute_total_cost, compute_selected_cost
 
-from ..agent.agent import HumanAgent, RobotAgent
+from ..agent.agent import AgentSet, HumanAgent, RobotAgent
 
+
+class Edge(object):
+    """An undirected edge"""
+    def __init__(self, u, v):
+        self.u = u
+        self.v = v
 
 class Button(object):
-    """for button states"""
+    """A class used to represent an abstract button and its possible states.
+
+    Attributes:
+        NA:
+            the button not available and is not displayed.
+        ENABLED:
+            the button is available and e.g. can be pressed to
+            trigger an action.
+        DISABLED:
+            the button is shown, but e.g. grayed out, to indicate it was
+            and/or will become available during the interaction
+        SELECTED:
+            the button is "selected", e.g. to indicate that the current
+            solution is submitted for a submit button
+    """
     NA = 'N'
     ENABLED = 'E'
     DISABLED = 'D'
@@ -19,11 +39,34 @@ class Button(object):
 
 
 class EnvironmentState(pomdp_py.State):
-    """TODO
+    """A class to represent the JUSThink environment's state.
 
     Attributes:
-        TODO
-        is_terminal (bool, optional)
+        network (NetworkState):
+            the state of the network, that contains the background graph,
+            the selected edges etc.
+        layout (networkx.Graph):
+            the layout of the network, that contains the node names, positions,
+            and image file names of the nodes etc.
+        agents (AgentSet, optional):
+            the set of "active" agents that can are allowed to take actions
+            in the environment (default AgentSet(HumanAgent, RobotAgent))
+        attempt_no (int, optional):
+            the current attempt number starting from 1 up to and including
+            max_attempts (default 1). Can do infinitely many submissions,
+            which is kept track of by the transition model operating
+            on this state (default 1).
+        max_attempts (int, optional):
+            the maximum number of attempts allowed from this state onwards
+            (default None)
+        is_submitting (bool, optional):
+            whether an agent is currently submitting by attempting to submit
+            so that a confirmation box opens (default False)
+        is_paused (bool, optional):
+            whether the state is "paused" e.g. by intervention or
+            by a pausing action for instance by the robot, so that is no agent
+            is allowed to take an action, except for unpausing (default False)
+        is_terminal (bool, optional):
            whether the state is a final or terminal state,
            to designate the end of the activity (default False)
     """
@@ -31,7 +74,7 @@ class EnvironmentState(pomdp_py.State):
     def __init__(self,
                  network,
                  layout,
-                 agents={HumanAgent, RobotAgent},
+                 agents=AgentSet([HumanAgent, RobotAgent]),
                  attempt_no=1,
                  max_attempts=None,
                  is_submitting=False,
@@ -53,16 +96,16 @@ class EnvironmentState(pomdp_py.State):
     def __hash__(self):
         return hash((self.network,
                      self.layout,
+                     self.agents,
                      self.attempt_no,
                      self.max_attempts,
                      self.is_submitting,
                      self.is_paused,
                      self.is_terminal))
-        # TODO update
 
     def __eq__(self, other):
-        if isinstance(other, NetworkState):
-            return (self.edges == other.edges)
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
         else:
             return False
 
@@ -70,7 +113,7 @@ class EnvironmentState(pomdp_py.State):
         """Create a copy of the state with shared attributes.
 
         Specifically, the layout is shared.
-        Overriding follows https://stackoverflow.com/a/15774013"""
+        Overriding modifies https://stackoverflow.com/a/15774013."""
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
@@ -85,8 +128,10 @@ class EnvironmentState(pomdp_py.State):
         return self.__repr__()
 
     def __repr__(self):
-        s = 'EnvState({},a:{};p:{:d},t:{:d},s:{:d})'.format(
+        s = 'EnvState({}@{}/{},a:{};p:{:d},t:{:d},s:{:d})'.format(
             self.network,
+            self.attempt_no,
+            'inf' if self.max_attempts is None else self.max_attempts,
             self.agents,
             self.is_paused,
             self.is_terminal,
@@ -95,7 +140,12 @@ class EnvironmentState(pomdp_py.State):
 
 
 class NetworkState(object):
-    """A class used to represent the network's state.
+    """A class to represent the solution's state.
+
+    Note:
+        This is a minimal representation without the node names,
+        positions etc., sufficient to compute the cost of the selected
+        network, whether it is optimal or not etc.
 
     Attributes:
         graph (networkx.Graph):
@@ -125,8 +175,8 @@ class NetworkState(object):
                      self.suggested_edge))
 
     def __eq__(self, other):
-        if isinstance(other, NetworkState):
-            return (self.edges == other.edges)
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
         else:
             return False
 
