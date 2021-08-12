@@ -30,19 +30,11 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-3) Install Python dependency [pomdp_py](https://h2r.github.io/pomdp-py/html/) with the following commands (or by following [here](https://h2r.github.io/pomdp-py/html/installation.html))
-```
-pip install Cython
-pip install pomdp-py
-```
-If you encounter an error regarding Pygraphviz while installing pomdp_py, first install that package by following [here](https://pygraphviz.github.io/documentation/stable/install.html), and than pomdp_py again.
-
-4) Install this package, along with the remaining dependencies via `pip` (in '-e' i.e. editable mode for "developer mode", e.g. if you intend to edit the library)
+3) Install this package, along with the remaining dependencies via `pip` (in '-e' i.e. editable mode for "developer mode", e.g. if you intend to edit the library)
 ```
 pip install -e .
 ```
 
-Done!
 
 ## Testing
 
@@ -143,6 +135,17 @@ print(state, state.network.get_mst_cost())
 # Print available actions at the current state.
 print(world.agent.all_actions)
 ```
+
+## Troubleshooting
+
+### Installation Issues
+
+Install Python dependency [pomdp_py](https://h2r.github.io/pomdp-py/html/) with the following commands (or by following [here](https://h2r.github.io/pomdp-py/html/installation.html))
+```
+pip install Cython
+pip install pomdp-py
+```
+If you encounter an error regarding Pygraphviz while installing pomdp_py, first install that package by following [here](https://pygraphviz.github.io/documentation/stable/install.html), and than pomdp_py again.
 
 
 

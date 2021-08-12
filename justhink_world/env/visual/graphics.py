@@ -144,7 +144,7 @@ def init_graphics(graph, width, height, image_container,
         color=(0, 0, 0),
         batch=graphics.batch,
         group=groups[12])
-    rect.opacity = 190
+    rect.opacity = 170
     rect.visible = False
     graphics.view_only_rect = rect
 
