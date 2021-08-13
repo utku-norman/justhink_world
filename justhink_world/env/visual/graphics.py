@@ -29,7 +29,7 @@ def init_graphics(graph, width, height, image_container,
     graphics = Graphics(graph, width, height, batch=batch)
 
     # Create groups: higher the order, the more the foreground.
-    groups = [pyglet.graphics.OrderedGroup(i) for i in range(13)]
+    groups = [pyglet.graphics.OrderedGroup(i) for i in range(16)]
 
     # Attempt label.
     label = pyglet.text.Label(
@@ -134,7 +134,7 @@ def init_graphics(graph, width, height, image_container,
         0, 0, width, height,
         color=(0, 0, 0),
         batch=graphics.batch,
-        group=groups[6])
+        group=groups[14])
     rect.opacity = 100
     rect.visible = False
     graphics.paused_rect = rect
@@ -143,7 +143,7 @@ def init_graphics(graph, width, height, image_container,
         0, 0, width, height,
         color=(0, 0, 0),
         batch=graphics.batch,
-        group=groups[12])
+        group=groups[15])
     rect.opacity = 170
     rect.visible = False
     graphics.view_only_rect = rect

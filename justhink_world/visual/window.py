@@ -79,7 +79,7 @@ class WorldWindow(pyglet.window.Window):
 
     def act_via_window(self, action):
         self._world.act(action)
-        self.update(self._world.get_state())
+        self.update(self._world.cur_state)
 
     def on_mouse_press(self, x, y, button, modifiers):
         self._scene.on_mouse_press(
@@ -94,25 +94,27 @@ class WorldWindow(pyglet.window.Window):
             x, y, button, modifiers, win=self)
 
     def on_key_press(self, symbol, modifiers):
+        world = self._world
+
         if symbol == key.ESCAPE:
             self.close()
         elif symbol == key.LEFT:
-            state = self._world.get_prev_state()
-            self.update(state)
+            world.state_no = world.state_no - 1
+            self.update(world.cur_state)
         elif symbol == key.RIGHT:
-            state = self._world.get_next_state()
-            self.update(state)
+            world.state_no = world.state_no + 1
+            self.update(world.cur_state)
         elif symbol == key.HOME:
-            state = self._world.get_prev_state(first=True)
-            self.update(state)
+            world.state_no = 1
+            self.update(world.cur_state)
         elif symbol == key.END:
-            state = self._world.get_next_state(last=True)
-            self.update(state)
+            world.state_no = world.num_states
+            self.update(world.state_no)
         elif symbol == key.TAB:
             self._scene.toggle_role()
             self.update()
         elif symbol == key.P:
-            is_paused = self._world.get_state().is_paused
+            is_paused = world.cur_state.is_paused
             self.act_via_window(SetPauseAction(not is_paused))
 
     # Maintenance methods.
@@ -124,7 +126,6 @@ class WorldWindow(pyglet.window.Window):
         self._hist_label.text = self._make_hist_label_text()
 
         # Update the role label.
-        # print('###########', self._scene.role)
         self._role_label.text = self._make_role_label_text()
 
     # Helper methods.
@@ -135,4 +136,4 @@ class WorldWindow(pyglet.window.Window):
     def _make_hist_label_text(self):
         return 'State: {}/{}'.format(
             self._world.state_no,
-            self._world.get_state_count())
+            self._world.num_states)

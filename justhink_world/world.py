@@ -6,7 +6,7 @@ import importlib_resources
 import pomdp_py
 
 from .domain.state import EnvironmentState, NetworkState
-from .domain.action import SetStateAction
+from .domain.action import ObserveAction, SetStateAction
 
 # from .env.env import MstEnvironment
 
@@ -32,20 +32,21 @@ class World(pomdp_py.POMDP):
     """
 
     def __init__(self,
-                 states,
+                 history,
                  transition_model,
                  policy_model,
                  name='World'):
 
         # States.
-        if not isinstance(states, list):
-            states = [states]
+        if not isinstance(history, list):
+            history = [history]
 
         # History, for navigating states.
-        self.history = states
-        self.state_no = self.get_state_count()
+        self._history = history
+        self.state_no = self.num_states
+
         # Current state as the last state.
-        cur_state = states[-1]
+        cur_state = history[-1]
 
         # Create a reward model.
         reward_model = MstRewardModel()
@@ -71,88 +72,62 @@ class World(pomdp_py.POMDP):
         # Construct an instance from the agent and the environment.
         super().__init__(agent, env, name=name)
 
+        # Update the agent.
+        # self.act(ObserveAction())
+
     def __str__(self):
         return self.__repr__()
 
     def __repr__(self):
         return 'World({})'.format(self.env.state)
 
-    # def reset(self):
-    #     # Reset the state.
-    #     self.env.state.reset()
-    #     self.history = [self.init_state]
+    @property
+    def num_states(self):
+        """number of states in the history"""
+        return len(self._history) // 2 + 1
+        # return len(self.agent.history)
 
-    #     # Reset the agent.
-    #     new_belief = pomdp_py.Histogram({self.env.state: 1.0})
-    #     self.agent.set_belief(new_belief)
+    @property
+    def cur_state(self):
+        """Current state of the environment"""
+        return self._history[self.state_index]
 
-    # def set_state(self, state):
-    #     self.history.append((self.env.state, None, state))
-    #     self.env.state = state
+        # Similarly from observation history
+        # if self.state_no == 0:
+        #     return None
+        # else:
+        #     return self.agent.history[self.state_no-1][1].state
 
-    def get_state_count(self):
-        return len(self.history) // 2 + 1
+    @property
+    def state_index(self):
+        return (self.state_no - 1) * 2
 
-    def get_prev_state(self, first=False):
-        if first:
-            self.state_no = 1
-        elif self.state_no > 1:
-            self.state_no -= 1
+    @property
+    def state_no(self):
+        return self._state_no
 
-        return self.get_state()
+    @state_no.setter
+    def state_no(self, value):
+        if value < 1:
+            value = 1
+        elif value > self.num_states:
+            value = self.num_states
 
-    def get_next_state(self, last=False):
-        n_states = self.get_state_count()
-        if last:
-            self.state_no = n_states
-        elif self.state_no < n_states:
-            self.state_no += 1
-
-        return self.get_state()
-
-    def get_state(self, state_no=None):
-        '''Get the indexed state, or current state if None'''
-        return self.history[self.get_state_index(state_no)]
-
-    def get_state_index(self, state_no=None):
-        '''Get the indexed state, or current state if None'''
-        if state_no is None:
-            index = (self.state_no - 1) * 2
-        else:
-            index = (state_no - 1) * 2
-
-        return index
-
-    # def update_scene(self, verbose=False):
-    #     # Get the indexed state.
-    #     i = self.state_no
-    #     if i == 0:  # initial state.
-    #         state = self.init_state
-    #     else:  # next state of the transition.
-    #         state = self.history[i-1][2]
+        self._state_no = value
 
     def act(self, action, verbose=False):
-        # print('##### acting', action)
-
         # Relocate in history if not at the last state.
-        # TODO: also agent's history? possibly drop world history
-        # in favor of agent's history.
-        if self.state_no != self.get_state_count():
-            state = self.get_state()
+        if self.state_no != self.num_states:
             # Rebase.
-            self.env.state_transition(SetStateAction(state))
+            self.env.state_transition(SetStateAction(self.cur_state))
+            print()
             # Clean history.
-            # print('### hist-bef', self.history)
-            self.history = self.history[:self.get_state_index()+1]
-            # print('### hist-aft', self.history)
+            self._history = self._history[:self.state_index+1]
 
         # Apply the state transition.
         state = copy.deepcopy(self.env.state)
         env_reward = self.env.state_transition(action)
         next_state = self.env.state
-
-        # Update the history.
-        self.history.extend([action, next_state])
 
         # Update the agent.
         real_observation = self.env.provide_observation(
@@ -165,6 +140,10 @@ class World(pomdp_py.POMDP):
         # Fully observable: immediate access to the state.
         new_belief = pomdp_py.Histogram({next_state: 1.0})
         self.agent.set_belief(new_belief)
+
+        # Update the history.
+        self._history.extend([action, next_state])
+        self.state_no = self.num_states
 
         # Update the planner.
         # if planner is not None:
@@ -189,8 +168,6 @@ class World(pomdp_py.POMDP):
             print("New Belief: %s" % str(new_belief))
             print("------------")
             print()
-
-        self.state_no = self.get_state_count()
 
         # To print the world after the action.
         return self
@@ -296,7 +273,6 @@ def load_world(graph_file,
         full_graph.add_edge(u, v, **d)
 
     # Construct the initial state.
-    # init_state = graphState(graph=graph)
     network = NetworkState(graph=full_graph)
     if world_type is IndividualWorld:
         init_state = EnvironmentState(
@@ -318,7 +294,7 @@ def load_world(graph_file,
         raise NotImplementedError
 
     # Construct the world.
-    world = world_type([init_state])
+    world = world_type(init_state)
 
     if verbose:
         print('Done!')

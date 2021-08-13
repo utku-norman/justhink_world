@@ -104,6 +104,11 @@ class UnpickAction(Action):
         super().__init__(name, agent)
 
 
+class ObserveAction(Action):
+    def __init__(self, agent=HumanAgent):
+        super().__init__('observe', agent)
+
+
 class AgreeAction(Action):
     def __init__(self, agent=HumanAgent):
         super().__init__('agree', agent)

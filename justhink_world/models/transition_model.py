@@ -8,7 +8,8 @@ from ..domain.action import PickAction, SuggestPickAction, \
     SetPauseAction, SetStateAction, \
     AgreeAction, DisagreeAction, \
     ClearAction, \
-    AttemptSubmitAction, ContinueAction, SubmitAction
+    AttemptSubmitAction, ContinueAction, SubmitAction, \
+    ObserveAction
 
 from ..domain.state import Button
 from ..agent import HumanAgent, RobotAgent
@@ -42,6 +43,10 @@ class IndivTransitionModel(pomdp_py.TransitionModel):
             next_state = copy.deepcopy(state)
             next_state.is_paused = action.is_paused
             return next_state
+
+        # Like a wait action to fill observation.
+        elif isinstance(action, ObserveAction):
+            return state
 
         next_state = copy.deepcopy(state)
         network = state.network
@@ -108,6 +113,10 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
             next_state = copy.deepcopy(state)
             next_state.is_paused = action.is_paused
             return next_state
+
+        # Like a wait action to fill observation.
+        elif isinstance(action, ObserveAction):
+            return state
 
         # Validation.
         # If the agent can act.
