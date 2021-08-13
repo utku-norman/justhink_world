@@ -25,10 +25,6 @@ class EnvironmentScene(object):
                                        height,
                                        image_container)
 
-        # for key, obj in graphics.items():
-        #     setattr(self._graphics, key, obj)
-        # self._batch = batch
-
     # Windowing methods.
 
     def on_draw(self):
