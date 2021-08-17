@@ -3,16 +3,13 @@ from pyglet.window import key
 
 from justhink_world.world import IndividualWorld, CollaborativeWorld
 
-from .scene import CollabWorldScene, IndivWorldScene
+from .scene import CollaborativeWorldScene, IndividualWorldScene
 
 from justhink_world.domain.action import SetPauseAction
 
 
 class WorldWindow(pyglet.window.Window):
-    def __init__(self, world,
-                 title='JUSThink World',
-                 width=1920,
-                 height=1080,
+    def __init__(self, world, title='JUSThink World', width=1920, height=1080,
                  screen_no=0):
         self._world = world
 
@@ -20,9 +17,9 @@ class WorldWindow(pyglet.window.Window):
             isinstance(world, CollaborativeWorld)
 
         if isinstance(world, IndividualWorld):
-            scene_type = IndivWorldScene
+            scene_type = IndividualWorldScene
         elif isinstance(world, CollaborativeWorld):
-            scene_type = CollabWorldScene
+            scene_type = CollaborativeWorldScene
         self._scene = scene_type(world=world,
                                  width=width, height=height)
         self._scene.update(world.env.state)
@@ -42,22 +39,15 @@ class WorldWindow(pyglet.window.Window):
 
         # History label.
         self._hist_label = pyglet.text.Label(
-            self._make_hist_label_text(),
-            x=20, y=height-120,
-            anchor_y='center',
-            color=(0, 0, 0, 255),
-            font_name='monospace',
-            font_size=32,
+            self._make_hist_label_text(), x=20, y=height-120,
+            anchor_y='center', color=(0, 0, 0, 255),
+            font_name='monospace', font_size=32,
             group=pyglet.graphics.OrderedGroup(5))
 
         # Role label.
         self._role_label = pyglet.text.Label(
-            '',
-            x=20, y=height-40,
-            anchor_y='center',
-            color=(0, 0, 0, 255),
-            font_name='Sans',
-            font_size=32,
+            '', x=20, y=height-40, anchor_y='center', color=(0, 0, 0, 255),
+            font_name='Sans', font_size=32,
             group=pyglet.graphics.OrderedGroup(5))
 
         self.update()
@@ -82,16 +72,13 @@ class WorldWindow(pyglet.window.Window):
         self.update(self._world.cur_state)
 
     def on_mouse_press(self, x, y, button, modifiers):
-        self._scene.on_mouse_press(
-            x, y, button, modifiers, win=self)
+        self._scene.on_mouse_press(x, y, button, modifiers, win=self)
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
-        self._scene.on_mouse_drag(
-            x, y, dx, dy, buttons, modifiers, win=self)
+        self._scene.on_mouse_drag(x, y, dx, dy, buttons, modifiers, win=self)
 
     def on_mouse_release(self, x, y, button, modifiers):
-        self._scene.on_mouse_release(
-            x, y, button, modifiers, win=self)
+        self._scene.on_mouse_release(x, y, button, modifiers, win=self)
 
     def on_key_press(self, symbol, modifiers):
         world = self._world

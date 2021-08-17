@@ -22,7 +22,7 @@ The main Python dependencies are:
 git clone https://github.com/utku-norman/justhink_world.git
 ```
 
-2) (optional-recommended) Create a new [virtual environment](https://docs.python.org/3/tutorial/venv.html) and activate it (can do so in the same folder. Note that the folder name `venv` is [git-ignored](https://git-scm.com/docs/gitignore)).
+2) Create a new [virtual environment](https://docs.python.org/3/tutorial/venv.html) and activate it (can do so in the same folder. Note that the folder name `venv` is [git-ignored](https://git-scm.com/docs/gitignore)).
 ```
 cd justhink_world
 rm -rf venv    # Delete if there is an existing virtual environment for a clean install.
@@ -116,7 +116,7 @@ from justhink_world.domain.action import SuggestPickAction, \
 from justhink_world.agent import HumanAgent, RobotAgent
 
 # Create a world.
-world = init_world('collab-activity')
+world = init_world('collab-activity-1')
 
 # Act on the world.
 world.act(SuggestPickAction((3, 1), agent=RobotAgent))

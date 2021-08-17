@@ -1,1 +1,3 @@
-from .window import WorldWindow, CollabWorldScene, IndivWorldScene
+from .window import WorldWindow
+from .scene import IntroWorldScene, DemoWorldScene, \
+    CollaborativeWorldScene, IndividualWorldScene

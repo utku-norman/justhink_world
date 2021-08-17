@@ -17,6 +17,7 @@ setup(
         "pyglet",
         "pathlib",
         "importlib_resources",
+        "pqdict",
     ],
     zip_safe=False,
 )

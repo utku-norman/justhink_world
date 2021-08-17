@@ -6,12 +6,11 @@ from ..domain.action import PickAction, SuggestPickAction, \
     AgreeAction, DisagreeAction, \
     ClearAction, AttemptSubmitAction, ContinueAction
 
-# from ..agent.agent import HumanAgent, RobotAgent
+from ..agent.agent import HumanAgent, RobotAgent
 
 
-class IndivPolicyModel(pomdp_py.RolloutPolicy):
-    '''
-    a PolicyModel:
+class PolicyModel(pomdp_py.RolloutPolicy):
+    '''a PolicyModel:
     (1) determines the action space at a given history or state, and
     (2) samples an action from this space according
     to some probability distribution.
@@ -39,6 +38,13 @@ class IndivPolicyModel(pomdp_py.RolloutPolicy):
         return self.sample(state, history)
 
     # Helper methods.
+    def update_available_actions(self, state):
+        raise NotImplementedError
+
+
+class IndividualPolicyModel(PolicyModel):
+    '''TODO'''
+
     def update_available_actions(self, state):
         actions = set()
 
@@ -68,38 +74,8 @@ class IndivPolicyModel(pomdp_py.RolloutPolicy):
         self.actions = actions
 
 
-class CollabPolicyModel(pomdp_py.RolloutPolicy):
-    '''
-    a PolicyModel:
-    (1) determines the action space at a given history or state, and
-    (2) samples an action from this space according
-    to some probability distribution.
-    '''
-
-    # def __init__(self):
-    #     # Set the agents that can act at the first state.
-    #     self.agents = ['robot']
-    #     super().__init__()
-
-    def probability(self, action, state, normalized=False, **kwargs):
-        raise NotImplementedError  # Never used
-
-    def sample(self, state, normalized=False, **kwargs):
-        return random.sample(self.get_all_actions(**kwargs), 1)[0]
-
-    # def argmax(self, state, normalized=False, **kwargs):
-    #     raise NotImplementedError
-
-    def update(self, state, next_state, action, **kwargs):
-        self.update_available_actions(next_state)
-
-    def get_all_actions(self, state=None, **kwargs):
-        if state is not None:
-            self.update_available_actions(state)
-        return self.actions
-
-    def rollout(self, state, history=None):
-        return self.sample(state, history)
+class CollaborativePolicyModel(PolicyModel):
+    '''TODO'''
 
     def update_available_actions(self, state):
         actions = set()
@@ -138,5 +114,31 @@ class CollabPolicyModel(pomdp_py.RolloutPolicy):
                 else:
                     actions.add(ContinueAction(agent=agent))
                     actions.add(SubmitAction(agent=agent))
+
+        self.actions = actions
+
+
+class IntroPolicyModel(PolicyModel):
+    def update_available_actions(self, state):
+        self.actions = {SubmitAction(agent=HumanAgent)}
+
+
+class DemoPolicyModel(PolicyModel):
+    def update_available_actions(self, state):
+        actions = set()
+
+        num_edges = state.network.subgraph.number_of_edges()
+
+        if state.step_no < 4:
+            for u, v in state.network.graph.edges():
+                if not state.network.subgraph.has_edge(u, v):
+                    action = PickAction((u, v), agent=HumanAgent)
+                    actions.add(action)
+
+        if state.step_no < 4 and num_edges > 0:
+            actions.add(ClearAction(agent=HumanAgent))
+
+        # if state.step_no == 3 and num_edges == 1:
+        actions.add(SubmitAction(agent=HumanAgent))
 
         self.actions = actions

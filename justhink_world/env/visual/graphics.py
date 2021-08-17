@@ -15,10 +15,14 @@ BLACK_RGBA = (0, 0, 0, 255)
 class Graphics(object):
     """docstring for Graphics"""
 
-    def __init__(self, from_graph, width, height, batch=None):
-        self.layout = copy.deepcopy(from_graph)
+    def __init__(self, width=1920, height=1080, from_graph=None, batch=None):
+        if from_graph is not None:
+            self.layout = copy.deepcopy(from_graph)
+
         self.width = width
         self.height = height
+
+        self.buttons = {}
 
         if batch is None:
             self.batch = pyglet.graphics.Batch()
@@ -28,11 +32,33 @@ class Graphics(object):
 
 def init_graphics(graph, width, height, image_container, batch=None):
     # , show_edge_costs=True, show_node_names=True
-    graphics = Graphics(graph, width, height, batch=batch)
+    graphics = Graphics(width, height, from_graph=graph, batch=batch)
     batch = graphics.batch
 
     # Create groups: higher the order, the more the foreground.
     groups = [pyglet.graphics.OrderedGroup(i) for i in range(16)]
+
+    # Load a cloud.
+    ref = image_container.joinpath('cloud.png')
+    image = read_image_from_reference(ref)
+    s = pyglet.sprite.Sprite(image, batch=batch, group=groups[6])
+    s.scale = 0.2
+    s.dx = 20.0
+    s.position = (220, height-150)
+    s.min_x = 50  # self.cloud.x
+    s.max_x = 400
+    graphics.cloud_sprite = s
+    pyglet.clock.schedule_interval(slide_x, 1.0/60, graphics.cloud_sprite)
+
+    # cow_img = pyglet.image.load(
+    # str(self._images_dir.joinpath('cloud.png')))
+    # self.cow = pyglet.sprite.Sprite(cow_img)
+
+    # self.cow.scale = 0.35
+    # self.cow.dx = 20.0
+    # self.cow.position = (220, height - 670)
+    # self.cow.min_x = self.cow.x
+    # self.cow.max_x = 400
 
     # Attempt label.
     graphics.attempt_label = pyglet.text.Label(
@@ -41,14 +67,14 @@ def init_graphics(graph, width, height, image_container, batch=None):
 
     # Create confirm box components.
     graphics.confirm_text_label = pyglet.text.Label(
-        '', x=width//2, y=height//2+180,  # width=width, height=50,
-        color=BLACK_RGBA, anchor_x='center', anchor_y='center',
-        font_name='Sans', font_size=48, batch=batch, group=groups[11])
+        '', x=width//2, y=height//2+180, color=BLACK_RGBA,
+        anchor_x='center', anchor_y='center', font_name='Sans', font_size=48,
+        batch=batch, group=groups[11])
 
     graphics.yes_label = pyglet.text.Label(
-        '', x=width//2-180, y=height//2-20,  # width=width, height=50,
-        color=BLACK_RGBA, anchor_x='center', anchor_y='center',
-        font_name='Sans', font_size=56, batch=batch, group=groups[11])
+        '', x=width//2-180, y=height//2-20, color=BLACK_RGBA,
+        anchor_x='center', anchor_y='center', font_name='Sans',
+        font_size=56, batch=batch, group=groups[11])
 
     graphics.no_label = pyglet.text.Label(
         '', x=width//2+180, y=height//2-20,  # width=width, height=50,
@@ -148,12 +174,8 @@ def init_graphics(graph, width, height, image_container, batch=None):
             x, y = d['label_x'], d['label_y']
         else:  # default location
             x, y = d['x'], d['y']
-        # if show_node_names:
-        #     text = d['text']
-        # else:
-        text = ''
         d['label'] = pyglet.text.Label(
-            text, x=x, y=y, font_name='Purisa', font_size=22,
+            d['text'], x=x, y=y, font_name='Purisa', font_size=22,
             anchor_x='center', anchor_y='center',
             bold=False, color=BLACK_RGBA, batch=batch, group=groups[5])
 
@@ -215,9 +237,11 @@ def init_graphics(graph, width, height, image_container, batch=None):
         ButtonWidget.DISABLED: c.joinpath('submit_disabled.png'),
         ButtonWidget.SELECTED: c.joinpath('submit_selected.png'),
     }
-    graphics.submit_button = ButtonWidget(
+    button = ButtonWidget(
         x=width-button_pads[0], y=height-button_pads[1], paths=paths,
         state=ButtonWidget.NA, scale=scale, batch=batch, group=groups[4])
+    graphics.submit_button = button
+    graphics.buttons['submit'] = button
 
     # Erase button.
     button_pads, scale = (200, height//2), 0.25
@@ -226,9 +250,11 @@ def init_graphics(graph, width, height, image_container, batch=None):
         ButtonWidget.DISABLED: c.joinpath('erase_disabled.png'),
         ButtonWidget.SELECTED: c.joinpath('erase_selected.png'),
     }
-    graphics.clear_button = ButtonWidget(
+    button = ButtonWidget(
         x=width-button_pads[0], y=height-button_pads[1], paths=paths,
         state=ButtonWidget.NA, scale=scale, batch=batch, group=groups[4])
+    graphics.clear_button = button
+    graphics.buttons['clear'] = button
 
     # Yes button.
     button_pads, scale = (290, 160), 0.3
@@ -237,9 +263,11 @@ def init_graphics(graph, width, height, image_container, batch=None):
         ButtonWidget.DISABLED: c.joinpath('check_disabled.png'),
         ButtonWidget.SELECTED: c.joinpath('check_selected.png'),
     }
-    graphics.yes_button = ButtonWidget(
+    button = ButtonWidget(
         x=button_pads[0], y=button_pads[1], paths=paths,
         state=ButtonWidget.NA, scale=scale, batch=batch, group=groups[4])
+    graphics.yes_button = button
+    graphics.buttons['yes'] = button
 
     # No button.
     paths = {
@@ -247,9 +275,11 @@ def init_graphics(graph, width, height, image_container, batch=None):
         ButtonWidget.DISABLED: c.joinpath('cross_disabled.png'),
         ButtonWidget.SELECTED: c.joinpath('cross_selected.png'),
     }
-    graphics.no_button = ButtonWidget(
+    button = ButtonWidget(
         x=width-button_pads[0], y=button_pads[1], paths=paths,
         state=ButtonWidget.NA, scale=scale, batch=batch, group=groups[4])
+    graphics.no_button = button
+    graphics.buttons['no'] = button
 
     return graphics
 
@@ -286,3 +316,14 @@ def read_image_from_reference(ref):
     """Read pyglet image from importlib reference."""
     with importlib_resources.as_file(ref) as file:
         return pyglet.image.load(file)
+
+
+def slide_x(dt, sprite):
+    if sprite.x > sprite.max_x:
+        sprite.x = sprite.max_x
+        sprite.dx = -sprite.dx
+    elif sprite.x < sprite.min_x:
+        sprite.x = sprite.min_x
+        sprite.dx = -sprite.dx
+
+    sprite.x += sprite.dx * dt

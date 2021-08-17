@@ -12,9 +12,12 @@ from .domain.action import ObserveAction, SetStateAction
 
 # from .domain.observation import Observation
 
-from .models.policy_model import IndivPolicyModel, CollabPolicyModel
-from .models.transition_model import IndivTransitionModel, \
-    CollabTransitionModel
+from .models.policy_model import IntroPolicyModel, DemoPolicyModel, \
+    IndividualPolicyModel, CollaborativePolicyModel
+
+from .models.transition_model import IntroTransitionModel, \
+    DemoTransitionModel, \
+    IndividualTransitionModel, CollaborativeTransitionModel
 from .models.observation_model import MstObservationModel
 from .models.reward_model import MstRewardModel
 
@@ -36,6 +39,8 @@ class World(pomdp_py.POMDP):
                  transition_model,
                  policy_model,
                  name='World'):
+
+        self.name = name
 
         # States.
         if not isinstance(history, list):
@@ -79,7 +84,11 @@ class World(pomdp_py.POMDP):
         return self.__repr__()
 
     def __repr__(self):
-        return 'World({})'.format(self.env.state)
+        return 'World({}:{})'.format(self.name, self.env.state)
+
+    @property
+    def history(self):
+        return self._history
 
     @property
     def num_states(self):
@@ -173,40 +182,63 @@ class World(pomdp_py.POMDP):
         return self
 
 
+class IntroWorld(World):
+    """TODO"""
+
+    def __init__(self, state, name='IntroWorld'):
+        transition_model = IntroTransitionModel()
+        policy_model = IntroPolicyModel()
+
+        super().__init__(
+            state, transition_model=transition_model,
+            policy_model=policy_model, name=name)
+
+
+class DemoWorld(World):
+    """TODO"""
+
+    def __init__(self, state, name='DemoWorld'):
+        transition_model = DemoTransitionModel()
+        policy_model = DemoPolicyModel()
+
+        super().__init__(
+            state, transition_model=transition_model,
+            policy_model=policy_model, name=name)
+
+
 class IndividualWorld(World):
     """TODO"""
 
-    def __init__(self, state):
-        transition_model = IndivTransitionModel()
-        policy_model = IndivPolicyModel()
+    def __init__(self, state, name='IndividualWorld'):
+        transition_model = IndividualTransitionModel()
+        policy_model = IndividualPolicyModel()
 
-        super().__init__(state,
-                         transition_model=transition_model,
-                         policy_model=policy_model,
-                         name="IndividualWorld")
+        super().__init__(
+            state, transition_model=transition_model,
+            policy_model=policy_model, name=name)
 
 
 class CollaborativeWorld(World):
     """TODO"""
 
-    def __init__(self, state):
-        transition_model = CollabTransitionModel()
-        policy_model = CollabPolicyModel()
+    def __init__(self, state, name='CollaborativeWorld'):
+        transition_model = CollaborativeTransitionModel()
+        policy_model = CollaborativePolicyModel()
 
-        super().__init__(state,
-                         transition_model=transition_model,
-                         policy_model=policy_model,
-                         name="CollaborativeWorld")
+        super().__init__(
+            state, transition_model=transition_model,
+            policy_model=policy_model, name=name)
 
 
 def list_worlds():
-    names = ['intro', 'indiv-illustrate']
+    """Create a list of the worlds that are available."""
+    names = ['intro', 'demo']
     for test in ['pretest', 'posttest']:
         for i in range(1, 6):
             name = '{}-{}'.format(test, i)
             names.append(name)
-    names.append('collab-activity')
-    names.append('collab-activity-2')
+    for i in range(1, 3):
+        names.append('collab-activity-{}'.format(i))
     names.append('debriefing')
 
     return names
@@ -216,6 +248,7 @@ def init_all_worlds(verbose=False):
     """Create all of the world instances."""
     # Create a list of world names to be initialised.
     names = list_worlds()
+
     # Initialise each world.
     worlds = {name: init_world(name, verbose) for name in names}
 
@@ -228,10 +261,17 @@ def init_world(name, verbose=False):
     resources = select_world_resources(name)
 
     # Determine the type of the world.
-    if 'collab-activity' in name:
+    if name == 'intro':
+        world_type = IntroWorld
+    elif name == 'demo':
+        world_type = DemoWorld
+    elif 'collab-activity' in name:
         world_type = CollaborativeWorld
+    # elif 'test' in name:
     else:
         world_type = IndividualWorld
+    # else:
+        # raise NotImplementedError
 
     # Read the resources via temporary files and create a world instance.
     with importlib_resources.as_file(resources['graph']) as graph_file, \
@@ -249,9 +289,9 @@ def load_world(graph_file,
                name=None,
                verbose=False):
     """Load a world from its resource files."""
-    # Type check for the world type.
-    assert world_type is IndividualWorld \
-        or world_type is CollaborativeWorld
+    # # Type check for the world type.
+    # assert world_type is IndividualWorld \
+    #     or world_type is CollaborativeWorld
 
     if verbose:
         print('Initialising world {} ...'.format(name))
@@ -290,11 +330,15 @@ def load_world(graph_file,
             max_attempts=4,
             is_paused=False,
         )
+    elif world_type is IntroWorld:
+        init_state = EnvironmentState(network=network)
+    elif world_type is DemoWorld:
+        init_state = EnvironmentState(network=network)
     else:
         raise NotImplementedError
 
     # Construct the world.
-    world = world_type(init_state)
+    world = world_type(init_state, name=name)
 
     if verbose:
         print('Done!')

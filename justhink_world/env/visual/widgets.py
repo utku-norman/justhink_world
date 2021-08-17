@@ -4,12 +4,12 @@ from justhink_world.domain.state import Button
 
 
 def center_image(image):
-    """Sets an image's anchor point to its center"""
+    """Set an image's anchor point to its center."""
     image.anchor_x = image.width // 2
     image.anchor_y = image.height // 2
 
 
-class TextInput(object):
+class TextWidget(object):
     # built on https://pythonhosted.org/pyglet/programming_guide/text_input.py
     def __init__(self, text, x, y, width, name,
                  valid_func=lambda text: True,
@@ -62,12 +62,7 @@ class TextInput(object):
 
 
 class ButtonWidget(Button):
-    def __init__(self, x, y,
-                 paths,  #
-                 state,
-                 scale=1,
-                 batch=None,
-                 group=None):
+    def __init__(self, x, y, paths, state, scale=1, batch=None, group=None):
         self.x = x
         self.y = y
         self.state = state

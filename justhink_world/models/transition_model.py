@@ -5,11 +5,10 @@ import pomdp_py
 import networkx as nx
 
 from ..domain.action import PickAction, SuggestPickAction, \
-    SetPauseAction, SetStateAction, \
-    AgreeAction, DisagreeAction, \
-    ClearAction, \
-    AttemptSubmitAction, ContinueAction, SubmitAction, \
-    ObserveAction
+    SetPauseAction, SetStateAction, ObserveAction, \
+    AgreeAction, DisagreeAction, ClearAction, \
+    AttemptSubmitAction, ContinueAction, SubmitAction
+
 
 from ..domain.state import Button
 from ..agent import HumanAgent, RobotAgent
@@ -17,11 +16,9 @@ from ..agent import HumanAgent, RobotAgent
 EPSILON = 1e-9
 
 
-class IndivTransitionModel(pomdp_py.TransitionModel):
-    """Transition model for an individual activity (e.g. tests)
-
-    Allows pick, unpick and submit actions: see policy model.
-    """
+class TransitionModel(pomdp_py.TransitionModel):
+    """Base class transition model for an activity.
+    Inherit and override sample(self, state, action)."""
 
     def __init__(self):
         pass
@@ -33,6 +30,79 @@ class IndivTransitionModel(pomdp_py.TransitionModel):
             return 1.0 - EPSILON
         else:
             return EPSILON
+
+    def sample(self, state, action):
+        raise NotImplementedError
+
+    def argmax(self, state, action):
+        """Returns the most likely next state"""
+        return self.sample(state, action)
+
+
+class IntroTransitionModel(TransitionModel):
+    """TODO"""
+
+    def sample(self, state, action):
+        return state
+
+
+class DemoTransitionModel(TransitionModel):
+    """TODO"""
+
+    def sample(self, state, action):
+        next_state = copy.deepcopy(state)
+
+        num_edges = state.network.subgraph.number_of_edges()
+
+        if state.step_no == 1 and isinstance(action, PickAction):
+            next_state.step_no = 2
+
+        elif state.step_no == 2 and isinstance(action, ClearAction):
+            next_state.step_no = 3
+
+        elif state.step_no == 3 and isinstance(action, SubmitAction) \
+                and num_edges == 1:
+            next_state.is_terminal = True
+            next_state.step_no = 4
+
+        if isinstance(action, PickAction):
+            next_state.network.subgraph.add_edge(*action.edge)
+
+        elif isinstance(action, ClearAction) and num_edges > 0:
+            next_state.network.subgraph = nx.Graph()
+
+        return next_state
+
+#     def on_mouse_press(self, x, y, button, modifiers, win):
+#         action = update_scene_press(
+#             self, x, y, submit_action_type=SubmitAction)
+#         if self.step_no == 3:
+#             # action = update_scene_press(self, x, y,
+#             # submit_action_type=SubmitAction)
+#             if self.step_no == 3 and isinstance(action, SubmitAction) \
+#                     and len(self._edges) == 1:
+#                 self.step_no = 4
+#                 self._submit_button.set_state('selected')
+#             win.execute_action_in_app(action)
+
+
+#     def on_mouse_release(self, x, y, button, modifiers, win):
+
+#         if self.step_no == 1 and isinstance(action, PickAction):
+#             self.step_no = 2
+#         elif self.step_no == 2 and isinstance(action, ClearAction):
+#             self.step_no = 3
+#             self._submit_button.set_state('enabled')
+
+
+#         highlight = self.step_no == 2
+#         update_scene_graph(self, edges, terminal, highlight=highlight)
+
+class IndividualTransitionModel(TransitionModel):
+    """Transition model for an individual activity (e.g. tests).
+
+    Allows pick, unpick and submit actions: see policy model.
+    """
 
     def sample(self, state, action):
 
@@ -81,28 +151,15 @@ class IndivTransitionModel(pomdp_py.TransitionModel):
 
         next_state.network = next_network
 
+        next_state.step_no = next_state.step_no + 1
+
         return next_state
 
-    def argmax(self, state, action):
-        """Returns the most likely next state"""
-        return self.sample(state, action)
 
-
-class CollabTransitionModel(pomdp_py.TransitionModel):
-    """Transition model for a collaborative activity
+class CollaborativeTransitionModel(TransitionModel):
+    """Transition model for a collaborative activity.
 
     Allows suggest-a-pick, agree, disagree, and submit actions."""
-
-    def __init__(self):
-        pass
-
-    def probability(self, next_state, state, action,
-                    normalized=False, **kwargs):
-        '''deterministic'''
-        if next_state == self.sample(state, action):
-            return 1.0 - EPSILON
-        else:
-            return EPSILON
 
     def sample(self, state, action):
         # Meta type of actions, intervention-like / god-mode.
@@ -210,11 +267,9 @@ class CollabTransitionModel(pomdp_py.TransitionModel):
 
         next_state.network = next_network
 
-        return next_state
+        next_state.step_no = next_state.step_no + 1
 
-    def argmax(self, state, action):
-        """Return the most likely next state."""
-        return self.sample(state, action)
+        return next_state
 
 
 def toggle_agent(agents):

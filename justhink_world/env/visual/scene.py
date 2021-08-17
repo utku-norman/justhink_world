@@ -1,13 +1,60 @@
 import importlib_resources
 
-from .graphics import init_graphics
+from .graphics import init_graphics, Graphics
 
 from justhink_world.tools.networks import compute_subgraph_cost
 from justhink_world.domain.state import EnvironmentState
 
 
-class EnvironmentScene(object):
-    def __init__(self, state, width=1920, height=1080):
+class Scene(object):
+    """Abstract scene (i.e. activity) class for common methods."""
+
+    def __init__(self, name, width, height):
+        self.name = name
+        self.width = width
+        self.height = height
+
+        # self.step_no = 0
+        # self.action_no = 0
+        self.graphics = Graphics()
+
+    def toggle_role(self):
+        pass
+
+    def update_scene(self, problem=None, action=None):
+        pass
+
+    def on_key_press(self, symbol, modifiers, win):
+        pass
+
+    def on_close(self):
+        pass
+
+    def on_mouse_press(self, x, y, button, modifiers, win):
+        pass
+
+    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers, win):
+        pass
+
+    def on_mouse_release(self, x, y, button, modifiers, win):
+        pass
+
+    def on_text(self, text):
+        pass
+
+    def on_text_motion(self, motion):
+        pass
+
+    def on_text_motion_select(self, motion):
+        pass
+
+    def update(self, **kwargs):
+        pass
+
+
+class EnvironmentScene(Scene):
+    def __init__(self, state, name='EnvScene', width=1920, height=1080):
+        super().__init__(name=name, width=width, height=height)
 
         assert isinstance(state, EnvironmentState)
 
@@ -20,24 +67,13 @@ class EnvironmentScene(object):
         # A network to contain the graphics as well.
 
         # Create the graphics.
-        self._graphics = init_graphics(state.network.graph,
-                                       width,
-                                       height,
-                                       image_container)
+        self.graphics = init_graphics(
+            state.network.graph, width, height, image_container)
 
     # Windowing methods.
 
     def on_draw(self):
-        self._graphics.batch.draw()
-
-    def on_mouse_press(self, x, y, button, modifiers, win):
-        pass
-
-    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers, win):
-        pass
-
-    def on_mouse_release(self, x, y, button, modifiers, win):
-        pass
+        self.graphics.batch.draw()
 
     # Maintenance methods.
 
@@ -49,7 +85,7 @@ class EnvironmentScene(object):
 
         # Update the selected edges.
         added_nodes = set()
-        for u, v, d in self._graphics.layout.edges(data=True):
+        for u, v, d in self.graphics.layout.edges(data=True):
             is_added = state.network.subgraph.has_edge(u, v)
             e = state.network.suggested_edge
             is_suggested = (e == (u, v)) or (e == (v, u))
@@ -62,12 +98,12 @@ class EnvironmentScene(object):
                 added_nodes.update((u, v))
 
         # Update the selected nodes.
-        for u, d in self._graphics.layout.nodes(data=True):
+        for u, d in self.graphics.layout.nodes(data=True):
             d['added_sprite'].visible = u in added_nodes
             # d['sprite'].visible = True # not u in added_nodes
 
         # Process highlights for edges.
-        for u, v, d in self._graphics.layout.edges(data=True):
+        for u, v, d in self.graphics.layout.edges(data=True):
             if highlight:
                 color = (255, 0, 0, 255)
                 bold = True
@@ -78,7 +114,7 @@ class EnvironmentScene(object):
             d['cost_label'].bold = bold
 
         # Process highlights for nodes.
-        for u, d in self._graphics.layout.nodes(data=True):
+        for u, d in self.graphics.layout.nodes(data=True):
             if highlight:
                 color = (255, 0, 0, 255)
                 bold = True
@@ -109,36 +145,35 @@ class EnvironmentScene(object):
             cost = compute_subgraph_cost(graph, subgraph)
         else:
             cost = 0
-        self._graphics.cost_label.text = 'Spent: {:2d} francs'.format(cost)
+        self.graphics.cost_label.text = 'Spent: {:2d} francs'.format(cost)
 
         if highlight:
-            self._graphics.cost_label.color = (255, 0, 0, 255)
-            self._graphics.cost_label.bold = True
+            self.graphics.cost_label.color = (255, 0, 0, 255)
+            self.graphics.cost_label.bold = True
         else:
-            self._graphics.cost_label.color = (0, 0, 0, 255)
-            self._graphics.cost_label.bold = False
+            self.graphics.cost_label.color = (0, 0, 0, 255)
+            self.graphics.cost_label.bold = False
 
     def _update_attempt_label(self):
         state = self._state
         if state.max_attempts is not None:
             s = 'Attempt: {}/{}'.format(state.attempt_no, state.max_attempts)
-            self._graphics.attempt_label.text = s
+            self.graphics.attempt_label.text = s
 
     def _update_paused(self):
         self.set_paused(self._state.is_terminal)
 
     def _update_submit_box(self):
         if self._state.is_submitting:
-            self._graphics.confirm_rect.visible = True
-            self._graphics.confirm_text_label.text = 'Do you want to submit?'
-            self._graphics.yes_label.text = 'Ok'
-            self._graphics.no_label.text = 'Cancel'
+            self.graphics.confirm_rect.visible = True
+            self.graphics.confirm_text_label.text = 'Do you want to submit?'
+            self.graphics.yes_label.text = 'Ok'
+            self.graphics.no_label.text = 'Cancel'
         else:
-            self._graphics.confirm_rect.visible = False
-            self._graphics.confirm_text_label.text = ''
-            self._graphics.yes_label.text = ''
-            self._graphics.no_label.text = ''
+            self.graphics.confirm_rect.visible = False
+            self.graphics.confirm_text_label.text = ''
+            self.graphics.yes_label.text = ''
+            self.graphics.no_label.text = ''
 
     def set_paused(self, is_paused):
-        self._is_paused = is_paused
-        self._graphics.paused_rect.visible = is_paused
+        self.graphics.paused_rect.visible = is_paused

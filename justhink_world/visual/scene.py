@@ -11,19 +11,25 @@ from justhink_world.domain.action import \
 
 
 class WorldScene(EnvironmentScene):
-    def __init__(self, world, width=1920, height=1080):
+    def __init__(self, world, name=None, width=1920, height=1080):
 
         self.role = HumanAgent
         self._state = world.env.state
         self._policy_model = world.agent.policy_model
 
-        super().__init__(self._state,
-                         height=height,
-                         width=width)
+        self._pick_action_type = PickAction
+        self._submit_action_type = SubmitAction
 
-        self._graphics.temp_from = None
-        self._graphics.temp_to = None
-        self._graphics.temp_suggested_sprite = None
+        if name is None:
+            name = world.name
+        super().__init__(
+            self._state, name=name, height=height, width=width)
+
+        self.graphics.temp_from = None
+        self.graphics.temp_to = None
+        self.graphics.temp_suggested_sprite = None
+
+        self.graphics.has_status_label = False
 
         # Feasible actions.
         self._update_feasible_actions()
@@ -31,9 +37,9 @@ class WorldScene(EnvironmentScene):
     # Windowing methods.
 
     def on_draw(self):
-        self._graphics.batch.draw()
-        if self._graphics.temp_suggested_sprite is not None:
-            self._graphics.temp_suggested_sprite.draw()
+        self.graphics.batch.draw()
+        if self.graphics.temp_suggested_sprite is not None:
+            self.graphics.temp_suggested_sprite.draw()
 
         # self._status_label.draw()
         # self._status_rect.draw()
@@ -66,32 +72,31 @@ class WorldScene(EnvironmentScene):
         if self._state.is_paused:
             return
 
-        if self._graphics.temp_from is not None:  # i.e. drawing
+        if self.graphics.temp_from is not None:  # i.e. drawing
             self._process_drawing(x, y)
 
     def on_mouse_release(self, x, y, button, modifiers, win):
         if self._state.is_paused:
             return
-            
+
         if self.role in self._state.agents:
-            action = self._process_drawing_done(x, y)  # , win)
+            action = self._process_drawing_done(x, y)
 
             if action is not None:
                 win.act_via_window(action)
-                # print('Released', action)
 
     def on_key_press(self, symbol, modifiers, win):
         pass
 
     def _process_drawing(self, x, y):
-        layout = self._graphics.layout
+        layout = self.graphics.layout
 
         # Check whether the agent is drawing from a node.
-        if self._graphics.temp_from is None:
+        if self.graphics.temp_from is None:
             node = check_node_hit(layout, x, y)
             if node is not None:
                 node_data = layout.nodes[node]
-                self._graphics.temp_from = (
+                self.graphics.temp_from = (
                     node_data['x'], node_data['y'], node)
                 node_data['added_sprite'].visible = True
 
@@ -102,39 +107,39 @@ class WorldScene(EnvironmentScene):
 
             if node is not None:
                 # if hover a new node that is not already selected
-                if node != self._graphics.temp_from[2] \
+                if node != self.graphics.temp_from[2] \
                         and node not in selected:
-                    self._graphics.temp_to = node
+                    self.graphics.temp_to = node
                     node_data = layout.nodes[node]
                     node_data['added_sprite'].visible = True
 
             # no longer hover a node
             else:
                 # there is an old temp to and if not already selected
-                if self._graphics.temp_to is not None \
-                        and self._graphics.temp_to not in selected:
-                    node_data = layout.nodes[self._graphics.temp_to]
+                if self.graphics.temp_to is not None \
+                        and self.graphics.temp_to not in selected:
+                    node_data = layout.nodes[self.graphics.temp_to]
                     node_data['added_sprite'].visible = False
-                    self._graphics.temp_to = None
+                    self.graphics.temp_to = None
 
-        if self._graphics.temp_from is not None:
-            self._graphics.temp_suggested_sprite = create_edge_sprite(
-                self._graphics.temp_edge_image,
-                self._graphics.temp_from[0],
-                self._graphics.temp_from[1],
+        if self.graphics.temp_from is not None:
+            self.graphics.temp_suggested_sprite = create_edge_sprite(
+                self.graphics.temp_edge_image,
+                self.graphics.temp_from[0],
+                self.graphics.temp_from[1],
                 x, y)
 
     def _process_drawing_done(self, x, y):
         action = None
 
-        layout = self._graphics.layout
+        layout = self.graphics.layout
 
         # Check if an edge is drawn.
-        if self._graphics.temp_from is not None:
+        if self.graphics.temp_from is not None:
             # Drawing action.
             node = check_node_hit(layout, x, y)
             if node is not None:
-                from_node = self._graphics.temp_from[2]
+                from_node = self.graphics.temp_from[2]
                 edge = from_node, node
                 is_added = self._state.network.subgraph.has_edge(*edge)
                 has_edge = layout.has_edge(*edge)
@@ -149,25 +154,25 @@ class WorldScene(EnvironmentScene):
 
         # Clear selection.
         selected = self._state.network.get_selected_nodes()
-        if self._graphics.temp_from is not None \
-                and self._graphics.temp_from[2] not in selected:
-            node_data = layout.nodes[self._graphics.temp_from[2]]
+        if self.graphics.temp_from is not None \
+                and self.graphics.temp_from[2] not in selected:
+            node_data = layout.nodes[self.graphics.temp_from[2]]
             node_data['added_sprite'].visible = False
 
-        if self._graphics.temp_to is not None \
-                and self._graphics.temp_to not in selected:
-            node_data = layout.nodes[self._graphics.temp_to]
+        if self.graphics.temp_to is not None \
+                and self.graphics.temp_to not in selected:
+            node_data = layout.nodes[self.graphics.temp_to]
             node_data['added_sprite'].visible = False
-            self._graphics.temp_to = None
+            self.graphics.temp_to = None
 
         self.reset_drawing()
 
         return action
 
     def reset_drawing(self):
-        self._graphics.temp_from = None
-        self._graphics.temp_to = None
-        self._graphics.temp_suggested_sprite = None
+        self.graphics.temp_from = None
+        self.graphics.temp_to = None
+        self.graphics.temp_suggested_sprite = None
 
     # Interaction methods.
 
@@ -184,31 +189,31 @@ class WorldScene(EnvironmentScene):
     def _check_buttons(self, x, y):
         action = None
 
-        if self._graphics.submit_button.state == Button.ENABLED \
-                and self._graphics.submit_button.check_hit(x, y):
+        if self.graphics.submit_button.state == Button.ENABLED \
+                and self.graphics.submit_button.check_hit(x, y):
             action = self._submit_action_type(agent=self.role)
 
-        elif self._graphics.yes_button.state == Button.ENABLED \
-                and self._graphics.yes_button.check_hit(x, y):
+        elif self.graphics.yes_button.state == Button.ENABLED \
+                and self.graphics.yes_button.check_hit(x, y):
             action = AgreeAction(agent=self.role)
 
-        elif self._graphics.no_button.state == Button.ENABLED \
-                and self._graphics.no_button.check_hit(x, y):
+        elif self.graphics.no_button.state == Button.ENABLED \
+                and self.graphics.no_button.check_hit(x, y):
             action = DisagreeAction(agent=self.role)
 
-        elif self._graphics.clear_button.state == Button.ENABLED \
-                and self._graphics.clear_button.check_hit(x, y):
+        elif self.graphics.clear_button.state == Button.ENABLED \
+                and self.graphics.clear_button.check_hit(x, y):
             action = ClearAction(agent=self.role)
 
         return action
 
     def _check_confirm_hit(self, x, y):
-        return (-320 < x - self._graphics.width//2 < -40 and
-                -100 < y - self._graphics.height//2 < 60)
+        return (-320 < x - self.graphics.width//2 < -40 and
+                -100 < y - self.graphics.height//2 < 60)
 
     def _check_continue_hit(self, x, y):
-        return (40 < x - self._graphics.width//2 < 320 and
-                -100 < y - self._graphics.height//2 < 60)
+        return (40 < x - self.graphics.width//2 < 320 and
+                -100 < y - self.graphics.height//2 < 60)
 
     # Maintenance methods.
 
@@ -227,7 +232,7 @@ class WorldScene(EnvironmentScene):
         # Update the buttons.
         self._update_buttons()
 
-        if self._graphics.has_status_label:
+        if self.graphics.has_status_label:
             self._update_status_label()
 
         super().update(state)
@@ -240,7 +245,7 @@ class WorldScene(EnvironmentScene):
         """Override EnvironmentScene's _update_paused() with 'role'"""
         state = self._state
 
-        self._graphics.view_only_rect.visible = self.role not in state.agents
+        self.graphics.view_only_rect.visible = self.role not in state.agents
 
         is_paused = state.is_terminal or state.is_paused
         self.set_paused(is_paused)
@@ -254,43 +259,77 @@ class WorldScene(EnvironmentScene):
         # Action space.
 
         if self._submit_action_type(self.role) in actions:
-            self._graphics.submit_button.set_state(Button.ENABLED)
+            self.graphics.submit_button.set_state(Button.ENABLED)
         elif state.is_terminal:
-            self._graphics.submit_button.set_state(Button.SELECTED)
+            self.graphics.submit_button.set_state(Button.SELECTED)
         else:
-            self._graphics.submit_button.set_state(Button.DISABLED)
+            self.graphics.submit_button.set_state(Button.DISABLED)
 
         if ClearAction(self.role) in actions:
-            self._graphics.clear_button.set_state(Button.ENABLED)
+            self.graphics.clear_button.set_state(Button.ENABLED)
         else:
-            self._graphics.clear_button.set_state(Button.DISABLED)
+            self.graphics.clear_button.set_state(Button.DISABLED)
 
     def _update_status_label(self):
         pass
 
 
-class IndivWorldScene(WorldScene):
+class IntroWorldScene(WorldScene):
 
     def __init__(self, **kwargs):
 
         super().__init__(**kwargs)
 
-        self._graphics.temp_edge_image = self._graphics.edge_added_image
+        # Hide node names if any.
+        for u, d in self.graphics.layout.nodes(data=True):
+            d['label'].text = ''
+
+        # Hide edge costs if any.
+        for u, v, d in self.graphics.layout.edges(data=True):
+            d['cost_label'].text = ''
+
+
+class DemoWorldScene(WorldScene):
+
+    def __init__(self, **kwargs):
+
+        super().__init__(**kwargs)
+
+        self.graphics.temp_edge_image = self.graphics.edge_added_image
+        self._pick_action_type = PickAction
+        self._submit_action_type = SubmitAction
+
+        # Hide node names if any.
+        for u, d in self.graphics.layout.nodes(data=True):
+            d['label'].text = ''
+
+
+class IndividualWorldScene(WorldScene):
+
+    def __init__(self, **kwargs):
+
+        super().__init__(**kwargs)
+
+        self.graphics.temp_edge_image = self.graphics.edge_added_image
         self._pick_action_type = PickAction
         self._submit_action_type = AttemptSubmitAction
-        self._graphics.has_status_label = False
+        self.graphics.has_status_label = False
+
+        # Hide node names if any.
+        for u, d in self.graphics.layout.nodes(data=True):
+            d['label'].text = ''
 
 
-class CollabWorldScene(WorldScene):
+class CollaborativeWorldScene(WorldScene):
 
     def __init__(self, **kwargs):
 
         super().__init__(**kwargs)
 
-        self._graphics.temp_edge_image = self._graphics.edge_suggested_image
+        self.graphics.temp_edge_image = self.graphics.edge_suggested_image
         self._pick_action_type = SuggestPickAction
-        self._submit_action_type = AttemptSubmitAction  # SubmitAction
-        self._graphics.has_status_label = True
+        self._submit_action_type = AttemptSubmitAction
+        self.graphics.has_status_label = True
 
     def _update_buttons(self):
         actions = self._actions
@@ -298,14 +337,14 @@ class CollabWorldScene(WorldScene):
         super()._update_buttons()
 
         if AgreeAction(self.role) in actions:
-            self._graphics.yes_button.set_state(Button.ENABLED)
+            self.graphics.yes_button.set_state(Button.ENABLED)
         else:
-            self._graphics.yes_button.set_state(Button.DISABLED)
+            self.graphics.yes_button.set_state(Button.DISABLED)
 
         if DisagreeAction(self.role) in actions:
-            self._graphics.no_button.set_state(Button.ENABLED)
+            self.graphics.no_button.set_state(Button.ENABLED)
         else:
-            self._graphics.no_button.set_state(Button.DISABLED)
+            self.graphics.no_button.set_state(Button.DISABLED)
 
     def _update_status_label(self):
         state = self._state
@@ -332,6 +371,6 @@ class CollabWorldScene(WorldScene):
 
         is_visible = len(s) != 0
 
-        self._graphics.status_label.text = s
-        self._graphics.status_label.visible = is_visible
-        self._graphics.status_rect.visible = is_visible
+        self.graphics.status_label.text = s
+        self.graphics.status_label.visible = is_visible
+        self.graphics.status_rect.visible = is_visible

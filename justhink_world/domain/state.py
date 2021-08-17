@@ -69,6 +69,7 @@ class EnvironmentState(pomdp_py.State):
                  agents=frozenset({HumanAgent, RobotAgent}),
                  attempt_no=1,
                  max_attempts=None,
+                 step_no=1,
                  is_submitting=False,
                  is_paused=False,
                  is_terminal=False):
@@ -81,6 +82,8 @@ class EnvironmentState(pomdp_py.State):
 
         self.is_submitting = is_submitting
 
+        self.step_no = step_no
+        
         self.is_paused = is_paused
         self.is_terminal = is_terminal
 
