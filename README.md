@@ -53,7 +53,9 @@ for name, world in worlds.items():
     print(name, world)
 ```
 
+
 ### Render an environment state (non-interactive).
+
 ```
 from justhink_world import init_world
 from justhink_world.env.visual import EnvironmentWindow
@@ -72,6 +74,7 @@ Use `left`-`right` keys to navigate among states, `p` to toggle pause, and `tab`
 
 Taking an action at a navigated state clears the future history and moves the application to the new state.
 
+#### For selected actions.
 ```
 from justhink_world import init_world
 from justhink_world.visual import WorldWindow
@@ -100,6 +103,22 @@ state = world.env.state
 print(state, state.network.get_mst_cost())
 # Print available actions at the current state.
 print(world.agent.all_actions)
+```
+
+#### For actual logs.
+```
+from justhink_world import init_world, load_log_table
+from justhink_world.visual import WorldWindow
+
+world_name = 'pretest-1'
+
+# Load the log table for a sample and activity.
+history = load_log_table(sample_no=1, world_name=world_name)
+
+# Create a world with that history.
+world = init_world(world_name, history)
+
+WorldWindow(world)
 ```
 
 
@@ -135,6 +154,24 @@ print(state, state.network.get_mst_cost())
 # Print available actions at the current state.
 print(world.agent.all_actions)
 ```
+
+#### For actual logs.
+```
+from justhink_world import init_world, load_log_table
+from justhink_world.visual import WorldWindow
+
+world_name = 'collab-activity-1'
+
+# Load the log table for a sample and activity.
+history = load_log_table(sample_no=1, world_name=world_name)
+
+# Create a world with that history.
+world = init_world(world_name, history)
+
+WorldWindow(world)
+```
+
+
 
 ## Troubleshooting
 

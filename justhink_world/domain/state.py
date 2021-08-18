@@ -83,7 +83,7 @@ class EnvironmentState(pomdp_py.State):
         self.is_submitting = is_submitting
 
         self.step_no = step_no
-        
+
         self.is_paused = is_paused
         self.is_terminal = is_terminal
 

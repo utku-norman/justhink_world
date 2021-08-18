@@ -1,28 +1,23 @@
-import sys
 import copy
 
 import importlib_resources
 
 import pomdp_py
 
-from .domain.state import EnvironmentState, NetworkState
-from .domain.action import ObserveAction, SetStateAction
-
-# from .env.env import MstEnvironment
-
-# from .domain.observation import Observation
+from .domain.state import EnvironmentState
+from .domain.action import SetStateAction
 
 from .models.policy_model import IntroPolicyModel, DemoPolicyModel, \
     IndividualPolicyModel, CollaborativePolicyModel
-
 from .models.transition_model import IntroTransitionModel, \
     DemoTransitionModel, \
     IndividualTransitionModel, CollaborativeTransitionModel
 from .models.observation_model import MstObservationModel
 from .models.reward_model import MstRewardModel
 
-from .tools.loaders import load_graph_from_edgelist, load_graph_from_json
+from .tools.loaders import make_network_resources, load_network
 
+# from ..world import IndividualWorld, CollaborativeWorld
 from .agent import HumanAgent, RobotAgent
 
 
@@ -250,15 +245,19 @@ def init_all_worlds(verbose=False):
     names = list_worlds()
 
     # Initialise each world.
-    worlds = {name: init_world(name, verbose) for name in names}
+    worlds = {name: init_world(name, verbose=verbose) for name in names}
 
     return worlds
 
 
-def init_world(name, verbose=False):
+def init_world(name, history=None, verbose=False):
     """Create a world instance by the world's name."""
+
+    if verbose:
+        print('Initialising world {} ...'.format(name))
+
     # Create the file names for the world.
-    resources = select_world_resources(name)
+    resources = make_network_resources(name)
 
     # Determine the type of the world.
     if name == 'intro':
@@ -276,97 +275,33 @@ def init_world(name, verbose=False):
     # Read the resources via temporary files and create a world instance.
     with importlib_resources.as_file(resources['graph']) as graph_file, \
             importlib_resources.as_file(resources['layout']) as layout_file:
-        return load_world(graph_file,
-                          layout_file,
-                          world_type=world_type,
-                          name=name,
-                          verbose=verbose)
-
-
-def load_world(graph_file,
-               layout_file,
-               world_type,
-               name=None,
-               verbose=False):
-    """Load a world from its resource files."""
-    # # Type check for the world type.
-    # assert world_type is IndividualWorld \
-    #     or world_type is CollaborativeWorld
-
-    if verbose:
-        print('Initialising world {} ...'.format(name))
-
-    # Load the graph.
-    graph = load_graph_from_edgelist(graph_file)
-
-    # Load the layout.
-    layout = load_graph_from_json(layout_file)
-
-    # Print debug message on the graph and the layout.
-    if verbose:
-        print('Using graph: {} with layout: {}'.format(
-            graph_file.name, layout_file.name))
-
-    # Fill in the possible edges and their attributes (e.g. cost).
-    full_graph = copy.deepcopy(layout)
-    for u, v, d in graph.edges(data=True):
-        full_graph.add_edge(u, v, **d)
+        network = load_network(graph_file, layout_file, verbose=verbose)
 
     # Construct the initial state.
-    network = NetworkState(graph=full_graph)
-    if world_type is IndividualWorld:
-        init_state = EnvironmentState(
-            network=network,
-            agents=frozenset({HumanAgent}),
-            attempt_no=1,
-            max_attempts=None,
-            is_paused=False,
-        )
-    elif world_type is CollaborativeWorld:
-        init_state = EnvironmentState(
-            network=network,
-            agents=frozenset({RobotAgent}),
-            attempt_no=1,
-            max_attempts=4,
-            is_paused=False,
-        )
-    elif world_type is IntroWorld:
-        init_state = EnvironmentState(network=network)
-    elif world_type is DemoWorld:
-        init_state = EnvironmentState(network=network)
+    if history is None:
+        if world_type is IndividualWorld:
+            init_state = EnvironmentState(
+                network=network, agents=frozenset({HumanAgent}),
+                attempt_no=1, max_attempts=None, is_paused=False)
+        elif world_type is CollaborativeWorld:
+            init_state = EnvironmentState(
+                network=network, agents=frozenset({RobotAgent}),
+                attempt_no=1, max_attempts=4, is_paused=False)
+        elif world_type is IntroWorld:
+            init_state = EnvironmentState(network=network)
+        elif world_type is DemoWorld:
+            init_state = EnvironmentState(network=network)
+        else:
+            raise NotImplementedError
+        history = [init_state]
     else:
-        raise NotImplementedError
+        history = history
 
     # Construct the world.
-    world = world_type(init_state, name=name)
+    # print('####', world_type, name, history)
+    world = world_type(history, name=name)
 
     if verbose:
         print('Done!')
 
     return world
-
-
-def select_world_resources(name):
-    """Select a world's resources by the world's name."""
-    # Create a container for the world sources.
-    package = importlib_resources.files('justhink_world.resources.networks')
-
-    # Make the source file names.
-    graph_file = '{}_edgelist.txt'.format(name)
-    layout_file = '{}_layout.json'.format(name)
-
-    # Make the sources.
-    # Create a container for the world sources.
-    graph_resource = package.joinpath(graph_file)
-    layout_resource = package.joinpath(layout_file)
-
-    # Check if the sources are available.
-    for source in [graph_resource, layout_resource]:
-        try:
-            assert source.exists()
-        except AssertionError:
-            print('Resource file {} does not exist for world "{}".'.format(
-                source, name))
-            sys.exit(1)
-
-    return {'graph': graph_resource, 'layout': layout_resource}
