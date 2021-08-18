@@ -11,7 +11,7 @@ from ..domain.action import PickAction, SuggestPickAction, \
 
 
 from ..domain.state import Button
-from ..agent import HumanAgent, RobotAgent
+from ..agent import Human, Robot
 
 EPSILON = 1e-9
 
@@ -273,7 +273,7 @@ class CollaborativeTransitionModel(TransitionModel):
 
 
 def toggle_agent(agents):
-    if RobotAgent in agents:
-        return frozenset({HumanAgent})
+    if Robot in agents:
+        return frozenset({Human})
     else:
-        return frozenset({RobotAgent})
+        return frozenset({Robot})

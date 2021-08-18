@@ -52,9 +52,10 @@ def load_log_table(sample_no, world_name):
     try:
         logs = load_all_logs()
         log_df = logs[sample_no][world_name]
+        return log_df
     except Exception as e:
         print(e)
-    return log_df
+        raise ValueError
 
 
 def load_network(graph_file, layout_file, verbose=False):

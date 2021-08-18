@@ -70,9 +70,11 @@ EnvironmentWindow(world.env.state)
 
 
 ### Try out an individual (i.e. a test) world (interactive).
-Use `left`-`right` keys to navigate among states, `p` to toggle pause, and `tab` to toggle the role.
+Use `left`-`right` keys to navigate to the previous and the next state, 
+`home`-`end` keys to navigate to the first and the last state, 
+`p` to toggle pause, and `tab` to toggle the role.
 
-Taking an action at a navigated state clears the future history and moves the application to the new state.
+Taking an action like picking an edge at a navigated state clears the future history and moves the application to the new state.
 
 #### For selected actions.
 ```
@@ -123,24 +125,26 @@ WorldWindow(world)
 
 
 ### Try out a collaborative world (interactive).
-Use `left`-`right` keys to navigate among states, `p` to toggle pause, and `tab` to toggle the role.
+Use `left`-`right` keys to navigate to the previous and the next state, 
+`home`-`end` keys to navigate to the first and the last state, 
+`p` to toggle pause, and `tab` to toggle the role.
 
-Taking an action at a navigated state clears the future history and moves the application to the new state.
+Taking an action like suggesting an edge at a navigated state clears the future history and moves the application to the new state.
 
 ```
 from justhink_world import init_world
 from justhink_world.visual import WorldWindow
 from justhink_world.domain.action import SuggestPickAction, \
 	AgreeAction, DisagreeAction
-from justhink_world.agent import HumanAgent, RobotAgent
+from justhink_world.agent import Human, Robot
 
 # Create a world.
 world = init_world('collab-activity-1')
 
 # Act on the world.
-world.act(SuggestPickAction((3, 1), agent=RobotAgent))
-world.act(AgreeAction(agent=HumanAgent))
-world.act(SuggestPickAction((1, 4), agent=HumanAgent))
+world.act(SuggestPickAction((3, 1), agent=Robot))
+world.act(AgreeAction(agent=Human))
+world.act(SuggestPickAction((1, 4), agent=Human))
 
 # Visualise the world.
 WorldWindow(world)
@@ -155,7 +159,7 @@ print(state, state.network.get_mst_cost())
 print(world.agent.all_actions)
 ```
 
-#### For actual logs.
+#### Replay actual logs.
 ```
 from justhink_world import init_world, load_log_table
 from justhink_world.visual import WorldWindow
@@ -163,7 +167,7 @@ from justhink_world.visual import WorldWindow
 world_name = 'collab-activity-1'
 
 # Load the log table for a sample and activity.
-history = load_log_table(sample_no=1, world_name=world_name)
+history = load_log_table(sample_no=3, world_name=world_name)
 
 # Create a world with that history.
 world = init_world(world_name, history)

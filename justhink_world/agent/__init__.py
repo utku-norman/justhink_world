@@ -1,1 +1,1 @@
-from .agent import HumanAgent, RobotAgent
+from .agent import Human, Robot

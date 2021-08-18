@@ -1,3 +1,5 @@
+import copy
+
 import pyglet
 from pyglet.window import key
 
@@ -46,8 +48,20 @@ class WorldWindow(pyglet.window.Window):
 
         # Role label.
         self._role_label = pyglet.text.Label(
-            '', x=20, y=height-40, anchor_y='center', color=(0, 0, 0, 255),
+            '', x=20, y=height-60, anchor_y='center', color=(0, 0, 0, 255),
             font_name='Sans', font_size=32,
+            group=pyglet.graphics.OrderedGroup(5))
+
+        # Next action if any label.
+        self._next_action_label = pyglet.text.Label(
+            '', x=width//2, y=height-20, anchor_y='center',
+            color=(0, 0, 0, 255), font_name='Sans', font_size=24,
+            group=pyglet.graphics.OrderedGroup(5))
+
+        # Previous action if any label.
+        self._prev_action_label = pyglet.text.Label(
+            '', x=20, y=height-20, anchor_y='center',
+            color=(0, 0, 0, 255), font_name='Sans', font_size=24,
             group=pyglet.graphics.OrderedGroup(5))
 
         self.update()
@@ -66,6 +80,8 @@ class WorldWindow(pyglet.window.Window):
         self._scene.on_draw()
         self._hist_label.draw()
         self._role_label.draw()
+        self._next_action_label.draw()
+        self._prev_action_label.draw()
 
     def act_via_window(self, action):
         self._world.act(action)
@@ -96,7 +112,7 @@ class WorldWindow(pyglet.window.Window):
             self.update(world.cur_state)
         elif symbol == key.END:
             world.state_no = world.num_states
-            self.update(world.state_no)
+            self.update(world.cur_state)
         elif symbol == key.TAB:
             self._scene.toggle_role()
             self.update()
@@ -115,10 +131,40 @@ class WorldWindow(pyglet.window.Window):
         # Update the role label.
         self._role_label.text = self._make_role_label_text()
 
+        self._next_action_label.text = self._make_next_action_label_text()
+        self._prev_action_label.text = self._make_prev_action_label_text()
+
     # Helper methods.
 
     def _make_role_label_text(self):
         return 'Role: {}'.format(self._scene.role.name)
+
+    def _make_action_text(self, offset=1):
+        world = self._world
+        index = world.state_index + offset
+        try:
+            action = world.history[index]
+        except IndexError:
+            action = None
+        if index < 0:
+            action = None
+
+        if isinstance(world, CollaborativeWorld):
+            if action is not None:
+                action = copy.deepcopy(action)
+                if hasattr(action, 'edge') and action.edge is not None:
+                    edge_name = world.env.state.network.get_edge_name(
+                        action.edge)
+                    u, _, v = edge_name.split()
+                    action = action.__class__(edge=(u, v), agent=action.agent)
+                    # print(action)
+        return str(action)
+
+    def _make_next_action_label_text(self):
+        return 'Next: {}'.format(self._make_action_text(offset=1))
+
+    def _make_prev_action_label_text(self):
+        return 'Previous: {}'.format(self._make_action_text(offset=-1))
 
     def _make_hist_label_text(self):
         return 'State: {}/{}'.format(

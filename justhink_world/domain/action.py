@@ -1,6 +1,6 @@
 import pomdp_py
 
-from ..agent.agent import Agent, HumanAgent
+from ..agent.agent import Agent, Human
 from .state import EnvironmentState
 
 
@@ -15,7 +15,7 @@ class Action(pomdp_py.Action):
             the inheriting/actual action class
         agent (Agent):
             the agent of the action, as the class itself
-            i.e. agent = HumanAgent rather than agent = HumanAgent()
+            i.e. agent = Human rather than agent = Human()
     """
 
     def __init__(self, name, agent):
@@ -52,10 +52,10 @@ class SetStateAction(Action):
         state (EnvironmentState):
             the state that he action will set the environment
         agent (Agent, optional):
-            the agent of the action (default HumanAgent)
+            the agent of the action (default Human)
     """
 
-    def __init__(self, state, agent=HumanAgent):
+    def __init__(self, state, agent=Human):
         assert isinstance(state, EnvironmentState)
         assert issubclass(agent, Agent)
 
@@ -67,7 +67,7 @@ class SetStateAction(Action):
 
 
 class SetPauseAction(Action):
-    def __init__(self, is_paused, agent=HumanAgent):
+    def __init__(self, is_paused, agent=Human):
         assert isinstance(is_paused, bool)
 
         self.is_paused = is_paused
@@ -78,7 +78,7 @@ class SetPauseAction(Action):
 
 
 class SuggestPickAction(Action):
-    def __init__(self, edge, agent=HumanAgent):
+    def __init__(self, edge, agent=Human):
         self.edge = edge
 
         name = 'suggest-pick({},{})'.format(self.edge[0], self.edge[1])
@@ -87,7 +87,7 @@ class SuggestPickAction(Action):
 
 
 class PickAction(Action):
-    def __init__(self, edge, agent=HumanAgent):
+    def __init__(self, edge, agent=Human):
         self.edge = edge
 
         name = 'pick({},{})'.format(self.edge[0], self.edge[1])
@@ -96,7 +96,7 @@ class PickAction(Action):
 
 
 class UnpickAction(Action):
-    def __init__(self, edge, agent=HumanAgent):
+    def __init__(self, edge, agent=Human):
         self.edge = edge
 
         name = 'unpick({},{})'.format(self.edge[0], self.edge[1])
@@ -105,35 +105,35 @@ class UnpickAction(Action):
 
 
 class ObserveAction(Action):
-    def __init__(self, agent=HumanAgent):
+    def __init__(self, agent=Human):
         super().__init__('observe', agent)
 
 
 class AgreeAction(Action):
-    def __init__(self, agent=HumanAgent):
+    def __init__(self, agent=Human):
         super().__init__('agree', agent)
 
 
 class DisagreeAction(Action):
-    def __init__(self, agent=HumanAgent):
+    def __init__(self, agent=Human):
         super().__init__('disagree', agent)
 
 
 class ClearAction(Action):
-    def __init__(self, agent=HumanAgent):
+    def __init__(self, agent=Human):
         super().__init__('clear', agent)
 
 
 class AttemptSubmitAction(Action):
-    def __init__(self, agent=HumanAgent):
+    def __init__(self, agent=Human):
         super().__init__('attempt-submit', agent)
 
 
 class ContinueAction(Action):
-    def __init__(self, agent=HumanAgent):
+    def __init__(self, agent=Human):
         super().__init__('continue', agent)
 
 
 class SubmitAction(Action):
-    def __init__(self, agent=HumanAgent):
+    def __init__(self, agent=Human):
         super().__init__('submit', agent)

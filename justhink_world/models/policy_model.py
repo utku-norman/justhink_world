@@ -6,7 +6,7 @@ from ..domain.action import PickAction, SuggestPickAction, \
     AgreeAction, DisagreeAction, \
     ClearAction, AttemptSubmitAction, ContinueAction
 
-from ..agent.agent import HumanAgent, RobotAgent
+from ..agent.agent import Human, Robot
 
 
 class PolicyModel(pomdp_py.RolloutPolicy):
@@ -120,7 +120,7 @@ class CollaborativePolicyModel(PolicyModel):
 
 class IntroPolicyModel(PolicyModel):
     def update_available_actions(self, state):
-        self.actions = {SubmitAction(agent=HumanAgent)}
+        self.actions = {SubmitAction(agent=Human)}
 
 
 class DemoPolicyModel(PolicyModel):
@@ -132,13 +132,13 @@ class DemoPolicyModel(PolicyModel):
         if state.step_no < 4:
             for u, v in state.network.graph.edges():
                 if not state.network.subgraph.has_edge(u, v):
-                    action = PickAction((u, v), agent=HumanAgent)
+                    action = PickAction((u, v), agent=Human)
                     actions.add(action)
 
         if state.step_no < 4 and num_edges > 0:
-            actions.add(ClearAction(agent=HumanAgent))
+            actions.add(ClearAction(agent=Human))
 
         # if state.step_no == 3 and num_edges == 1:
-        actions.add(SubmitAction(agent=HumanAgent))
+        actions.add(SubmitAction(agent=Human))
 
         self.actions = actions

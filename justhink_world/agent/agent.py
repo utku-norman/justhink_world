@@ -2,7 +2,7 @@ class Agent(object):
     pass
 
 
-class HumanAgent(Agent):
+class Human(Agent):
     name = 'Human'
 
     def __str__(self):
@@ -12,7 +12,18 @@ class HumanAgent(Agent):
         return self.name
 
 
-class RobotAgent(Agent):
+class Robot(Agent):
+    name = 'Robot'
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return self.name
+
+
+
+class Robot(Agent):
     name = 'Robot'
 
     def __str__(self):

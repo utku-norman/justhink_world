@@ -3,7 +3,7 @@ from .graphics import check_node_hit
 from justhink_world.env.visual import EnvironmentScene
 from justhink_world.env.visual.graphics import create_edge_sprite
 
-from justhink_world.domain.state import HumanAgent, RobotAgent, Button
+from justhink_world.domain.state import Human, Robot, Button
 from justhink_world.domain.action import \
     SubmitAction, AgreeAction, DisagreeAction, \
     ClearAction, PickAction, SuggestPickAction, \
@@ -13,7 +13,7 @@ from justhink_world.domain.action import \
 class WorldScene(EnvironmentScene):
     def __init__(self, world, name=None, width=1920, height=1080):
 
-        self.role = HumanAgent
+        self.role = Human
         self._state = world.env.state
         self._policy_model = world.agent.policy_model
 
@@ -177,10 +177,10 @@ class WorldScene(EnvironmentScene):
     # Interaction methods.
 
     def toggle_role(self):
-        if self.role == RobotAgent:
-            self.role = HumanAgent
-        elif self.role == HumanAgent:
-            self.role = RobotAgent
+        if self.role == Robot:
+            self.role = Human
+        elif self.role == Human:
+            self.role = Robot
         else:
             raise NotImplementedError
 

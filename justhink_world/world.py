@@ -18,7 +18,7 @@ from .models.reward_model import MstRewardModel
 from .tools.loaders import make_network_resources, load_network
 
 # from ..world import IndividualWorld, CollaborativeWorld
-from .agent import HumanAgent, RobotAgent
+from .agent import Human, Robot
 
 
 class World(pomdp_py.POMDP):
@@ -281,11 +281,11 @@ def init_world(name, history=None, verbose=False):
     if history is None:
         if world_type is IndividualWorld:
             init_state = EnvironmentState(
-                network=network, agents=frozenset({HumanAgent}),
+                network=network, agents=frozenset({Human}),
                 attempt_no=1, max_attempts=None, is_paused=False)
         elif world_type is CollaborativeWorld:
             init_state = EnvironmentState(
-                network=network, agents=frozenset({RobotAgent}),
+                network=network, agents=frozenset({Robot}),
                 attempt_no=1, max_attempts=4, is_paused=False)
         elif world_type is IntroWorld:
             init_state = EnvironmentState(network=network)
