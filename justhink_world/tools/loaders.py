@@ -3,6 +3,7 @@ import copy
 import json
 import pickle
 
+import pyglet
 import importlib_resources
 import networkx as nx
 import pathlib as pl
@@ -47,7 +48,7 @@ def load_all_logs(log_resource='justhink_spring21_transition_logs.pickle'):
     return logs
 
 
-def load_log_table(sample_no, world_name):
+def load_log(sample_no, world_name):
     """TODO"""
     try:
         logs = load_all_logs()
@@ -80,6 +81,14 @@ def load_network(graph_file, layout_file, verbose=False):
     network = NetworkState(graph=full_graph)
 
     return network
+
+
+def load_image_from_reference(ref):
+    """Read pyglet image from importlib reference."""
+    with importlib_resources.as_file(ref) as file:
+        return pyglet.image.load(file)
+
+
 
 
 def make_network_resources(name):

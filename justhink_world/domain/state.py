@@ -13,15 +13,15 @@ from ..agent import Human, Robot
 class MentalState(object):
     """TODO: docstring for MentalState"""
 
-    def __init__(self, from_graph, agents=set({Human, Robot})):
+    def __init__(self, graph, agents=set({Human, Robot})):
         if Human in agents:
             self.beliefs = {
                 'me': {
-                    'world': copy.deepcopy(from_graph),
+                    'world': self.create_view(graph),
                     'you': {
-                        'world': copy.deepcopy(from_graph),
+                        'world': self.create_view(graph),
                         'me': {
-                            'world': copy.deepcopy(from_graph),
+                            'world': self.create_view(graph),
                         }
 
                     },
@@ -30,9 +30,16 @@ class MentalState(object):
         else:
             self.beliefs = {
                 'me': {
-                    'world': copy.deepcopy(from_graph),
+                    'world': self.create_view(graph),
                 }
             }
+
+    def create_view(self, from_graph):
+        graph = copy.deepcopy(from_graph)
+        for u, v, d in graph.edges(data=True):
+            d['is_opt'] = None
+
+        return graph
 
 
 class NetworkState(object):

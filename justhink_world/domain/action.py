@@ -1,6 +1,6 @@
 import pomdp_py
 
-from ..agent.agent import Agent, Human
+from ..agent.agent import Actor, Human
 from .state import EnvironmentState
 
 
@@ -13,14 +13,14 @@ class Action(pomdp_py.Action):
         name (str):
             the string representation of the action built by
             the inheriting/actual action class
-        agent (Agent):
+        agent (Actor):
             the agent of the action, as the class itself
             i.e. agent = Human rather than agent = Human()
     """
 
     def __init__(self, name, agent):
         assert isinstance(name, str)
-        assert issubclass(agent, Agent)
+        assert issubclass(agent, Actor)
 
         self.name = name
         self.agent = agent
@@ -51,13 +51,13 @@ class SetStateAction(Action):
     Attributes:
         state (EnvironmentState):
             the state that he action will set the environment
-        agent (Agent, optional):
+        agent (Actor, optional):
             the agent of the action (default Human)
     """
 
     def __init__(self, state, agent=Human):
         assert isinstance(state, EnvironmentState)
-        assert issubclass(agent, Agent)
+        assert issubclass(agent, Actor)
 
         self.state = state
 

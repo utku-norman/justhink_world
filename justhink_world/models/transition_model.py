@@ -95,8 +95,8 @@ class DemoTransitionModel(TransitionModel):
 #             self._submit_button.set_state('enabled')
 
 
-#         highlight = self.step_no == 2
-#         update_scene_graph(self, edges, terminal, highlight=highlight)
+#         is_highlighted = self.step_no == 2
+#         update_scene_graph(self, edges, terminal, is_highlighted=is_highlighted)
 
 class IndividualTransitionModel(TransitionModel):
     """Transition model for an individual activity (e.g. tests).

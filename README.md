@@ -42,12 +42,12 @@ You can check the installation in a Python interpreter (e.g. by running `python`
 
 ### Print a list of available worlds and try to initialise all of the worlds.
 ```
-from justhink_world import list_worlds, init_all_worlds
+from justhink_world import list_worlds, create_all_worlds
 
 # Print the list of available worlds (i.e. the pretest worlds, collaborative activity worlds etc.).
 print(list_worlds())
 
-worlds = init_all_worlds()
+worlds = create_all_worlds()
 
 for name, world in worlds.items():
     print(name, world)
@@ -57,15 +57,14 @@ for name, world in worlds.items():
 ### Render an environment state (non-interactive).
 
 ```
-from justhink_world import init_world
-from justhink_world.env.visual import EnvironmentWindow
+from justhink_world import create_world, show_state
 from justhink_world.domain.action import PickAction
 
-world = init_world('pretest-1')
+world = create_world('pretest-1')
 world.act(PickAction((3, 1)))
 world.act(PickAction((1, 4)))
 
-EnvironmentWindow(world.env.state)
+show_state(world.cur_state)
 ```
 
 
@@ -76,15 +75,14 @@ Use `left`-`right` keys to navigate to the previous and the next state,
 
 Taking an action like picking an edge at a navigated state clears the future history and moves the application to the new state.
 
-#### For selected actions.
+#### For made up actions.
 ```
-from justhink_world import init_world
-from justhink_world.visual import WorldWindow
+from justhink_world import create_world, show_world
 from justhink_world.domain.action import PickAction, ClearAction, \
 AttemptSubmitAction, ContinueAction, SubmitAction
 
 # Create a world.
-world = init_world('pretest-1')
+world = create_world('pretest-1')
 
 # Act on the world.
 world.act(PickAction((3, 1)))
@@ -97,11 +95,11 @@ world.act(AttemptSubmitAction())
 world.act(SubmitAction())
 
 # Visualise the world.
-WorldWindow(world)
+show_world(world)
 
 
 # Print the current state and MST cost.
-state = world.env.state
+state = world.cur_state
 print(state, state.network.get_mst_cost())
 # Print available actions at the current state.
 print(world.agent.all_actions)
@@ -109,18 +107,17 @@ print(world.agent.all_actions)
 
 #### For actual logs.
 ```
-from justhink_world import init_world, load_log_table
-from justhink_world.visual import WorldWindow
+from justhink_world import create_world, show_world, load_log
 
 world_name = 'pretest-1'
 
 # Load the log table for a sample and activity.
-history = load_log_table(sample_no=1, world_name=world_name)
+history = load_log(sample_no=1, world_name=world_name)
 
 # Create a world with that history.
-world = init_world(world_name, history)
+world = create_world(world_name, history)
 
-WorldWindow(world)
+show_world(world)
 ```
 
 
@@ -132,14 +129,13 @@ Use `left`-`right` keys to navigate to the previous and the next state,
 Taking an action like suggesting an edge at a navigated state clears the future history and moves the application to the new state.
 
 ```
-from justhink_world import init_world
-from justhink_world.visual import WorldWindow
+from justhink_world import create_world, show_world
+from justhink_world.agent import Human, Robot
 from justhink_world.domain.action import SuggestPickAction, \
 	AgreeAction, DisagreeAction
-from justhink_world.agent import Human, Robot
 
 # Create a world.
-world = init_world('collab-activity-1')
+world = create_world('collab-activity-1')
 
 # Act on the world.
 world.act(SuggestPickAction((3, 1), agent=Robot))
@@ -147,8 +143,35 @@ world.act(AgreeAction(agent=Human))
 world.act(SuggestPickAction((1, 4), agent=Human))
 
 # Visualise the world.
-WorldWindow(world)
+show_world(world)
+```
 
+#### Replay actual logs.
+```
+from justhink_world import create_world, load_log, show_world
+
+world_name = 'collab-activity-1'
+
+# Load the log table for a sample and activity.
+history = load_log(sample_no=3, world_name=world_name)
+
+# Create a world with that history.
+world = create_world(world_name, history)
+
+show_world(world)
+```
+
+
+#### Playground
+```
+from justhink_world import create_world, show_world, show_mind, show_all
+
+world = create_world('pretest-1')
+show_all(world)
+
+
+show_mind(world)
+show_world(world)
 
 # Print history.
 print(world.history)
@@ -157,24 +180,8 @@ state = world.env.state
 print(state, state.network.get_mst_cost())
 # Print available actions at the current state.
 print(world.agent.all_actions)
+
 ```
-
-#### Replay actual logs.
-```
-from justhink_world import init_world, load_log_table
-from justhink_world.visual import WorldWindow
-
-world_name = 'collab-activity-1'
-
-# Load the log table for a sample and activity.
-history = load_log_table(sample_no=3, world_name=world_name)
-
-# Create a world with that history.
-world = init_world(world_name, history)
-
-WorldWindow(world)
-```
-
 
 
 ## Troubleshooting

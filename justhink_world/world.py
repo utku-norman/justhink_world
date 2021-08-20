@@ -4,8 +4,10 @@ import importlib_resources
 
 import pomdp_py
 
-from .domain.state import EnvironmentState
+from .domain.state import EnvironmentState, MentalState
 from .domain.action import SetStateAction
+from .domain.action import PickAction, SuggestPickAction, AgreeAction, \
+    DisagreeAction, ObserveAction # , AttemptSubmitAction, SubmitAction
 
 from .models.policy_model import IntroPolicyModel, DemoPolicyModel, \
     IndividualPolicyModel, CollaborativePolicyModel
@@ -17,8 +19,7 @@ from .models.reward_model import MstRewardModel
 
 from .tools.loaders import make_network_resources, load_network
 
-# from ..world import IndividualWorld, CollaborativeWorld
-from .agent import Human, Robot
+from .agent import Human, Robot, RobotAgent
 
 
 class World(pomdp_py.POMDP):
@@ -50,18 +51,24 @@ class World(pomdp_py.POMDP):
 
         # Create a reward model.
         reward_model = MstRewardModel()
+        observation_model = MstObservationModel()
 
         # Initialise an agent.
         # The state is fully observable.
-        init_belief = pomdp_py.Histogram({cur_state: 1.0})
-        agent = pomdp_py.Agent(init_belief,
-                               policy_model,
-                               transition_model,
-                               MstObservationModel(),
-                               reward_model)
-        # Update the available actions in the policy model
-        # to access agent.all_actions even at the initial state.
-        agent.policy_model.update_available_actions(cur_state)
+        # init_belief = pomdp_py.Histogram({cur_state: 1.0})
+        # agent = pomdp_py.Agent(init_belief,
+        #                        policy_model,
+        #                        transition_model,
+        #                        MstObservationModel(),
+        #                        reward_model)
+
+        # Initialise an agent.
+        # The state is fully observable.
+        mental_state = MentalState(cur_state.network.graph)
+        agent = RobotAgent(
+            cur_state, policy_model, transition_model=transition_model,
+            observation_model=observation_model, reward_model=reward_model,
+            mental_state=mental_state)
 
         # Initialise an environment.
         # MstEnvironment
@@ -73,7 +80,7 @@ class World(pomdp_py.POMDP):
         super().__init__(agent, env, name=name)
 
         # Update the agent.
-        # self.act(ObserveAction())
+        self.act(ObserveAction(agent=Robot))
 
     def __str__(self):
         return self.__repr__()
@@ -138,6 +145,8 @@ class World(pomdp_py.POMDP):
             self.agent.observation_model, action)
 
         self.agent.update_history(action, real_observation)
+        # problem.agent.update_history(real_action, real_observation)
+        belief_update(self.agent, action, real_observation)
         self.agent.policy_model.update(state, next_state, action)
 
         # TODO: run a belief update function.
@@ -239,18 +248,18 @@ def list_worlds():
     return names
 
 
-def init_all_worlds(verbose=False):
+def create_all_worlds(verbose=False):
     """Create all of the world instances."""
     # Create a list of world names to be initialised.
     names = list_worlds()
 
     # Initialise each world.
-    worlds = {name: init_world(name, verbose=verbose) for name in names}
+    worlds = {name: create_world(name, verbose=verbose) for name in names}
 
     return worlds
 
 
-def init_world(name, history=None, verbose=False):
+def create_world(name, history=None, verbose=False):
     """Create a world instance by the world's name."""
 
     if verbose:
@@ -305,3 +314,30 @@ def init_world(name, history=None, verbose=False):
         print('Done!')
 
     return world
+
+
+# belief update
+def belief_update(agent, action, observation):
+    if action.agent is Human:
+        beliefs = agent.state.beliefs['me']['you']
+    elif action.agent is Robot:
+        beliefs = agent.state.beliefs['me']['you']['me']
+    else:
+        raise ValueError
+    cur_state = agent.cur_belief.mpe()
+    try:
+
+        if isinstance(action, PickAction) \
+                or isinstance(action, SuggestPickAction):
+            u, v = action.edge
+            beliefs['world'][u][v]['is_opt'] = 1.0
+
+        elif isinstance(action, AgreeAction):
+            u, v = cur_state.network.suggested_edge
+            beliefs['world'][u][v]['is_opt'] = 1.0
+
+        elif isinstance(action, DisagreeAction):
+            u, v = cur_state.network.suggested_edge
+            beliefs['world'][u][v]['is_opt'] = 0.0
+    except Exception as e:
+        print(beliefs, e)
