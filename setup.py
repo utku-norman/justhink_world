@@ -12,6 +12,7 @@ setup(
     license='LICENSE',
     long_description=open('README.md').read(),
     install_requires=[
+        "wheel",
         "pomdp_py",
         "networkx",
         "pyglet",
