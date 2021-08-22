@@ -164,7 +164,7 @@ show_world(world)
 
 #### Playground
 ```
-from justhink_world import create_world, show_world, show_mind, show_all
+"from justhink_world import create_world, show_world, show_mind, show_all
 
 world = create_world('pretest-1')
 show_all(world)
@@ -179,7 +179,7 @@ print(world.history)
 state = world.env.state
 print(state, state.network.get_mst_cost())
 # Print available actions at the current state.
-print(world.agent.all_actions)
+print(world.agent.all_actions)"
 
 ```
 

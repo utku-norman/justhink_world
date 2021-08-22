@@ -33,6 +33,9 @@ class Scene(object):
     def on_close(self):
         pass
 
+    def on_update(self):
+        pass
+
     def on_mouse_press(self, x, y, button, modifiers, win):
         pass
 
@@ -204,6 +207,9 @@ class Graphics(object):
 
         self.width = width
         self.height = height
+
+        # self._temp_from = None
+        # self._temp_to = None
 
         self.buttons = {}
 

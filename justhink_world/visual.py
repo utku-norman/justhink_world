@@ -17,13 +17,6 @@ from justhink_world.domain.action import SetPauseAction,  \
 from justhink_world.world import IndividualWorld, CollaborativeWorld
 
 
-def show_world(world):
-    WorldWindow(world)
-
-    # Enter the main event loop.
-    pyglet.app.run()
-
-
 def show_all(world):
     world_window = WorldWindow(world)
     mental_window = MentalWindow(world)
@@ -64,8 +57,11 @@ def show_all(world):
     pyglet.app.run()
 
 
-def update(dt):
-    pass
+def show_world(world):
+    WorldWindow(world)
+
+    # Enter the main event loop.
+    pyglet.app.run()
 
 
 class WorldWindow(pyglet.window.Window):
@@ -241,13 +237,37 @@ class WorldScene(EnvironmentScene):
         self._pick_action_type = PickAction
         self._submit_action_type = SubmitAction
 
-        self.graphics.temp_from = None
-        self.graphics.temp_to = None
+        # self.temp_from = None
+        # self.temp_to = None
         self.graphics.temp_suggested_sprite = None
+
+        # self.temp_from = None
+        # self.temp_to = None
 
         # self.graphics.has_status_label = False
 
         self._update_feasible_actions()
+
+        self._temp_from = None
+        self._temp_to = None
+
+    @property
+    def temp_from(self):
+        return self._temp_from
+
+    @property
+    def temp_to(self):
+        return self._temp_to
+
+    @temp_from.setter
+    def temp_from(self, value):
+        print('Setting temp to', value)
+        self._temp_from = value
+
+    @temp_to.setter
+    def temp_to(self, value):
+        print('Setting temp from', value)
+        self._temp_to = value
 
     # Custom public methods.
 
@@ -305,7 +325,7 @@ class WorldScene(EnvironmentScene):
         if self.state.is_paused:
             return
 
-        if self.graphics.temp_from is not None:  # i.e. drawing
+        if self.temp_from is not None:  # i.e. drawing
             self._process_drawing(x, y)
 
     def on_mouse_release(self, x, y, button, modifiers, win):
@@ -322,41 +342,39 @@ class WorldScene(EnvironmentScene):
         pass
 
     def _process_drawing(self, x, y):
-        # Check whether the agent is drawing from a node.
-        if self.graphics.temp_from is None:
-            node = check_node_hit(self.graphics.layout, x, y)
-            if node is not None:
-                node_data = self.graphics.layout.nodes[node]
-                self.graphics.temp_from = (
-                    node_data['x'], node_data['y'], node)
-                node_data['added_sprite'].visible = True
+        # Check if a node is pressed.
+        node = check_node_hit(self.graphics.layout, x, y)
 
-        # Check pressing a node.
+        # Check if the agent started drawing from a node.
+        if self.temp_from is None:
+            if node is not None:
+                d = self.graphics.layout.nodes[node]
+                self.temp_from = (d['x'], d['y'], node)
+                d['added_sprite'].visible = True
+
+        # If the agent is already drawing from a node.
         else:
-            node = check_node_hit(self.graphics.layout, x, y)
             selected = self.state.network.get_selected_nodes()
 
-            if node is not None:
-                # if hover a new node that is not already selected
-                if node != self.graphics.temp_from[2] \
-                        and node not in selected:
-                    self.graphics.temp_to = node
-                    d = self.graphics.layout.nodes[node]
-                    d['added_sprite'].visible = True
+            # If mouse is on a new node that is not already selected
+            if node is not None and node not in selected and \
+                    node != self.temp_from[2]:
+                self.temp_to = node
+                d = self.graphics.layout.nodes[node]
+                d['added_sprite'].visible = True
 
-            # no longer hover a node
-            else:
-                # there is an old temp to and if not already selected
-                if self.graphics.temp_to is not None \
-                        and self.graphics.temp_to not in selected:
-                    d = self.graphics.layout.nodes[self.graphics.temp_to]
-                    d['added_sprite'].visible = False
-                    self.graphics.temp_to = None
+            # If mouse is not on a node, reset the previous drawing to node.
+            elif self.temp_to is not None \
+                    and self.temp_to not in selected:
+                d = self.graphics.layout.nodes[self.temp_to]
+                d['added_sprite'].visible = False
+                self.temp_to = None
 
-        if self.graphics.temp_from is not None:
+            # Update the temporary drawing edge to the new mouse position.
+            # if self.temp_from is not None:
             self.graphics.temp_suggested_sprite = create_edge_sprite(
-                self.graphics.temp_edge_image,
-                self.graphics.temp_from[0], self.graphics.temp_from[1], x, y)
+                self.temp_edge_image, self.temp_from[0],
+                self.temp_from[1], x, y)
 
     # Private methods.
 
@@ -423,11 +441,11 @@ class WorldScene(EnvironmentScene):
         # self.graphics.layout = self.graphics.self.graphics.layout
 
         # Check if an edge is drawn.
-        if self.graphics.temp_from is not None:
+        if self.temp_from is not None:
             # Drawing action.
             node = check_node_hit(self.graphics.layout, x, y)
             if node is not None:
-                from_node = self.graphics.temp_from[2]
+                from_node = self.temp_from[2]
                 edge = from_node, node
                 is_added = self.state.network.subgraph.has_edge(*edge)
                 has_edge = self.graphics.layout.has_edge(*edge)
@@ -437,24 +455,24 @@ class WorldScene(EnvironmentScene):
 
         # Clear selection.
         selected = self.state.network.get_selected_nodes()
-        if self.graphics.temp_from is not None \
-                and self.graphics.temp_from[2] not in selected:
-            node_data = self.graphics.layout.nodes[self.graphics.temp_from[2]]
+        if self.temp_from is not None \
+                and self.temp_from[2] not in selected:
+            node_data = self.graphics.layout.nodes[self.temp_from[2]]
             node_data['added_sprite'].visible = False
 
-        if self.graphics.temp_to is not None \
-                and self.graphics.temp_to not in selected:
-            node_data = self.graphics.layout.nodes[self.graphics.temp_to]
+        if self.temp_to is not None \
+                and self.temp_to not in selected:
+            node_data = self.graphics.layout.nodes[self.temp_to]
             node_data['added_sprite'].visible = False
-            self.graphics.temp_to = None
+            self.temp_to = None
 
         self._reset_drawing()
 
         return action
 
     def _reset_drawing(self):
-        self.graphics.temp_from = None
-        self.graphics.temp_to = None
+        self.temp_from = None
+        self.temp_to = None
         self.graphics.temp_suggested_sprite = None
 
 
@@ -472,6 +490,14 @@ class IntroWorldScene(WorldScene):
         for u, v, d in self.graphics.layout.edges(data=True):
             d['cost_label'].text = ''
 
+    def _update_cost_label(self, is_highlighted=False):
+        # Hide cost label text.
+        self.graphics.cost_label.text = ''
+        self.graphics.cost_label.visible = False
+
+    def _check_buttons(self, x, y):
+        pass
+
 
 class DemoWorldScene(WorldScene):
 
@@ -479,7 +505,7 @@ class DemoWorldScene(WorldScene):
 
         super().__init__(**kwargs)
 
-        self.graphics.temp_edge_image = self.graphics.edge_added_image
+        self.temp_edge_image = self.graphics.edge_added_image
         self._pick_action_type = PickAction
         self._submit_action_type = SubmitAction
 
@@ -487,13 +513,16 @@ class DemoWorldScene(WorldScene):
         for u, d in self.graphics.layout.nodes(data=True):
             d['label'].text = ''
 
+        # # Hide cost label text.
+        # self.graphics.cost_label.visible = False
+
 
 class IndividualWorldScene(WorldScene):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.graphics.temp_edge_image = self.graphics.edge_added_image
+        self.temp_edge_image = self.graphics.edge_added_image
         self._pick_action_type = PickAction
         self._submit_action_type = AttemptSubmitAction
 
@@ -501,13 +530,22 @@ class IndividualWorldScene(WorldScene):
         for u, d in self.graphics.layout.nodes(data=True):
             d['label'].text = ''
 
+    @property
+    def graphics(self):
+        return self._graphics
+
+    @graphics.setter
+    def graphics(self, value):
+        # print('Setting temp to', value)
+        self._graphics = value
+
 
 class CollaborativeWorldScene(WorldScene):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.graphics.temp_edge_image = self.graphics.edge_suggested_image
+        self.temp_edge_image = self.graphics.edge_suggested_image
         self._pick_action_type = SuggestPickAction
         self._submit_action_type = AttemptSubmitAction
 

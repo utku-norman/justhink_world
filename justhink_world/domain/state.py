@@ -239,12 +239,15 @@ class EnvironmentState(pomdp_py.State):
         is_terminal (bool, optional):
            whether the state is a final or terminal state,
            to designate the end of the activity (default False)
+        is_highlighted (bool, optional):
+           whether the cost labels, node names etc. are higlighted e.g.
+           to emphasise on the cost in the demo (default False)
     """
 
     def __init__(
             self, network, agents=frozenset({Human, Robot}),
             attempt_no=1, max_attempts=None, step_no=1, is_submitting=False,
-            is_paused=False, is_terminal=False):
+            is_paused=False, is_terminal=False, is_highlighted=False):
         self.network = network
         self.agents = agents
         self.attempt_no = attempt_no
@@ -253,12 +256,13 @@ class EnvironmentState(pomdp_py.State):
         self.step_no = step_no
         self.is_paused = is_paused
         self.is_terminal = is_terminal
+        self.is_highlighted = is_highlighted
 
     def __hash__(self):
         return hash(
             (self.network, self.agents, self.attempt_no, self.max_attempts,
                 self.step_no, self.is_submitting, self.is_paused,
-                self.is_terminal))
+                self.is_terminal, self.is_highlighted))
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -282,19 +286,16 @@ class EnvironmentState(pomdp_py.State):
         return self.__repr__()
 
     def __repr__(self):
-        if len(self.agents) > 0:
-            agents_string = ''.join([a.name[0] for a in self.agents])
-        else:
-            agents_string = 'x'
+        agents_str = ''.join([a.name[0] for a in self.agents]) \
+            if len(self.agents) > 0 else 'x'
+        attempt_str = 'inf' if self.max_attempts is None else self.max_attempts
 
-        s = 'EnvironmentState({}@{}/{},a:{};p:{:d},t:{:d},s:{:d})'.format(
-            self.network,
-            self.attempt_no,
-            'inf' if self.max_attempts is None else self.max_attempts,
-            agents_string,
-            self.is_paused,
-            self.is_terminal,
-            self.is_submitting)
+        s = 'EnvironmentState('
+        s += '{}@{}/{},a:{};p:{:d},t:{:d},s:{:d},h:{:d})'.format(
+            self.network, self.attempt_no, attempt_str, agents_str,
+            self.is_paused, self.is_terminal, self.is_submitting,
+            self.is_highlighted)
+
         return s
 
 

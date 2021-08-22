@@ -30,7 +30,7 @@ class EnvironmentScene(Scene):
     def state(self, value):
         self._state = value
 
-    def on_update(self, is_highlighted=False):
+    def on_update(self):
         # Update the selected edges.
         added_nodes = set()
         for u, v, d in self.graphics.layout.edges(data=True):
@@ -48,11 +48,10 @@ class EnvironmentScene(Scene):
         # Update the selected nodes.
         for u, d in self.graphics.layout.nodes(data=True):
             d['added_sprite'].visible = u in added_nodes
-            # d['sprite'].visible = True # not u in added_nodes
 
-        # Process is_highlighteds for edges.
+        # Process highlight for edges.
         for u, v, d in self.graphics.layout.edges(data=True):
-            if is_highlighted:
+            if self.state.is_highlighted:
                 color = (255, 0, 0, 255)
                 bold = True
             else:
@@ -61,9 +60,9 @@ class EnvironmentScene(Scene):
             d['cost_label'].color = color
             d['cost_label'].bold = bold
 
-        # Process is_highlighteds for nodes.
+        # Process highlight for nodes.
         for u, d in self.graphics.layout.nodes(data=True):
-            if is_highlighted:
+            if self.state.is_highlighted:
                 color = (255, 0, 0, 255)
                 bold = True
             else:
@@ -84,18 +83,12 @@ class EnvironmentScene(Scene):
         # Show or hide the confirm box.
         self._update_submit_box()
 
-    def _update_cost_label(self, is_highlighted=False):
-        state = self._state
-        graph = state.network.graph
-        subgraph = state.network.subgraph
+    def _update_cost_label(self):
+        cost = self.state.network.get_cost()
+        self.graphics.cost_label.text = 'Spent: {:2d} franc{}'.format(
+            cost, 's' if cost != 1 else '')
 
-        if subgraph is not None:
-            cost = compute_subgraph_cost(graph, subgraph)
-        else:
-            cost = 0
-        self.graphics.cost_label.text = 'Spent: {:2d} francs'.format(cost)
-
-        if is_highlighted:
+        if self.state.is_highlighted:
             self.graphics.cost_label.color = (255, 0, 0, 255)
             self.graphics.cost_label.bold = True
         else:
@@ -158,7 +151,7 @@ class EnvironmentScene(Scene):
 
         # Attempt label.
         graphics.attempt_label = pyglet.text.Label(
-            '', x=20, y=height-200, anchor_y='center', color=BLACKA,
+            '', x=20, y=height-280, anchor_y='center', color=BLACKA,
             font_name='Sans', font_size=32, group=groups[5], batch=batch)
 
         # Create confirm box components.
@@ -185,7 +178,7 @@ class EnvironmentScene(Scene):
 
         # Cost label.
         graphics.cost_label = pyglet.text.Label(
-            '', x=20, y=height-290, anchor_y='center', color=BLACKA,
+            '', x=20, y=height-340, anchor_y='center', color=BLACKA,
             font_name='Sans', font_size=32, batch=batch, group=groups[8])
 
         # Bottom label.
@@ -321,7 +314,7 @@ class EnvironmentScene(Scene):
             sprite.scale = 2
 
         # Initialise the submit button.
-        button_pads, scale = (200, 200), 0.3
+        button_pads, scale = (200, 180), 0.3
         c = image_source
         paths = {
             ButtonWidget.ENABLED: c.joinpath('submit_enabled.png'),

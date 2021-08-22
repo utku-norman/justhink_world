@@ -56,9 +56,11 @@ class DemoTransitionModel(TransitionModel):
 
         if state.step_no == 1 and isinstance(action, PickAction):
             next_state.step_no = 2
+            next_state.is_highlighted = True
 
         elif state.step_no == 2 and isinstance(action, ClearAction):
             next_state.step_no = 3
+            next_state.is_highlighted = False
 
         elif state.step_no == 3 and isinstance(action, SubmitAction) \
                 and num_edges == 1:
