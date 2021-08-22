@@ -19,12 +19,13 @@ from justhink_world.world import IndividualWorld, CollaborativeWorld
 
 def show_all(world):
     world_window = WorldWindow(world)
-    mental_window = MentalWindow(world)
+    mental_window = MentalWindow(world) #, offset=(1920, 0))
 
     @world_window.event
     def on_update():
         # print('Key pressed so updating')
         world_window.on_update()
+        # world_window.dispatch_event('on_update')
 
         mental_window.graphics.next_label.text = \
             world_window.graphics.next_label.text
@@ -39,6 +40,11 @@ def show_all(world):
             s = str(world.agent.history[index][1])
         # s += 'state #{}'.format(world.state_no)
         mental_window.graphics.observes_label.text = s
+
+
+        mental_window.state = world_window.world.agent.state
+        # mental_window.on_update()
+        mental_window.dispatch_event('on_update')
 
         # Event handled.
         return True
@@ -65,7 +71,7 @@ def show_world(world):
 
 
 class WorldWindow(pyglet.window.Window):
-    def __init__(self, world, width=1920, height=1080, screen_no=0):
+    def __init__(self, world, caption='World', width=1920, height=1080, screen_no=0):
         assert isinstance(world, IndividualWorld) or \
             isinstance(world, CollaborativeWorld)
 
@@ -80,11 +86,11 @@ class WorldWindow(pyglet.window.Window):
         # window_style = pyglet.window.Window.WINDOW_STYLE_DEFAULT
         style = pyglet.window.Window.WINDOW_STYLE_BORDERLESS
 
-        super().__init__(width, height, style=style, fullscreen=False)
+        super().__init__(width, height, caption, style=style, fullscreen=False)
         self._init_graphics(width, height)
 
         self.register_event_type('on_update')
-        # self.set_handlers(self.scene.on_update)
+        self.dispatch_event('on_update')
 
         # Move the window to a screen in possibly a dual-monitor setup.
         display = pyglet.canvas.get_display()
@@ -93,7 +99,6 @@ class WorldWindow(pyglet.window.Window):
         active_screen = screens[screen_no]
         self.set_location(active_screen.x, active_screen.y)
 
-        self.dispatch_event('on_update')
 
     def __str__(self):
         return self.__repr__()
@@ -261,12 +266,10 @@ class WorldScene(EnvironmentScene):
 
     @temp_from.setter
     def temp_from(self, value):
-        print('Setting temp to', value)
         self._temp_from = value
 
     @temp_to.setter
     def temp_to(self, value):
-        print('Setting temp from', value)
         self._temp_to = value
 
     # Custom public methods.

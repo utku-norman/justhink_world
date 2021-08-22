@@ -52,11 +52,9 @@ class RobotAgent(pomdp_py.Agent):
         policy_model.update_available_actions(init_state)
 
         super().__init__(
-            init_belief,
-            policy_model=policy_model,
+            init_belief, policy_model=policy_model, 
             transition_model=transition_model,
-            observation_model=observation_model,
-            reward_model=reward_model)
+            observation_model=observation_model, reward_model=reward_model)
 
         # Create a reward model.
         # reward_model = MstRewardModel(
