@@ -230,7 +230,7 @@ class EnvironmentScene(Scene):
         edge_selected_image = center_image(load_image_from_reference(ref))
 
         ref = image_source.joinpath('railroad_selectable.png')
-        edge_selectable_image = center_image(load_image_from_reference(ref))
+        selectable_sprite_image = center_image(load_image_from_reference(ref))
 
         ref = image_source.joinpath('railroad_suggested.png')
         edge_suggested_image = center_image(load_image_from_reference(ref))
@@ -241,7 +241,7 @@ class EnvironmentScene(Scene):
             vd = graphics.layout.nodes[v]
 
             d['selectable_sprite'] = create_edge_sprite(
-                edge_selectable_image, ud['x'], ud['y'], vd['x'], vd['y'],
+                selectable_sprite_image, ud['x'], ud['y'], vd['x'], vd['y'],
                 batch=batch, group=groups[1], visible=True)
 
             d['selected_sprite'] = create_edge_sprite(

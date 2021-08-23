@@ -3,21 +3,20 @@ import copy
 import pyglet
 from pyglet.window import key
 
-from justhink_world.tools.graphics import Graphics, BLACKA
+from justhink_world.tools.graphics import Graphics, check_node_hit, BLACKA
 
 from justhink_world.agent.visual import MentalWindow
 from justhink_world.env.visual import EnvironmentScene, create_edge_sprite
-from justhink_world.tools.graphics import check_node_hit
 
+from justhink_world.world import IndividualWorld, CollaborativeWorld
 from justhink_world.domain.state import Human, Robot, Button
 from justhink_world.domain.action import SetPauseAction,  \
     PickAction, SuggestPickAction, ClearAction, AgreeAction, DisagreeAction, \
     AttemptSubmitAction, ContinueAction, SubmitAction
 
-from justhink_world.world import IndividualWorld, CollaborativeWorld
-
 
 def show_all(world):
+    """TODO"""
     world_window = WorldWindow(world)
     mental_window = MentalWindow(world)  # , offset=(1920, 0))
 
@@ -49,7 +48,7 @@ def show_all(world):
         # mental_window.on_update()
         mental_window.dispatch_event('on_update')
 
-        # Event handled.
+        # Event is handled: do not run another on_update.
         return True
 
     world_window.push_handlers(on_update)
@@ -67,6 +66,7 @@ def show_all(world):
 
 
 def show_world(world):
+    """TODO"""
     WorldWindow(world)
 
     # Enter the main event loop.
@@ -156,19 +156,20 @@ class WorldWindow(pyglet.window.Window):
             self.scene.state = self.world.cur_state
         elif symbol == key.P:
             is_paused = self.world.cur_state.is_paused
-            self.act_via_window(SetPauseAction(not is_paused))
+            self.execute_action(SetPauseAction(not is_paused))
 
         self.dispatch_event('on_update')
 
     # Custom public methods.
 
-    def act_via_window(self, action):
+    def execute_action(self, action):
         """TODO"""
         self.world.act(action)
         self.scene.state = self.world.cur_state
         self.dispatch_event('on_update')
 
     def on_update(self):
+        """TODO"""
         # Update the scene.
         self.scene.on_update()
 
@@ -307,7 +308,7 @@ class WorldScene(EnvironmentScene):
 
         # if action is not None:
         if action in self._actions:
-            win.act_via_window(action)
+            win.execute_action(action)
             # print('Pressed', action)
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers, win):
@@ -325,7 +326,7 @@ class WorldScene(EnvironmentScene):
             action = self._process_drawing_done(x, y)
 
             if action is not None:
-                win.act_via_window(action)
+                win.execute_action(action)
 
     def on_key_press(self, symbol, modifiers, win):
         pass
@@ -497,6 +498,7 @@ class WorldScene(EnvironmentScene):
 
 
 class IntroWorldScene(WorldScene):
+    """TODO"""
 
     def __init__(self, **kwargs):
 
@@ -520,12 +522,13 @@ class IntroWorldScene(WorldScene):
 
 
 class DemoWorldScene(WorldScene):
+    """TODO"""
 
     def __init__(self, **kwargs):
 
         super().__init__(**kwargs)
 
-        self.temp_edge_image = self.graphics.edge_added_image
+        self.temp_edge_image = self.graphics.added_sprite_image
         self._pick_action_type = PickAction
         self._submit_action_type = SubmitAction
 
@@ -538,11 +541,12 @@ class DemoWorldScene(WorldScene):
 
 
 class IndividualWorldScene(WorldScene):
+    """TODO"""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.temp_edge_image = self.graphics.edge_added_image
+        self.temp_edge_image = self.graphics.added_sprite_image
         self._pick_action_type = PickAction
         self._submit_action_type = AttemptSubmitAction
 
@@ -561,6 +565,8 @@ class IndividualWorldScene(WorldScene):
 
 
 class CollaborativeWorldScene(WorldScene):
+    """TODO"""
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
