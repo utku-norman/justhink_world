@@ -17,11 +17,11 @@ class MentalState(object):
         if Human in agents:
             self.beliefs = {
                 'me': {
-                    'world': self.create_view(graph),
+                    'world': self._create_view(graph),
                     'you': {
-                        'world': self.create_view(graph),
+                        'world': self._create_view(graph),
                         'me': {
-                            'world': self.create_view(graph),
+                            'world': self._create_view(graph),
                         }
 
                     },
@@ -30,16 +30,47 @@ class MentalState(object):
         else:
             self.beliefs = {
                 'me': {
-                    'world': self.create_view(graph),
+                    'world': self._create_view(graph),
                 }
             }
+        self.cur_node = None
 
-    def create_view(self, from_graph):
-        graph = copy.deepcopy(from_graph)
-        for u, v, d in graph.edges(data=True):
-            d['is_opt'] = None
+    def _create_view(self, from_graph):
+        # graph = copy.deepcopy(from_graph) for u, v, d in graph.edges
+        # (data=True): d['is_opt'] = None
+
+        # About choices.
+        d = {'is_opt': None}
+
+        graph = nx.Graph()
+        for u, v in from_graph.edges():
+            graph.add_edge(u, v, **d)
+
+        # About strategies.
+        graph.graph['me'] = None
+        graph.graph['you'] = None
 
         return graph
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return 'MentalState({})'.format(self.get_beliefs())
+
+    def get_beliefs(self):
+        belief_list = list()
+        # beliefs = self.beliefs['me']['you']
+        pairs = [('world', self.beliefs['me']),
+                 ('you', self.beliefs['me']['you']),
+                 ('me-by-you', self.beliefs['me']['you']['me'])]
+        for key, beliefs in pairs:
+            for u, v, d in beliefs['world'].edges(data=True):
+                value = d['is_opt']
+                if value is not None:
+                    belief_list.append(('you', u, v, value))
+
+        return sorted(belief_list)
 
 
 class NetworkState(object):
@@ -126,19 +157,16 @@ class NetworkState(object):
             name = name.split()[-1]
         return name
 
-    def get_edge_name(self, edge) -> str:
-        """Construct the name of an edge e.g. "Montreux to Neuchatel".
+    def get_edge_name(self, edge) -> tuple:
+        """Construct the name of an edge e.g. (Montreux, Neuchatel).
 
         Attributes:
             edge (tuple):
                 an edge in the graph.
         Returns:
-            str: name of an edge e.g. "Montreux to Neuchatel".
+            tuple: name of an edge by the node name pair (Montreux, Neuchatel.
         """
-        u, v = edge[0], edge[1]
-        u_name = self.get_node_name(u)
-        v_name = self.get_node_name(v)
-        return '{} to {}'.format(u_name, v_name)
+        return self.get_node_name(edge[0]), self.get_node_name(edge[1])
 
     def clear(self):
         """Clear the selected edges and the flags."""
@@ -318,3 +346,211 @@ class Button(object):
     ENABLED = 'E'
     DISABLED = 'D'
     SELECTED = 'S'
+
+
+# class MentalState():  # pomdp_py.State):
+#     def __init__(self, graph, probs, step=0):
+#         self.graph = graph
+#         self.probs = probs
+#         self.step = step
+#         # super().__init__()
+
+#     # def __hash__(self):
+#     #     # tuple casting could be very inefficient!
+#     #     return hash((self.graph, tuple(self.edges)))
+#     #     # return hash((self.graph, self.subgraph))
+
+#     # def __eq__(self, other):
+#     #     if isinstance(other, WorldState):
+#     #         return self.edges == other.edges
+#     #     else:
+#     #         return False
+
+#     # def __str__(self):
+#     #     return self.__repr__()
+
+#     # def __repr__(self):
+#     #     return 'WorldState(n:{}, e:{} | e:{}, cost:{},
+# spanning:{}, terminal:{})'.format(
+#     #         self.graph.number_of_nodes(),
+#     #         self.graph.number_of_edges(),
+#     #         len(self.edges),
+#     #         self.get_cost(),
+#     #         self.is_spanning(),
+#     #         self.terminal)
+
+
+# def make_choice_index(action):
+#     if action is None:
+#         return None, None
+#     if action.agent_name == 'human':
+#         target = 'other'
+#         key = make_edge_key(level=1, context='choice')
+#     elif action.agent_name == 'robot':
+#         target = 'self'
+#         key = make_edge_key(level=2, context='choice')
+#     else:
+#         print('Unknown agent: {}'.format(action.agent_name))
+#     return target, key
+
+
+# def make_strategy_index(action, level=0):
+#     if action is None:
+#         return None, None
+#     if action.agent_name == 'robot':
+#         key = make_edge_key(level=level, context='strategy')
+#         target = 'other'
+#     elif action.agent_name == 'human':
+#         key = make_edge_key(level=level, context='strategy')
+#         target = 'self'
+#     else:
+#         print('Unknown agent: {}'.format(action.agent_name))
+#     return target, key
+
+
+# def update_mental_state_from_plan(problem):
+#     state = problem.mental_history[-1]
+#     state = copy.deepcopy(state)
+#     state.step = state.step + 1
+
+#     # Update state's self-beliefs about correctness of choices.
+#     if hasattr(problem.agent, 'tree'):
+#         print('##### Updating from plan')
+#         root = problem.agent.tree
+#         if root is not None:
+#             actions = get_actions(root, max_depth=10)  # 7)
+#             edges = [a.edge for a in actions if isinstance(a, PickAction)]
+#             key = make_edge_key(level=0, context='choice')
+#             for u, v, d in state.probs['choices'].edges(data=True):
+#                 # print(d)
+#                 if in_undirected_edgeset(u, v, edges):
+#                     d[key] = 1.0
+#                 else:
+#                     d[key] = 0.0
+
+#     problem.mental_history.append(state)
+
+
+# def update_mental_state(problem, action):  # ,  # =None,
+#     # ,
+#     # edges=set(), is_spanning=False,
+#     # terminal=False,
+#     # step=0):
+#     world_state = problem.env.state
+#     # scene.update_state(
+#     #     self._problem.env.state.edges,
+#     #     self._problem.env.state.is_spanning(),
+#     #     self._problem.env.state.terminal,
+#     #     self._step,
+#     # )
+
+#     # print('Updating mental state step = {}'.format(step))
+#     # Save the previous state.
+#     state = problem.mental_history[-1]
+#     state = copy.deepcopy(state)
+#     state.step = state.step + 1
+
+#     # Update the mental state.
+#     # state.step = step
+#     # Update state's edge list: "about the world".
+#     # Add the new edges.
+#     for u, v in world_state.edges:
+#         if not state.graph.has_edge(u, v):
+#             state.graph.add_edge(u, v)
+#     # Remove extra edges.
+#     for u, v in state.graph.edges():
+#         if not in_undirected_edgeset(u, v, world_state.edges):
+#             state.graph.remove_edge(u, v)
+
+#     # Update state's L1 and L2 choices.
+#     target, key = make_choice_index(action)
+#     if isinstance(action, PickAction):
+#         u, v = action.edge
+#         # d = state.graph.edges[u, v]
+#         d = state.probs['choices'].edges[u, v]
+#         d[key] = 1.0
+#     # elif isinstance(action, SubmitAction):
+#     #     for u, v, d in state.graph.edges(data=True):
+#     #         if tuple(sorted([u, v])) in self._edges:
+#     #             d[key] = 1.0
+#     #         else:
+#     #             d[key] = 0.0
+#     # Update L0 strategy.
+#     target, key = make_strategy_index(action, level=0)
+#     if isinstance(action, PickAction):
+#         delta = 0.2
+#         # if key not in state.probs:
+#         #     print('Key {} not found'.format(key))
+#         #     print(state.probs.keys())
+#         p = state.probs[key][target]
+#         if action.quality == 'optimal':
+#             p = p + delta
+#             if p > 1.0:
+#                 p = 1.0
+#         else:  # 'sub-optimal'
+#             p = p - delta
+#             if p < 0.0:
+#                 p = 0.0
+#         state.probs[key][target] = p
+#     elif isinstance(action, SubmitAction):
+#         delta = 0.2
+#         p = state.probs[key][target]
+#         if world_state.terminal:
+#             p = p + delta
+#             if p > 1.0:
+#                 p = 1.0
+#         else:  # 'sub-optimal'
+#             p = p - delta
+#             if p < 0.0:
+#                 p = 0.0
+#         state.probs[key][target] = p
+#     # Update L0, L1, L2 self-or-other.
+#     levels = [0, 1, 2]
+#     for level in levels:
+#         target, key = make_strategy_index(action, level=level)
+#         if isinstance(action, SubmitAction):
+#             delta = 0.3
+#             p = state.probs[key][target]
+#             if world_state.terminal:
+#                 p = p + delta
+#                 if p > 1.0:
+#                     p = 1.0
+#             else:  # 'sub-optimal'
+#                 p = p - delta
+#                 if p < 0.0:
+#                     p = 0.0
+#             state.probs[key][target] = p
+
+#     problem.mental_history.append(state)
+
+
+# def make_edge_key(level, context='world'):
+#     return 'L{}-{}'.format(level, context)
+
+
+# # class SolutionBeliefState(pomdp_py.State):
+# #     def __init__(self, optimal_edges):
+# #         '''optimal_edges is a dict from edges to a probability'''
+# #         self.optimal_edges = optimal_edges
+
+# #     def __hash__(self):
+# #         # tuple casting could be very inefficient!
+# #         return hash((tuple(self.optimal_edges)))
+# #         # return hash((self.graph, self.subgraph))
+
+# #     def __eq__(self, other):
+# #         if isinstance(other, SolutionBeliefState):
+# #             return self.optimal_edges == other.optimal_edges
+# #         else:
+# #             return False
+
+# #     def __str__(self):
+# #         return self.__repr__()
+
+# #     def __repr__(self):
+# #         # return 'State(n:{}, e:{} | e:{})'.format(
+# #         #     self.graph.number_of_nodes(),
+# #         #     self.graph.number_of_edges(),
+# #         #     len(self.edges))
+# #         return 'SolutionBeliefState(e:{}, optimal e:{})'.format(
+# #             len(optimal_edges), sum(list(optimal_edges.items())))

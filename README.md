@@ -135,7 +135,7 @@ from justhink_world.domain.action import SuggestPickAction, \
 	AgreeAction, DisagreeAction
 
 # Create a world.
-world = create_world('collab-activity-1')
+world = create_world('collaboration-1')
 
 # Act on the world.
 world.act(SuggestPickAction((3, 1), agent=Robot))
@@ -150,7 +150,7 @@ show_world(world)
 ```
 from justhink_world import create_world, load_log, show_world
 
-world_name = 'collab-activity-1'
+world_name = 'collaboration-1'
 
 # Load the log table for a sample and activity.
 history = load_log(sample_no=3, world_name=world_name)
@@ -165,9 +165,9 @@ show_world(world)
 #### Playground
 ```
 from justhink_world import create_world, show_world, show_mind, show_all
+world = create_world('pretest-1'); show_all(world)
 
-world = create_world('pretest-1')
-show_all(world)
+world = create_world('collaboration-1'); show_all(world)
 
 
 

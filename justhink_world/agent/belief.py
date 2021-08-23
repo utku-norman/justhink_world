@@ -1,5 +1,3 @@
-# import copy
-
 import pomdp_py
 
 # from .agent import Human, Robot

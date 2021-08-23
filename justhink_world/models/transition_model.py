@@ -182,7 +182,7 @@ class CollaborativeTransitionModel(TransitionModel):
         if action.agent not in state.agents:
             print('Invalid action {}: agent {} is not an active ({}).'.format(
                 action, action.agent.name, state.agents))
-            raise ValueError
+            # raise ValueError
 
         next_state = copy.deepcopy(state)
         network = state.network

@@ -19,7 +19,7 @@ from justhink_world.world import IndividualWorld, CollaborativeWorld
 
 def show_all(world):
     world_window = WorldWindow(world)
-    mental_window = MentalWindow(world) #, offset=(1920, 0))
+    mental_window = MentalWindow(world)  # , offset=(1920, 0))
 
     @world_window.event
     def on_update():
@@ -27,22 +27,25 @@ def show_all(world):
         world_window.on_update()
         # world_window.dispatch_event('on_update')
 
-        mental_window.graphics.next_label.text = \
+        mental_window.cur_scene.graphics.next_label.text = \
             world_window.graphics.next_label.text
 
-        mental_window.graphics.prev_label.text = \
+        mental_window.cur_scene.graphics.prev_label.text = \
             world_window.graphics.prev_label.text
 
-        index = world.state_no-2
+        # Offset for the observe.
+        index = world.state_no - 2
         if index < 0 or index > len(world.agent.history) - 1:
             s = 'None'
         else:
             s = str(world.agent.history[index][1])
         # s += 'state #{}'.format(world.state_no)
-        mental_window.graphics.observes_label.text = s
+        mental_window.cur_scene.graphics.observes_label.text = s
 
+        # mental_window.state = world_window.world.agent.state
+        mental_window.cur_scene.state = world_window.world.cur_mental_state
+        print('###', mental_window.cur_scene.state)
 
-        mental_window.state = world_window.world.agent.state
         # mental_window.on_update()
         mental_window.dispatch_event('on_update')
 
@@ -71,7 +74,11 @@ def show_world(world):
 
 
 class WorldWindow(pyglet.window.Window):
-    def __init__(self, world, caption='World', width=1920, height=1080, screen_no=0):
+    """TODO"""
+
+    def __init__(
+            self, world, caption='World', width=1920, height=1080,
+            screen_no=0):
         assert isinstance(world, IndividualWorld) or \
             isinstance(world, CollaborativeWorld)
 
@@ -99,7 +106,6 @@ class WorldWindow(pyglet.window.Window):
         active_screen = screens[screen_no]
         self.set_location(active_screen.x, active_screen.y)
 
-
     def __str__(self):
         return self.__repr__()
 
@@ -115,14 +121,11 @@ class WorldWindow(pyglet.window.Window):
     def world(self, value):
         self._world = value
 
+    # GUI methods.
+
     def on_draw(self):
         self.scene.on_draw()
         self.graphics.batch.draw()
-
-    def act_via_window(self, action):
-        self.world.act(action)
-        self.scene.state = self.world.cur_state
-        self.dispatch_event('on_update')
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.scene.on_mouse_press(x, y, button, modifiers, win=self)
@@ -157,6 +160,14 @@ class WorldWindow(pyglet.window.Window):
 
         self.dispatch_event('on_update')
 
+    # Custom public methods.
+
+    def act_via_window(self, action):
+        """TODO"""
+        self.world.act(action)
+        self.scene.state = self.world.cur_state
+        self.dispatch_event('on_update')
+
     def on_update(self):
         # Update the scene.
         self.scene.on_update()
@@ -166,6 +177,34 @@ class WorldWindow(pyglet.window.Window):
         self._update_role_label()
         self._update_next_label()
         self._update_prev_label()
+
+    # Private methods.
+
+    def _init_graphics(self, width, height):
+        graphics = Graphics(width, height)
+        group = pyglet.graphics.OrderedGroup(5)
+
+        # History label.
+        graphics.hist_label = pyglet.text.Label(
+            '', x=20, y=height-120, anchor_y='center', color=BLACKA,
+            font_name='Sans', font_size=32, batch=graphics.batch, group=group)
+
+        # Role label.
+        graphics.role_label = pyglet.text.Label(
+            '', x=20, y=height-60, anchor_y='center', color=BLACKA,
+            font_name='Sans', font_size=32, batch=graphics.batch, group=group)
+
+        # Next action if any label.
+        graphics.next_label = pyglet.text.Label(
+            '', x=width//2, y=height-20, anchor_y='center', color=BLACKA,
+            font_name='Sans', font_size=24, batch=graphics.batch, group=group)
+
+        # Previous action if any label.
+        graphics.prev_label = pyglet.text.Label(
+            '', x=20, y=height-20, anchor_y='center', color=BLACKA,
+            font_name='Sans', font_size=24, batch=graphics.batch, group=group)
+
+        self.graphics = graphics
 
     def _update_role_label(self):
         self.graphics.role_label.text = 'Role: {}'.format(
@@ -196,37 +235,10 @@ class WorldWindow(pyglet.window.Window):
             if action is not None:
                 action = copy.deepcopy(action)
                 if hasattr(action, 'edge') and action.edge is not None:
-                    edge_name = self.world.env.state.network.get_edge_name(
+                    u, v = self.world.env.state.network.get_edge_name(
                         action.edge)
-                    u, _, v = edge_name.split()
                     action = action.__class__(edge=(u, v), agent=action.agent)
         return str(action)
-
-    def _init_graphics(self, width, height):
-        graphics = Graphics(width, height)
-        group = pyglet.graphics.OrderedGroup(5)
-
-        # History label.
-        graphics.hist_label = pyglet.text.Label(
-            '', x=20, y=height-120, anchor_y='center', color=BLACKA,
-            font_name='Sans', font_size=32, batch=graphics.batch, group=group)
-
-        # Role label.
-        graphics.role_label = pyglet.text.Label(
-            '', x=20, y=height-60, anchor_y='center', color=BLACKA,
-            font_name='Sans', font_size=32, batch=graphics.batch, group=group)
-
-        # Next action if any label.
-        graphics.next_label = pyglet.text.Label(
-            '', x=width//2, y=height-20, anchor_y='center', color=BLACKA,
-            font_name='Sans', font_size=24, batch=graphics.batch, group=group)
-
-        # Previous action if any label.
-        graphics.prev_label = pyglet.text.Label(
-            '', x=20, y=height-20, anchor_y='center', color=BLACKA,
-            font_name='Sans', font_size=24, batch=graphics.batch, group=group)
-
-        self.graphics = graphics
 
 
 class WorldScene(EnvironmentScene):
@@ -241,15 +253,7 @@ class WorldScene(EnvironmentScene):
 
         self._pick_action_type = PickAction
         self._submit_action_type = SubmitAction
-
-        # self.temp_from = None
-        # self.temp_to = None
         self.graphics.temp_suggested_sprite = None
-
-        # self.temp_from = None
-        # self.temp_to = None
-
-        # self.graphics.has_status_label = False
 
         self._update_feasible_actions()
 
@@ -271,24 +275,6 @@ class WorldScene(EnvironmentScene):
     @temp_to.setter
     def temp_to(self, value):
         self._temp_to = value
-
-    # Custom public methods.
-
-    def on_update(self):
-        super().on_update()
-        self._update_feasible_actions()
-        self._update_buttons()
-        self._update_status_label()
-
-    def toggle_role(self):
-        if self._role == Robot:
-            self._role = Human
-        elif self._role == Human:
-            self._role = Robot
-        else:
-            raise NotImplementedError
-
-        self._reset_drawing()
 
     # GUI methods.
 
@@ -344,7 +330,32 @@ class WorldScene(EnvironmentScene):
     def on_key_press(self, symbol, modifiers, win):
         pass
 
+    # Custom public methods.
+
+    def on_update(self):
+        """TODO"""
+        super().on_update()
+
+        self._update_feasible_actions()
+
+        self._update_buttons()
+        self._update_status_label()
+
+    def toggle_role(self):
+        """TODO"""
+        if self._role == Robot:
+            self._role = Human
+        elif self._role == Human:
+            self._role = Robot
+        else:
+            raise NotImplementedError
+
+        self._reset_drawing()
+
+    # Private methods.
+
     def _process_drawing(self, x, y):
+        """TODO"""
         # Check if a node is pressed.
         node = check_node_hit(self.graphics.layout, x, y)
 
@@ -382,6 +393,7 @@ class WorldScene(EnvironmentScene):
     # Private methods.
 
     def _check_buttons(self, x, y):
+        """TODO"""
         action = None
 
         if self.graphics.submit_button.state == Button.ENABLED \
@@ -403,14 +415,17 @@ class WorldScene(EnvironmentScene):
         return action
 
     def _check_confirm_hit(self, x, y):
+        """TODO"""
         return (-320 < x - self.graphics.width//2 < -40 and
                 -100 < y - self.graphics.height//2 < 60)
 
     def _check_continue_hit(self, x, y):
+        """TODO"""
         return (40 < x - self.graphics.width//2 < 320 and
                 -100 < y - self.graphics.height//2 < 60)
 
     def _update_feasible_actions(self):
+        """TODO"""
         self._actions = self._policy_model.get_all_actions(self._state)
         self._action_types = {type(action) for action in self._actions}
 
@@ -421,6 +436,7 @@ class WorldScene(EnvironmentScene):
         self._set_paused(self.state.is_terminal or self.state.is_paused)
 
     def _update_buttons(self):
+        """TODO"""
         if self._submit_action_type(self._role) in self._actions:
             button_state = Button.ENABLED
         elif self.state.is_terminal:
@@ -439,6 +455,7 @@ class WorldScene(EnvironmentScene):
         pass
 
     def _process_drawing_done(self, x, y):
+        """TODO"""
         action = None
 
         # self.graphics.layout = self.graphics.self.graphics.layout
@@ -533,18 +550,17 @@ class IndividualWorldScene(WorldScene):
         for u, d in self.graphics.layout.nodes(data=True):
             d['label'].text = ''
 
-    @property
-    def graphics(self):
-        return self._graphics
+    # @property
+    # def graphics(self):
+    #     return self._graphics
 
-    @graphics.setter
-    def graphics(self, value):
-        # print('Setting temp to', value)
-        self._graphics = value
+    # @graphics.setter
+    # def graphics(self, value):
+    #     # print('Setting temp to', value)
+    #     self._graphics = value
 
 
 class CollaborativeWorldScene(WorldScene):
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -555,41 +571,52 @@ class CollaborativeWorldScene(WorldScene):
     # Overridden private methods.
 
     def _update_buttons(self):
+        """Update the button states."""
+        # Update buttons of the superclass.
         super()._update_buttons()
 
+        # Update agree button.
         if AgreeAction(self._role) in self._actions:
             self.graphics.yes_button.set_state(Button.ENABLED)
         else:
             self.graphics.yes_button.set_state(Button.DISABLED)
 
+        # Update disagree button.
         if DisagreeAction(self._role) in self._actions:
             self.graphics.no_button.set_state(Button.ENABLED)
         else:
             self.graphics.no_button.set_state(Button.DISABLED)
 
     def _update_status_label(self):
+        """Update the status label."""
         s = ''
+
+        # At the start.
         if self.state.network.subgraph.number_of_edges() == 0 \
                 and self.state.network.suggested_edge is None:
             if self.state.attempt_no == 1:
                 s += "Let's go!"
             else:
                 s += 'Try again!'
+
+        # Terminal.
         elif self.state.is_terminal:
             if self.state.network.is_mst():
                 s += 'Congratulations!'
             else:
                 s += 'Game over!'
 
+        # Role information.
         if not self.state.is_terminal:
             if self._role in self.state.agents:
                 s += ' (your turn)'
             else:
                 s += " (your partner's turn)"
-            # TODO: handle maybe simultaneous case
 
+        # The label is shown if not empty.
         is_visible = len(s) != 0
 
+        # Update the label and its visibility.
         self.graphics.status_label.text = s
         self.graphics.status_label.visible = is_visible
         self.graphics.status_rect.visible = is_visible

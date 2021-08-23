@@ -1,10 +1,7 @@
-import copy
-
 import pomdp_py
 
 from .belief import initialize_belief
-# from ..models.observation_model import MstObservationModel
-# from ..models.reward_model import MstRewardModel
+# from .reasoning import TraversalPlanner
 
 
 class Actor(object):
@@ -38,6 +35,11 @@ class RobotAgent(pomdp_py.Agent):
 
         self.state = mental_state
 
+        self.mental_history = [self.state]
+
+        # self.planner = TraversalPlanner(init_state)
+        # action = self.current_planner.plan(world.agent)
+
         # Defines the agent. There's nothing special
         # about the MST agent in fact, except that
         # it uses models defined in ..models, and
@@ -52,7 +54,7 @@ class RobotAgent(pomdp_py.Agent):
         policy_model.update_available_actions(init_state)
 
         super().__init__(
-            init_belief, policy_model=policy_model, 
+            init_belief, policy_model=policy_model,
             transition_model=transition_model,
             observation_model=observation_model, reward_model=reward_model)
 
@@ -95,3 +97,21 @@ class RobotAgent(pomdp_py.Agent):
 #                          transition_model=transition_model,
 #                          observation_model=observation_model,
 #                          reward_model=reward_model)
+
+    # # Update agent belief
+    # current_mpe_state = agent.cur_belief.mpe()
+    # next_robot_position = agent.transition_model.sample(
+    #     current_mpe_state, real_action).robot_position
+
+    # next_state_space = set({})
+    # for state in agent.cur_belief:
+    #     next_state = copy.deepcopy(state)
+    #     next_state.robot_position = next_robot_position
+    #     next_state_space.add(next_state)
+
+    # new_belief = pomdp_py.update_histogram_belief(
+    #     agent.cur_belief, real_action, real_observation,
+    #     agent.observation_model, agent.transition_model,
+    #     next_state_space=next_state_space)
+
+    # agent.set_belief(new_belief)

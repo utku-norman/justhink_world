@@ -5,9 +5,10 @@ import importlib_resources
 import pomdp_py
 
 from .domain.state import EnvironmentState, MentalState
-from .domain.action import SetStateAction
-from .domain.action import PickAction, SuggestPickAction, AgreeAction, \
-    DisagreeAction, ObserveAction  # , AttemptSubmitAction, SubmitAction
+# from .domain.action import SetStateAction
+from .domain.action import ObserveAction, PickAction, SuggestPickAction, \
+    AgreeAction,  DisagreeAction, SetStateAction, ClearAction, \
+    AttemptSubmitAction, ContinueAction, SubmitAction
 
 from .models.policy_model import IntroPolicyModel, DemoPolicyModel, \
     IndividualPolicyModel, CollaborativePolicyModel
@@ -20,6 +21,163 @@ from .models.reward_model import MstRewardModel
 from .tools.loaders import make_network_resources, load_network
 
 from .agent import Human, Robot, RobotAgent
+from .agent.reasoning import TraversalPlanner
+
+
+def list_worlds():
+    """Create a list of the worlds that are available."""
+    names = ['intro', 'demo']
+    for test in ['pretest', 'posttest']:
+        for i in range(1, 6):
+            name = '{}-{}'.format(test, i)
+            names.append(name)
+    for i in range(1, 3):
+        names.append('collaboration-{}'.format(i))
+    names.append('debriefing')
+
+    return names
+
+
+def create_all_worlds(verbose=False):
+    """Create all of the world instances."""
+    # Create a list of world names to be initialised.
+    names = list_worlds()
+
+    # Initialise each world.
+    worlds = {name: create_world(name, verbose=verbose) for name in names}
+
+    return worlds
+
+
+def create_world(name, history=None, verbose=False):
+    """Create a world instance by the world's name."""
+
+    if verbose:
+        print('Initialising world {} ...'.format(name))
+
+    # Create the file names for the world.
+    resources = make_network_resources(name)
+
+    # Determine the type of the world.
+    if name == 'intro':
+        world_type = IntroWorld
+    elif name == 'demo':
+        world_type = DemoWorld
+    elif 'collaboration' in name:
+        world_type = CollaborativeWorld
+    # elif 'test' in name:
+    else:
+        world_type = IndividualWorld
+    # else:
+        # raise NotImplementedError
+
+    # Read the resources via temporary files and create a world instance.
+    with importlib_resources.as_file(resources['graph']) as graph_file, \
+            importlib_resources.as_file(resources['layout']) as layout_file:
+        network = load_network(graph_file, layout_file, verbose=verbose)
+
+    # Construct the initial state.
+    if history is None:
+        if world_type is IndividualWorld:
+            init_state = EnvironmentState(
+                network=network, agents=frozenset({Human}),
+                attempt_no=1, max_attempts=None, is_paused=False)
+        elif world_type is CollaborativeWorld:
+            init_state = EnvironmentState(
+                network=network, agents=frozenset({Robot}),
+                attempt_no=1, max_attempts=4, is_paused=False)
+        elif world_type is IntroWorld:
+            init_state = EnvironmentState(network=network)
+        elif world_type is DemoWorld:
+            init_state = EnvironmentState(network=network)
+        else:
+            raise NotImplementedError
+        history = [init_state]
+    else:
+        history = history
+
+    # Construct the world.
+    world = world_type(history, name=name)
+
+    if verbose:
+        print('Done!')
+
+    return world
+
+
+def belief_update(agent, action, observation=None, is_executed=True):
+    """TODO"""
+    # print('### updating belief for', action, is_executed)
+    cur_env_state = agent.cur_belief.mpe()
+
+    # next_state = agent.state
+    if is_executed:
+        next_state = copy.deepcopy(agent.state)
+    else:
+        next_state = agent.state
+
+    if is_executed:
+        if action.agent is Human:
+            beliefs = next_state.beliefs['me']['you']
+        elif action.agent is Robot:
+            beliefs = next_state.beliefs['me']['you']['me']
+        else:
+            raise ValueError
+    else:
+        beliefs = next_state.beliefs['me']
+
+    try:
+        # Choice belief updates.
+
+        if isinstance(action, PickAction) \
+                or isinstance(action, SuggestPickAction):
+            u, v = action.edge
+            # print('### setting pick belief', action)
+            beliefs['world'][u][v]['is_opt'] = 1.0
+
+        elif isinstance(action, AgreeAction):
+            u, v = cur_env_state.network.suggested_edge
+            beliefs['world'][u][v]['is_opt'] = 1.0
+
+        elif isinstance(action, DisagreeAction):
+            u, v = cur_env_state.network.suggested_edge
+            beliefs['world'][u][v]['is_opt'] = 0.0
+
+        elif isinstance(action, ClearAction):
+            for u, v in cur_env_state.network.subgraph.edges():
+                value = beliefs['world'][u][v]['is_opt']
+                if value is None:
+                    value = 0
+                value = value - 0.1
+                if value < 0:
+                    value = 0
+                beliefs['world'][u][v]['is_opt'] = value
+
+        elif isinstance(action, SubmitAction) or \
+                isinstance(action, AttemptSubmitAction):
+            for u, v in cur_env_state.network.graph.edges():
+                if cur_env_state.network.subgraph.has_edge(u, v):
+                    value = 1.0
+                else:
+                    value = 0.0
+                beliefs['world'][u][v]['is_opt'] = value
+
+        elif isinstance(action, ContinueAction):
+            for u, v in cur_env_state.network.subgraph.edges():
+                value = beliefs['world'][u][v]['is_opt']
+                if value is None:
+                    value = 0
+                value = value - 0.1
+                if value < 0:
+                    value = 0
+                beliefs['world'][u][v]['is_opt'] = value
+
+    except Exception as e:
+        print(beliefs, e)
+
+    if is_executed:
+        agent.mental_history.append(next_state)
+        agent.state = next_state
 
 
 class World(pomdp_py.POMDP):
@@ -30,11 +188,7 @@ class World(pomdp_py.POMDP):
     An Environment maintains the true state of the world.
     """
 
-    def __init__(self,
-                 history,
-                 transition_model,
-                 policy_model,
-                 name='World'):
+    def __init__(self, history, transition_model, policy_model, name='World'):
 
         self.name = name
 
@@ -69,18 +223,23 @@ class World(pomdp_py.POMDP):
             cur_state, policy_model, transition_model=transition_model,
             observation_model=observation_model, reward_model=reward_model,
             mental_state=mental_state)
+        agent.planner = TraversalPlanner(cur_state)
 
         # Initialise an environment.
         # MstEnvironment
-        env = pomdp_py.Environment(cur_state,
-                                   transition_model,
-                                   reward_model)
+        env = pomdp_py.Environment(cur_state, transition_model, reward_model)
 
         # Construct an instance from the agent and the environment.
         super().__init__(agent, env, name=name)
 
         # Update the agent.
-        self.act(ObserveAction(agent=Robot))
+        if self.num_states == 0:
+            self.act(ObserveAction(agent=Robot))
+
+        # Have the robot make a plan and update its beliefs.
+        action = self.agent.planner.plan()
+        belief_update(self.agent, action, is_executed=False)
+        # print('### Robot made a plan to', action)
 
     def __str__(self):
         return self.__repr__()
@@ -100,14 +259,22 @@ class World(pomdp_py.POMDP):
 
     @property
     def cur_state(self):
-        """Current state of the environment"""
+        """Current state of the environment."""
         return self._history[self.state_index]
-
         # Similarly from observation history
         # if self.state_no == 0:
         #     return None
         # else:
         #     return self.agent.history[self.state_no-1][1].state
+
+    @property
+    def cur_mental_state(self):
+        """Current state of the environment."""
+        index = self.state_no - 1  # - 2  #1
+        if index >= 0 and index < len(self.agent.mental_history):
+            return self.agent.mental_history[index]
+        else:
+            return self.agent.mental_history[0]
 
     @property
     def state_index(self):
@@ -148,6 +315,12 @@ class World(pomdp_py.POMDP):
         # problem.agent.update_history(real_action, real_observation)
         belief_update(self.agent, action, real_observation)
         self.agent.policy_model.update(state, next_state, action)
+
+        # Reasoning.
+        self.agent.planner.update(action, real_observation)
+        action = self.agent.planner.plan()
+        # print('### replanned to', action)
+        belief_update(self.agent, action, is_executed=False)
 
         # TODO: run a belief update function.
         # Fully observable: immediate access to the state.
@@ -234,110 +407,5 @@ class CollaborativeWorld(World):
             policy_model=policy_model, name=name)
 
 
-def list_worlds():
-    """Create a list of the worlds that are available."""
-    names = ['intro', 'demo']
-    for test in ['pretest', 'posttest']:
-        for i in range(1, 6):
-            name = '{}-{}'.format(test, i)
-            names.append(name)
-    for i in range(1, 3):
-        names.append('collab-activity-{}'.format(i))
-    names.append('debriefing')
-
-    return names
-
-
-def create_all_worlds(verbose=False):
-    """Create all of the world instances."""
-    # Create a list of world names to be initialised.
-    names = list_worlds()
-
-    # Initialise each world.
-    worlds = {name: create_world(name, verbose=verbose) for name in names}
-
-    return worlds
-
-
-def create_world(name, history=None, verbose=False):
-    """Create a world instance by the world's name."""
-
-    if verbose:
-        print('Initialising world {} ...'.format(name))
-
-    # Create the file names for the world.
-    resources = make_network_resources(name)
-
-    # Determine the type of the world.
-    if name == 'intro':
-        world_type = IntroWorld
-    elif name == 'demo':
-        world_type = DemoWorld
-    elif 'collab-activity' in name:
-        world_type = CollaborativeWorld
-    # elif 'test' in name:
-    else:
-        world_type = IndividualWorld
-    # else:
-        # raise NotImplementedError
-
-    # Read the resources via temporary files and create a world instance.
-    with importlib_resources.as_file(resources['graph']) as graph_file, \
-            importlib_resources.as_file(resources['layout']) as layout_file:
-        network = load_network(graph_file, layout_file, verbose=verbose)
-
-    # Construct the initial state.
-    if history is None:
-        if world_type is IndividualWorld:
-            init_state = EnvironmentState(
-                network=network, agents=frozenset({Human}),
-                attempt_no=1, max_attempts=None, is_paused=False)
-        elif world_type is CollaborativeWorld:
-            init_state = EnvironmentState(
-                network=network, agents=frozenset({Robot}),
-                attempt_no=1, max_attempts=4, is_paused=False)
-        elif world_type is IntroWorld:
-            init_state = EnvironmentState(network=network)
-        elif world_type is DemoWorld:
-            init_state = EnvironmentState(network=network)
-        else:
-            raise NotImplementedError
-        history = [init_state]
-    else:
-        history = history
-
-    # Construct the world.
-    # print('####', world_type, name, history)
-    world = world_type(history, name=name)
-
-    if verbose:
-        print('Done!')
-
-    return world
-
-
+# make_strategy_text
 # belief update
-def belief_update(agent, action, observation):
-    if action.agent is Human:
-        beliefs = agent.state.beliefs['me']['you']
-    elif action.agent is Robot:
-        beliefs = agent.state.beliefs['me']['you']['me']
-    else:
-        raise ValueError
-    cur_state = agent.cur_belief.mpe()
-    try:
-
-        if isinstance(action, PickAction) \
-                or isinstance(action, SuggestPickAction):
-            u, v = action.edge
-            beliefs['world'][u][v]['is_opt'] = 1.0
-
-        elif isinstance(action, AgreeAction):
-            u, v = cur_state.network.suggested_edge
-            beliefs['world'][u][v]['is_opt'] = 1.0
-
-        elif isinstance(action, DisagreeAction):
-            u, v = cur_state.network.suggested_edge
-            beliefs['world'][u][v]['is_opt'] = 0.0
-    except Exception as e:
-        print(beliefs, e)
