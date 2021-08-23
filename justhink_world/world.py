@@ -7,7 +7,7 @@ import pomdp_py
 from .domain.state import EnvironmentState, MentalState
 from .domain.action import SetStateAction
 from .domain.action import PickAction, SuggestPickAction, AgreeAction, \
-    DisagreeAction, ObserveAction # , AttemptSubmitAction, SubmitAction
+    DisagreeAction, ObserveAction  # , AttemptSubmitAction, SubmitAction
 
 from .models.policy_model import IntroPolicyModel, DemoPolicyModel, \
     IndividualPolicyModel, CollaborativePolicyModel

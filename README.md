@@ -164,13 +164,18 @@ show_world(world)
 
 #### Playground
 ```
-"from justhink_world import create_world, show_world, show_mind, show_all
+from justhink_world import create_world, show_world, show_mind, show_all
 
 world = create_world('pretest-1')
 show_all(world)
 
 
+
 show_mind(world)
+
+
+
+
 show_world(world)
 
 # Print history.

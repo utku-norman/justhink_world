@@ -3,7 +3,7 @@ from pyglet.window import key
 
 import networkx as nx
 
-from justhink_world.tools.graphics import Scene, Graphics, Surface, \
+from justhink_world.tools.graphics import Graphics, Surface, \
     crop_edge, create_ellipse, transform_position, WHITEA, BLACK
 
 
@@ -18,14 +18,17 @@ class MentalWindow(pyglet.window.Window):
     """docstring for MentalWindow"""
 
     def __init__(self, world, caption="Robot's Mind", width=1920, height=1080,
-                 offset=(1920, 0), screen_no=0):
+                 offset=(0, 0), screen_no=0, context=None):
 
-        self.scene = MentalScene(world, width, height)
+        # Create the graphics.
+        self.state = world.agent.state
+        self._init_graphics(world.env.state.network.graph, width, height)
 
-        # style = pyglet.window.Window.WINDOW_STYLE_DEFAULT
-        style = pyglet.window.Window.WINDOW_STYLE_BORDERLESS
+        # window_style = pyglet.window.Window.WINDOW_STYLE_DEFAULT
+        window_style = pyglet.window.Window.WINDOW_STYLE_BORDERLESS
 
-        super().__init__(width, height, caption, style=style, fullscreen=False)
+        super().__init__(width, height, caption, context=context,
+                         style=window_style, fullscreen=False)
 
         # Move the window to a screen in possibly a dual-monitor setup.
         display = pyglet.canvas.get_display()
@@ -34,27 +37,8 @@ class MentalWindow(pyglet.window.Window):
         active_screen = screens[screen_no]
         self.set_location(active_screen.x+offset[0], active_screen.y+offset[1])
 
-    def on_draw(self):
-        self.scene.on_draw()
-        self.graphics.batch.draw()
-
-    def on_mouse_press(self, x, y, button, modifiers):
-        self.scene.on_mouse_press(x, y, button, modifiers, win=self)
-
-    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
-        self.scene.on_mouse_drag(x, y, dx, dy, buttons, modifiers, win=self)
-
-    def on_mouse_release(self, x, y, button, modifiers):
-        self.scene.on_mouse_release(x, y, button, modifiers, win=self)
-
-
-class MentalScene(Scene):
-    def __init__(self, world, width, height):
-        super().__init__(world.name, width, height)
-
-        # Create the graphics.
-        state = world.env.state
-        self._init_graphics(state.network.graph, width, height)
+        self.register_event_type('on_update')
+        self.dispatch_event('on_update')
 
     def on_draw(self):
         self.clear()
@@ -64,6 +48,36 @@ class MentalScene(Scene):
         # print('Key pressed in mental')
         if symbol == key.ESCAPE:
             self.close()
+
+    def on_update(self):
+        print('Updating mind window')
+        # Update the scene.
+        # self.scene.on_update()
+
+        # # Update the window labels.
+        # self._update_hist_label()
+        # self._update_role_label()
+        # self._update_next_label()
+        # self._update_prev_label()
+        self._update_graphs()
+
+    def _update_graphs(self):
+        for level in range(0, 3):
+            if level == 0:
+                beliefs = self.state.beliefs['me']
+            elif level == 1:
+                beliefs = self.state.beliefs['me']['you']
+            elif level == 2:
+                beliefs = self.state.beliefs['me']['you']['me']
+
+            for u, v, d in self.graphics.layout.edges(data=True):
+                p = beliefs['world'][u][v]['is_opt']
+                s = '{:.1f}'.format(p) if p is not None else '?'
+                d[level]['edge_label'].text = s
+
+        self.graphics.layout
+
+        pass
 
     def _init_graphics(self, graph, width, height, batch=None, font_size=24):
         graphics = Graphics(width, height, from_graph=graph, batch=batch)
@@ -138,8 +152,8 @@ class MentalScene(Scene):
             '(robot thinks)', x=outer_pad[0], y=y, font_name='Sans',
             font_size=font_size, batch=batch)
         graphics.thinks_label = pyglet.text.Label(
-            '', x=outer_pad[0]+x_pad, y=y, font_name='Sans',
-            font_size=font_size, align='center', batch=batch)
+            '', x=outer_pad[0]+x_pad, y=y, font_name='Sans', font_size=font_size,
+            align='center', batch=batch)
         # l.text = '"I believe that choosing Montreux to Basel is correct."'
 
         # Initialise belief visualisation.
@@ -168,32 +182,30 @@ class MentalScene(Scene):
         graphics.labels[level] = label
 
         level = 1
-        x = outer_pad[0]+width//3-p
         rect = pyglet.shapes.BorderedRectangle(
-            x=x, y=outer_pad[3]-p, width=2*width//3+1.8*p,
+            x=outer_pad[0]+width//3-p, y=outer_pad[3]-p, width=2*width//3+1.8*p,
             height=height-5*y_pad+2*p, border=10, color=BLACK,
             border_color=(100, 100, 100), batch=batch, group=groups[0])
 
         x = outer_pad[0]+(level)*(width//3)+width//6
         label = pyglet.text.Label(
-            'L1: of the Other', x=x, y=y, font_name='Sans', bold=True,
-            font_size=font_size,  anchor_x='center', anchor_y='bottom',
+            'L1: of the Other', x=x, y=y, font_name='Sans', font_size=font_size,
+            bold=True, anchor_x='center', anchor_y='bottom',
             batch=batch, group=groups[1])
         graphics.rects[level] = rect
         graphics.labels[level] = label
 
         level = 2
         # p = 15
-        x = outer_pad[0]+2*width//3-p
         rect = pyglet.shapes.BorderedRectangle(
-            x=x, y=outer_pad[3]-p, width=width//3+1.8*p,
+            x=outer_pad[0]+2*width//3-p, y=outer_pad[3]-p, width=width//3+1.8*p,
             height=height-6*y_pad+2*p, border=10, color=BLACK,
             border_color=(100, 100, 100), batch=batch, group=groups[0])
 
         x = outer_pad[0]+(level)*(width//3)+width//6
         label = pyglet.text.Label(
-            'L2: of the Self-by-Other', x=x, y=y, font_name='Sans',  bold=True,
-            font_size=font_size, anchor_x='center', anchor_y='bottom',
+            'L2: of the Self-by-Other', x=x, y=y, font_name='Sans',
+            font_size=font_size, bold=True, anchor_x='center', anchor_y='bottom',
             batch=batch, group=groups[1])
         graphics.rects[level] = rect
         graphics.labels[level] = label
@@ -277,12 +289,12 @@ class MentalScene(Scene):
             context = 'choice'
             key = make_edge_key(level, context)
             s = Surface(
-                height=height//2, width=width//3,
-                x=outer_pad[0]+level*(width//3), y=outer_pad[1], pad=pad)
+                height=height//2, width=width//3, x=outer_pad[0]+level*(width//3),
+                y=outer_pad[1], pad=pad)
             # y=outer_pad[1]+height//3, pad=pad)
             create_network_graphics(
-                graphics.layout, s, graphics.surface, key=level,
-                edge_font_size=18, scale=2.3, batch=batch)
+                graphics.layout, s, graphics.surface, key=level, edge_font_size=18,
+                scale=2.3, batch=batch)
             d[context] = s
 
             # # Initialise strategy surface.
@@ -319,7 +331,7 @@ class MentalScene(Scene):
             # Set as the panels of the current level.
             graphics.surfaces[key] = d
 
-        return graphics
+        self.graphics = graphics
 
 
 def create_network_graphics(
