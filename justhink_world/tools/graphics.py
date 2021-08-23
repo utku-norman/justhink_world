@@ -20,11 +20,6 @@ class Scene(object):
 
     def __init__(self, name, width, height):
         self.name = name
-        # self.width = width
-        # self.height = height
-
-        # self.step_no = 0
-        # self.action_no = 0
         self.graphics = Graphics(width, height)
 
     def on_key_press(self, symbol, modifiers, win):
@@ -33,7 +28,7 @@ class Scene(object):
     def on_close(self):
         pass
 
-    def on_update(self):
+    def on_update(self, **kwargs):
         pass
 
     def on_mouse_press(self, x, y, button, modifiers, win):

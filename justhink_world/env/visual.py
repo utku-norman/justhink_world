@@ -1,7 +1,6 @@
 import importlib_resources
 import pyglet
 
-from justhink_world.tools.networks import compute_subgraph_cost
 from justhink_world.tools.loaders import load_image_from_reference
 from justhink_world.tools.graphics import Graphics, center_image, slide_x, \
     WHITE, BLACK, WHITEA, BLACKA, ButtonWidget, Scene, create_edge_sprite
