@@ -528,7 +528,7 @@ class DemoWorldScene(WorldScene):
 
         super().__init__(**kwargs)
 
-        self.temp_edge_image = self.graphics.added_sprite_image
+        self.temp_edge_image = self.graphics.edge_added_image
         self._pick_action_type = PickAction
         self._submit_action_type = SubmitAction
 
@@ -546,7 +546,7 @@ class IndividualWorldScene(WorldScene):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.temp_edge_image = self.graphics.added_sprite_image
+        self.temp_edge_image = self.graphics.edge_added_image
         self._pick_action_type = PickAction
         self._submit_action_type = AttemptSubmitAction
 
