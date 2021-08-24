@@ -1,5 +1,8 @@
 # JUSThink World
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+
 ## Overview
 
 This repository contains the [justhink_world] Python package to represent and visualise activities in a pedagogical scenario that contains a human-robot collaborative learning activity for school children, named [JUSThink](https://www.epfl.ch/labs/chili/index-html/research/animatas/justhink/). The scenario aims to improve their computational thinking skills by applying abstract and algorithmic reasoning to solve an unfamiliar problem on networks.
