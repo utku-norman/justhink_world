@@ -71,28 +71,31 @@ If you use this work in an academic context, please cite the following publicati
 #### Building
 
 1) Clone this ([justhink_world]) repository:
-	
-	git clone https://github.com/utku-norman/justhink_world.git
+```
+git clone https://github.com/utku-norman/justhink_world.git
+```
 
 2) Create a new [virtual environment](https://docs.python.org/3/tutorial/venv.html) and activate it (can do so in the same folder. Note that the folder name `venv` is [git-ignored](https://git-scm.com/docs/gitignore)):
-
-	cd justhink_world
-	python3 -m venv venv
-	source venv/bin/activate
+```
+cd justhink_world
+python3 -m venv venv
+source venv/bin/activate
+```
 
 If you do not have `venv`, first install it by: `sudo apt install python3-venv`
 
 3) Install this package, along with the remaining dependencies via `pip` (in '-e' i.e. editable mode for "developer mode")
-	
-	pip install -e .
+```
+pip install -e .
+```
 
 If you encounter an error regarding Pygraphviz while installing pomdp_py, first install its dependencies (as in [here](https://pygraphviz.github.io/documentation/stable/install.html)): `sudo apt install graphviz graphviz-dev; pip install pygraphviz`
 
 4) Check the installation by running the following in a Python interpreter:
-
-	from justhink_world import list_worlds, create_all_worlds
-	worlds = create_all_worlds()
-
+```
+from justhink_world import list_worlds, create_all_worlds
+worlds = create_all_worlds()
+```
 
 ## Usage
 
