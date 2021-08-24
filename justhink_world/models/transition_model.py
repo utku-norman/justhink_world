@@ -6,7 +6,7 @@ import networkx as nx
 
 from ..domain.action import PickAction, SuggestPickAction, \
     SetPauseAction, SetStateAction, ObserveAction, \
-    AgreeAction, DisagreeAction, ClearAction, \
+    AgreeAction, DisagreeAction, ClearAction, ResetAction, \
     AttemptSubmitAction, ContinueAction, SubmitAction
 
 
@@ -51,6 +51,11 @@ class DemoTransitionModel(TransitionModel):
 
     def sample(self, state, action):
         next_state = copy.deepcopy(state)
+
+        if isinstance(action, ResetAction):
+            next_state.step_no = 0
+            next_state.is_highlighted = False
+            next_state.network.subgraph = nx.Graph()
 
         num_edges = state.network.subgraph.number_of_edges()
 
@@ -108,6 +113,8 @@ class IndividualTransitionModel(TransitionModel):
 
     def sample(self, state, action):
 
+        next_state = copy.deepcopy(state)
+
         if isinstance(action, SetStateAction):
             return action.state
 
@@ -116,11 +123,19 @@ class IndividualTransitionModel(TransitionModel):
             next_state.is_paused = action.is_paused
             return next_state
 
+        elif isinstance(action, ResetAction):
+            next_state.network.subgraph = nx.Graph()
+            next_state.agents = frozenset({Human})
+            next_state.attempt_no = 1
+            next_state.is_submitting = False
+            next_state.is_paused = False
+            next_state.is_terminal = False
+            next_state.is_highlighted = False
+
         # Like a wait action to fill observation.
         elif isinstance(action, ObserveAction):
             return state
 
-        next_state = copy.deepcopy(state)
         network = state.network
         next_network = next_state.network
 
@@ -131,7 +146,7 @@ class IndividualTransitionModel(TransitionModel):
                 if network.graph.has_edge(u, v) \
                         and not network.subgraph.has_edge(u, v):
                     next_network.subgraph.add_edge(u, v)
-                next_network.is_submitting = False
+                next_state.is_submitting = False
                 next_state.clear_button = Button.ENABLED
 
         # Clear action.
@@ -164,6 +179,8 @@ class CollaborativeTransitionModel(TransitionModel):
     Allows suggest-a-pick, agree, disagree, and submit actions."""
 
     def sample(self, state, action):
+        next_state = copy.deepcopy(state)
+
         # Meta type of actions, intervention-like / god-mode.
         if isinstance(action, SetStateAction):
             return copy.deepcopy(action.state)
@@ -172,6 +189,15 @@ class CollaborativeTransitionModel(TransitionModel):
             next_state = copy.deepcopy(state)
             next_state.is_paused = action.is_paused
             return next_state
+
+        elif isinstance(action, ResetAction):
+            next_state.network.subgraph = nx.Graph()
+            next_state.agents = frozenset({Robot})
+            next_state.attempt_no = 1
+            next_state.is_submitting = False
+            next_state.is_paused = False
+            next_state.is_terminal = False
+            next_state.is_highlighted = False
 
         # Like a wait action to fill observation.
         elif isinstance(action, ObserveAction):

@@ -1,6 +1,6 @@
 import pomdp_py
 
-from ..agent.agent import Actor, Human
+from ..agent.agent import Actor, Human, Admin
 from .state import EnvironmentState
 
 
@@ -45,6 +45,11 @@ class Action(pomdp_py.Action):
         return 'Action({},{})'.format(self.name, self.agent.name)
 
 
+class ResetAction(Action):
+    def __init__(self, agent=Admin):
+        super().__init__('reset', agent)
+
+
 class SetStateAction(Action):
     """TODO
 
@@ -55,7 +60,7 @@ class SetStateAction(Action):
             the agent of the action (default Human)
     """
 
-    def __init__(self, state, agent=Human):
+    def __init__(self, state, agent=Admin):
         assert isinstance(state, EnvironmentState)
         assert issubclass(agent, Actor)
 

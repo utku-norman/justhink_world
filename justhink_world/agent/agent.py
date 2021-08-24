@@ -5,27 +5,23 @@ from .belief import initialize_belief
 
 
 class Actor(object):
-    pass
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return self.name
 
 
 class Human(Actor):
     name = 'Human'
 
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        return self.name
-
 
 class Robot(Actor):
     name = 'Robot'
 
-    def __str__(self):
-        return self.__repr__()
 
-    def __repr__(self):
-        return self.name
+class Admin(Actor):
+    name = 'Admin'
 
 
 class RobotAgent(pomdp_py.Agent):

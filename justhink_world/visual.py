@@ -22,9 +22,7 @@ def show_all(world):
 
     @world_window.event
     def on_update():
-        # print('Key pressed so updating')
         world_window.on_update()
-        # world_window.dispatch_event('on_update')
 
         mental_window.cur_scene.graphics.next_label.text = \
             world_window.graphics.next_label.text
@@ -45,7 +43,6 @@ def show_all(world):
         mental_window.cur_scene.state = world_window.world.cur_mental_state
         print('###', mental_window.cur_scene.state)
 
-        # mental_window.on_update()
         mental_window.dispatch_event('on_update')
 
         # Event is handled: do not run another on_update.
@@ -164,9 +161,12 @@ class WorldWindow(pyglet.window.Window):
 
     def execute_action(self, action):
         """TODO"""
+        print('### executing action in world_window')
         self.world.act(action)
         self.scene.state = self.world.cur_state
+        print('### executing action in world_window DONE! dispatching on_update')
         self.dispatch_event('on_update')
+        print('### executing action in world_window DONE! dispatching on_update DONE!')
 
     def on_update(self):
         """TODO"""
