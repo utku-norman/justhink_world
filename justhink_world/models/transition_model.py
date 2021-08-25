@@ -46,8 +46,8 @@ class IntroTransitionModel(TransitionModel):
         return state
 
 
-class DemoTransitionModel(TransitionModel):
-    """TODO"""
+class TutorialTransitionModel(TransitionModel):
+    """Transition model for the tutorial."""
 
     def sample(self, state, action):
         next_state = copy.deepcopy(state)
@@ -80,36 +80,9 @@ class DemoTransitionModel(TransitionModel):
 
         return next_state
 
-#     def on_mouse_press(self, x, y, button, modifiers, win):
-#         action = update_scene_press(
-#             self, x, y, submit_action_type=SubmitAction)
-#         if self.step_no == 3:
-#             # action = update_scene_press(self, x, y,
-#             # submit_action_type=SubmitAction)
-#             if self.step_no == 3 and isinstance(action, SubmitAction) \
-#                     and len(self._edges) == 1:
-#                 self.step_no = 4
-#                 self._submit_button.set_state('selected')
-#             win.execute_action_in_app(action)
-
-
-#     def on_mouse_release(self, x, y, button, modifiers, win):
-
-#         if self.step_no == 1 and isinstance(action, PickAction):
-#             self.step_no = 2
-#         elif self.step_no == 2 and isinstance(action, ClearAction):
-#             self.step_no = 3
-#             self._submit_button.set_state('enabled')
-
-
-#         is_highlighted = self.step_no == 2
-#         update_scene_graph(self, edges, terminal, is_highlighted=is_highlighted)
 
 class IndividualTransitionModel(TransitionModel):
-    """Transition model for an individual activity (e.g. tests).
-
-    Allows pick, unpick and submit actions: see policy model.
-    """
+    """Transition model for an individual activity (e.g. tests)."""
 
     def sample(self, state, action):
 
@@ -174,9 +147,7 @@ class IndividualTransitionModel(TransitionModel):
 
 
 class CollaborativeTransitionModel(TransitionModel):
-    """Transition model for a collaborative activity.
-
-    Allows suggest-a-pick, agree, disagree, and submit actions."""
+    """Transition model for a collaborative activity."""
 
     def sample(self, state, action):
         next_state = copy.deepcopy(state)

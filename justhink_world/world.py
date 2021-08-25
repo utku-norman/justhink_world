@@ -10,10 +10,10 @@ from .domain.action import ObserveAction, PickAction, SuggestPickAction, \
     AgreeAction,  DisagreeAction, SetStateAction, ClearAction, \
     AttemptSubmitAction, ContinueAction, SubmitAction
 
-from .models.policy_model import IntroPolicyModel, DemoPolicyModel, \
+from .models.policy_model import IntroPolicyModel, TutorialPolicyModel, \
     IndividualPolicyModel, CollaborativePolicyModel
 from .models.transition_model import IntroTransitionModel, \
-    DemoTransitionModel, \
+    TutorialTransitionModel, \
     IndividualTransitionModel, CollaborativeTransitionModel
 from .models.observation_model import MstObservationModel
 from .models.reward_model import MstRewardModel
@@ -26,7 +26,7 @@ from .agent.reasoning import TraversalPlanner
 
 def list_worlds():
     """Create a list of the worlds that are available."""
-    names = ['intro', 'demo']
+    names = ['intro', 'tutorial']
     for test in ['pretest', 'posttest']:
         for i in range(1, 6):
             name = '{}-{}'.format(test, i)
@@ -61,8 +61,8 @@ def create_world(name, history=None, verbose=False):
     # Determine the type of the world.
     if name == 'intro':
         world_type = IntroWorld
-    elif name == 'demo':
-        world_type = DemoWorld
+    elif name == 'tutorial':
+        world_type = TutorialWorld
     elif 'collaboration' in name:
         world_type = CollaborativeWorld
     # elif 'test' in name:
@@ -88,7 +88,7 @@ def create_world(name, history=None, verbose=False):
                 attempt_no=1, max_attempts=4, is_paused=False)
         elif world_type is IntroWorld:
             init_state = EnvironmentState(network=network)
-        elif world_type is DemoWorld:
+        elif world_type is TutorialWorld:
             init_state = EnvironmentState(network=network)
         else:
             raise NotImplementedError
@@ -371,12 +371,12 @@ class IntroWorld(World):
             policy_model=policy_model, name=name)
 
 
-class DemoWorld(World):
+class TutorialWorld(World):
     """TODO"""
 
-    def __init__(self, state, name='DemoWorld'):
-        transition_model = DemoTransitionModel()
-        policy_model = DemoPolicyModel()
+    def __init__(self, state, name='TutorialWorld'):
+        transition_model = TutorialTransitionModel()
+        policy_model = TutorialPolicyModel()
 
         super().__init__(
             state, transition_model=transition_model,

@@ -254,7 +254,7 @@ class EnvironmentState(pomdp_py.State):
             the maximum number of attempts allowed from this state onwards
             (default None)
         step_no (int, optional):
-            the current step number, to sequence the demo via a few
+            the current step number, to sequence the Tutorial via a few
             intstruction steps, and to indicate the action count for an
             individual or collaborative activity (default 1)
         is_submitting (bool, optional):
@@ -269,7 +269,7 @@ class EnvironmentState(pomdp_py.State):
            to designate the end of the activity (default False)
         is_highlighted (bool, optional):
            whether the cost labels, node names etc. are higlighted e.g.
-           to emphasise on the cost in the demo (default False)
+           to emphasise on the cost in the tutorial (default False)
     """
 
     def __init__(

@@ -521,7 +521,7 @@ class IntroWorldScene(WorldScene):
         pass
 
 
-class DemoWorldScene(WorldScene):
+class TutorialWorldScene(WorldScene):
     """TODO"""
 
     def __init__(self, **kwargs):

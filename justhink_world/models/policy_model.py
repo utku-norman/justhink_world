@@ -123,7 +123,7 @@ class IntroPolicyModel(PolicyModel):
         self.actions = {SubmitAction(agent=Human)}
 
 
-class DemoPolicyModel(PolicyModel):
+class TutorialPolicyModel(PolicyModel):
     def update_available_actions(self, state):
         actions = set()
 
