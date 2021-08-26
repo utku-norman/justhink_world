@@ -368,7 +368,7 @@ class EnvironmentScene(Scene):
 
 
 class EnvironmentWindow(pyglet.window.Window):
-    def __init__(self, state, width=1920, height=1080, screen_no=0):
+    def __init__(self, state, width=1920, height=1080, screen_index=0):
         self.scene = EnvironmentScene(state=state, width=width, height=height)
 
         style = pyglet.window.Window.WINDOW_STYLE_BORDERLESS
@@ -378,7 +378,7 @@ class EnvironmentWindow(pyglet.window.Window):
         self.set_handlers(self.scene.on_update)
 
         # Move the window to a screen.
-        active_screen = pyglet.canvas.get_display().get_screens()[screen_no]
+        active_screen = pyglet.canvas.get_display().get_screens()[screen_index]
         self.set_location(active_screen.x, active_screen.y)
 
         self.dispatch_event('on_update')

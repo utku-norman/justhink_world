@@ -15,9 +15,9 @@ from justhink_world.domain.action import SetPauseAction,  \
     AttemptSubmitAction, ContinueAction, SubmitAction
 
 
-def show_all(world):
+def show_all(world, state_no=None):
     """TODO"""
-    world_window = WorldWindow(world)
+    world_window = WorldWindow(world, state_no=state_no)
     mental_window = MentalWindow(world)  # , offset=(1920, 0))
 
     @world_window.event
@@ -36,12 +36,13 @@ def show_all(world):
             s = 'None'
         else:
             s = str(world.agent.history[index][1])
+
         # s += 'state #{}'.format(world.state_no)
         mental_window.cur_scene.graphics.observes_label.text = s
 
         # mental_window.state = world_window.world.agent.state
         mental_window.cur_scene.state = world_window.world.cur_mental_state
-        print('###', mental_window.cur_scene.state)
+        print('Showing state:', mental_window.cur_scene.state)
 
         mental_window.dispatch_event('on_update')
 
@@ -62,9 +63,9 @@ def show_all(world):
     pyglet.app.run()
 
 
-def show_world(world):
-    """TODO"""
-    WorldWindow(world)
+def show_world(world, state_no=None):
+    """TODO By default showing the last state."""
+    WorldWindow(world, state_no=state_no)
 
     # Enter the main event loop.
     pyglet.app.run()
@@ -74,8 +75,8 @@ class WorldWindow(pyglet.window.Window):
     """TODO"""
 
     def __init__(
-            self, world, caption='World', width=1920, height=1080,
-            screen_no=0):
+            self, world, state_no=None, caption='World', width=1920,
+            height=1080, screen_index=0):
         assert isinstance(world, IndividualWorld) or \
             isinstance(world, CollaborativeWorld)
 
@@ -83,14 +84,20 @@ class WorldWindow(pyglet.window.Window):
             scene_type = IndividualWorldScene
         elif isinstance(world, CollaborativeWorld):
             scene_type = CollaborativeWorldScene
-        self.scene = scene_type(world=world, width=width, height=height)
+        else:
+            raise NotImplementedError
 
         self.world = world
+        # # TODO try except
+        if state_no is not None:
+            self.world.state_no = state_no
 
-        # window_style = pyglet.window.Window.WINDOW_STYLE_DEFAULT
+        self.scene = scene_type(world=self.world, width=width, height=height)
+
+        # style = pyglet.window.Window.WINDOW_STYLE_DEFAULT
         style = pyglet.window.Window.WINDOW_STYLE_BORDERLESS
-
         super().__init__(width, height, caption, style=style, fullscreen=False)
+
         self._init_graphics(width, height)
 
         self.register_event_type('on_update')
@@ -100,7 +107,7 @@ class WorldWindow(pyglet.window.Window):
         display = pyglet.canvas.get_display()
         screens = display.get_screens()
         # 0 for the laptop screen, e.g. 1 for the external screen
-        active_screen = screens[screen_no]
+        active_screen = screens[screen_index]
         self.set_location(active_screen.x, active_screen.y)
 
     def __str__(self):
@@ -161,12 +168,13 @@ class WorldWindow(pyglet.window.Window):
 
     def execute_action(self, action):
         """TODO"""
-        print('### executing action in world_window')
+        # print('### executing action in world_window')
         self.world.act(action)
         self.scene.state = self.world.cur_state
-        print('### executing action in world_window DONE! dispatching on_update')
+        # print('### executing action in world_window DONE!')
+        # print('###  dispatching on_update')
         self.dispatch_event('on_update')
-        print('### executing action in world_window DONE! dispatching on_update DONE!')
+        # print('###  dispatching on_update DONE!')
 
     def on_update(self):
         """TODO"""
@@ -243,13 +251,16 @@ class WorldWindow(pyglet.window.Window):
 
 
 class WorldScene(EnvironmentScene):
-    def __init__(self, world, name=None, width=1920, height=1080):
+    """TODO"""
+
+    def __init__(self, world, role=Human, name=None, width=1920, height=1080):
         if name is None:
             name = world.name
         super().__init__(
-            world.env.state, name=name, height=height, width=width)
+            world.cur_state, name=name, height=height, width=width)
+        # world.env.state, name=name, height=height, width=width)
 
-        self._role = Human
+        self._role = role
         self._policy_model = world.agent.policy_model
 
         self._pick_action_type = PickAction
@@ -284,9 +295,6 @@ class WorldScene(EnvironmentScene):
         if self.graphics.temp_suggested_sprite is not None:
             self.graphics.temp_suggested_sprite.draw()
 
-        # self._status_label.draw()
-        # self._status_rect.draw()
-
     def on_mouse_press(self, x, y, button, modifiers, win):
         if self.state.is_paused:
             return
@@ -306,10 +314,8 @@ class WorldScene(EnvironmentScene):
                     self._pick_action_type in self._action_types:
                 self._process_drawing(x, y)
 
-        # if action is not None:
         if action in self._actions:
             win.execute_action(action)
-            # print('Pressed', action)
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers, win):
         if self.state.is_paused:

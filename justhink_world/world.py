@@ -49,7 +49,7 @@ def create_all_worlds(verbose=False):
     return worlds
 
 
-def create_world(name, history=None, verbose=False):
+def create_world(name, history=None, state_no=None, verbose=False):
     """Create a world instance by the world's name."""
 
     if verbose:
@@ -97,7 +97,7 @@ def create_world(name, history=None, verbose=False):
         history = history
 
     # Construct the world.
-    world = world_type(history, name=name)
+    world = world_type(history, name=name, state_no=state_no)
 
     if verbose:
         print('Done!')
@@ -175,6 +175,9 @@ def belief_update(agent, action, observation=None, is_executed=True):
     except Exception as e:
         print(beliefs, e)
 
+    # Update the current node if any.
+    next_state.cur_node = agent.planner.cur_node
+
     if is_executed:
         agent.mental_history.append(next_state)
         agent.state = next_state
@@ -188,7 +191,8 @@ class World(pomdp_py.POMDP):
     An Environment maintains the true state of the world.
     """
 
-    def __init__(self, history, transition_model, policy_model, name='World'):
+    def __init__(self, history, transition_model, policy_model,
+                 state_no=None, name='World'):
 
         self.name = name
 
@@ -198,10 +202,19 @@ class World(pomdp_py.POMDP):
 
         # History, for navigating states.
         self._history = history
-        self.state_no = self.num_states
 
-        # Current state as the last state.
-        cur_state = history[-1]
+        # Set the state no if given, the last state otherwise.
+        if state_no is not None:
+            self.state_no = state_no
+        else:
+            self.state_no = self.num_states
+        # except Exception as e:
+        #     print(e)
+        #     print('Can not set state to number {}'.format(state_no))
+
+        # cur_state = history[-1]
+        cur_state = history[self.state_index]
+        # print('### cur state is', cur_state, state_no)
 
         # Create a reward model.
         reward_model = MstRewardModel()
@@ -248,6 +261,24 @@ class World(pomdp_py.POMDP):
         return 'World({}:{})'.format(self.name, self.env.state)
 
     @property
+    def state_no(self):
+        return self._state_no
+
+    @state_no.setter
+    def state_no(self, value):
+        # if value is not None:
+        if value < 1:
+            value = 1
+        elif value > self.num_states:
+            value = self.num_states
+
+        self._state_no = value
+
+    @property
+    def state_index(self):
+        return (self.state_no - 1) * 2
+
+    @property
     def history(self):
         return self._history
 
@@ -276,23 +307,6 @@ class World(pomdp_py.POMDP):
         else:
             return self.agent.mental_history[0]
 
-    @property
-    def state_index(self):
-        return (self.state_no - 1) * 2
-
-    @property
-    def state_no(self):
-        return self._state_no
-
-    @state_no.setter
-    def state_no(self, value):
-        if value < 1:
-            value = 1
-        elif value > self.num_states:
-            value = self.num_states
-
-        self._state_no = value
-
     def act(self, action, verbose=False):
         # Relocate in history if not at the last state.
         if self.state_no != self.num_states:
@@ -307,6 +321,9 @@ class World(pomdp_py.POMDP):
         env_reward = self.env.state_transition(action)
         next_state = self.env.state
 
+        # Update the history.
+        self._history.extend([action, next_state])
+
         # Update the agent.
         real_observation = self.env.provide_observation(
             self.agent.observation_model, action)
@@ -318,17 +335,15 @@ class World(pomdp_py.POMDP):
 
         # Reasoning.
         self.agent.planner.update(action, real_observation)
-        action = self.agent.planner.plan()
-        # print('### replanned to', action)
-        belief_update(self.agent, action, is_executed=False)
+        robot_action = self.agent.planner.plan()
+        belief_update(self.agent, robot_action, is_executed=False)
 
         # TODO: run a belief update function.
         # Fully observable: immediate access to the state.
         new_belief = pomdp_py.Histogram({next_state: 1.0})
         self.agent.set_belief(new_belief)
 
-        # Update the history.
-        self._history.extend([action, next_state])
+        # Move to the new state.
         self.state_no = self.num_states
 
         # Update the planner.
@@ -362,49 +377,49 @@ class World(pomdp_py.POMDP):
 class IntroWorld(World):
     """TODO"""
 
-    def __init__(self, state, name='IntroWorld'):
+    def __init__(self, state, name='IntroWorld', **kwargs):
         transition_model = IntroTransitionModel()
         policy_model = IntroPolicyModel()
 
         super().__init__(
             state, transition_model=transition_model,
-            policy_model=policy_model, name=name)
+            policy_model=policy_model, name=name, **kwargs)
 
 
 class TutorialWorld(World):
     """TODO"""
 
-    def __init__(self, state, name='TutorialWorld'):
+    def __init__(self, state, name='TutorialWorld', **kwargs):
         transition_model = TutorialTransitionModel()
         policy_model = TutorialPolicyModel()
 
         super().__init__(
             state, transition_model=transition_model,
-            policy_model=policy_model, name=name)
+            policy_model=policy_model, name=name, **kwargs)
 
 
 class IndividualWorld(World):
     """TODO"""
 
-    def __init__(self, state, name='IndividualWorld'):
+    def __init__(self, state, name='IndividualWorld', **kwargs):
         transition_model = IndividualTransitionModel()
         policy_model = IndividualPolicyModel()
 
         super().__init__(
             state, transition_model=transition_model,
-            policy_model=policy_model, name=name)
+            policy_model=policy_model, name=name, **kwargs)
 
 
 class CollaborativeWorld(World):
     """TODO"""
 
-    def __init__(self, state, name='CollaborativeWorld'):
+    def __init__(self, state, name='CollaborativeWorld', **kwargs):
         transition_model = CollaborativeTransitionModel()
         policy_model = CollaborativePolicyModel()
 
         super().__init__(
             state, transition_model=transition_model,
-            policy_model=policy_model, name=name)
+            policy_model=policy_model, name=name, **kwargs)
 
 
 # make_strategy_text

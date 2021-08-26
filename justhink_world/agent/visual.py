@@ -18,7 +18,7 @@ class MentalWindow(pyglet.window.Window):
     """docstring for MentalWindow"""
 
     def __init__(self, world, caption="Robot's Mind", width=1920, height=1080,
-                 offset=(1920, 0), screen_no=0, max_level=2):
+                 offset=(1920, 0), screen_index=0, max_level=2):
 
         self.scene = MentalScene(
             world, width=width, height=height, max_level=max_level)
@@ -31,7 +31,7 @@ class MentalWindow(pyglet.window.Window):
         display = pyglet.canvas.get_display()
         screens = display.get_screens()
         # 0 for the laptop screen, e.g. 1 for the external screen
-        active_screen = screens[screen_no]
+        active_screen = screens[screen_index]
         self.set_location(active_screen.x+offset[0], active_screen.y+offset[1])
 
         self.register_event_type('on_update')
@@ -94,9 +94,23 @@ class MentalScene(Scene):
     def on_update(self):
         self._update_graphs()
 
+        # Update the current node belief.
+        cur_node = self.state.cur_node
+        if cur_node is not None:
+            for u, d in self.graphics.layout.nodes(data=True):
+                if u == cur_node:
+                    color = (255, 0, 0, 255)
+                    is_bold = True
+                else:
+                    color = (255, 255, 255, 255)
+                    is_bold = False
+                d[0]['label'].color = color
+                d[0]['label'].bold = is_bold
+
     # Private methods.
 
     def _update_graphs(self):
+        # Update the choice beliefs.
         for level in range(0, 3):
             if level == 0:
                 beliefs = self.state.beliefs['me']
@@ -109,10 +123,6 @@ class MentalScene(Scene):
                 p = beliefs['world'][u][v]['is_opt']
                 s = '{:.1f}'.format(p) if p is not None else '?'
                 d[level]['label'].text = s
-
-        self.graphics.layout
-
-        pass
 
     def _init_graphics(self, graph, width, height, max_level, batch=None):
         font_size = 24
@@ -366,11 +376,11 @@ def create_network_graphics(
 
         # Create node name label.
         text = d['text'].split()[-1]
-        d[key]['node_label'] = create_node_label(
+        d[key]['label'] = create_node_label(
             x, y, text, font_size=node_font_size, batch=batch, group=groups[2])
 
         # Create node border.
-        d[key]['node_border'] = create_node_border(
+        d[key]['border'] = create_node_border(
             x, y, rx=rx, ry=ry, batch=batch, group=groups[2])
 
     # Create edge graphics.

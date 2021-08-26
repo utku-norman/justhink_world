@@ -33,11 +33,11 @@ This README is based on the project [ros_best_practices](https://github.com/legg
 Affiliation: [CHILI Lab, EPFL](https://www.epfl.ch/labs/chili/)<br />
 Maintainer: Utku Norman, utku.norman@epfl.ch**
 
-The justhink_app package has been tested under Python 3.8 on Ubuntu 20.04.
+The [justhink_world] package has been tested under Python 3.8 on Ubuntu 20.04.
 This is research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
 
 
-![](doc/collab_activity.jpg)
+<img src="doc/collab_activity.jpg" width="768" />
 
 
 ### Publications
@@ -123,6 +123,9 @@ world.act(PickAction((1, 4)))
 show_state(world.cur_state)
 ```
 
+<img src="doc/example_show_state.jpg" width="768" />
+
+
 ### Try out a world (interactive).
 
 * Use `left`-`right` keys to navigate to the previous and the next state, 
@@ -148,11 +151,16 @@ world.act(AttemptSubmitAction())
 world.act(ContinueAction())
 world.act(ClearAction())
 world.act(PickAction((5, 6)))
+
+# Visualise the world, from the last state by default.
+show_world(world)
+
+# Take a few more actions.
 world.act(AttemptSubmitAction())
 world.act(SubmitAction())
 
-# Visualise the world.
-show_world(world)
+# Visualise the world, from the first state.
+show_world(world, state_no=1)
 ```
 
 ##### For real log data from a child.
@@ -167,8 +175,14 @@ history = load_log(sample_no=1, world_name=world_name)
 # Create a world with that history.
 world = create_world(world_name, history)
 
-show_world(world)
+# Display from the first state in the log.
+show_world(world, state_no=1)
 ```
+
+
+<img src="doc/example_test_log.gif" width="768" />
+<!-- ![](doc/example_test_log.gif) -->
+
 
 #### Try out a collaborative world.
 
@@ -187,7 +201,7 @@ world.act(SuggestPickAction((3, 1), agent=Robot))
 world.act(AgreeAction(agent=Human))
 world.act(SuggestPickAction((1, 4), agent=Human))
 
-# Visualise the world.
+# Visualise the world, from the last state by default.
 show_world(world)
 ```
 
@@ -203,7 +217,7 @@ history = load_log(sample_no=3, world_name=world_name)
 # Create a world with that history.
 world = create_world(world_name, history)
 
-show_world(world)
+show_world(world, state_no=1)
 ```
 
 #### Playground
