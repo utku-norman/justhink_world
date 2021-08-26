@@ -220,6 +220,10 @@ world = create_world(world_name, history)
 show_world(world, state_no=1)
 ```
 
+
+<img src="doc/example_collab_log.gif" width="768" />
+
+
 #### Playground
 Visualising a mental state for the robot:
 ```
