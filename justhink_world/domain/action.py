@@ -74,38 +74,29 @@ class SetStateAction(Action):
 class SetPauseAction(Action):
     def __init__(self, is_paused, agent=Human):
         assert isinstance(is_paused, bool)
-
         self.is_paused = is_paused
-
         name = 'set-paused({})'.format(is_paused)
-
         super().__init__(name, agent)
 
 
 class SuggestPickAction(Action):
     def __init__(self, edge, agent=Human):
         self.edge = edge
-
         name = 'suggest-pick({},{})'.format(self.edge[0], self.edge[1])
-
         super().__init__(name, agent)
 
 
 class PickAction(Action):
     def __init__(self, edge, agent=Human):
         self.edge = edge
-
         name = 'pick({},{})'.format(self.edge[0], self.edge[1])
-
         super().__init__(name, agent)
 
 
 class UnpickAction(Action):
     def __init__(self, edge, agent=Human):
         self.edge = edge
-
         name = 'unpick({},{})'.format(self.edge[0], self.edge[1])
-
         super().__init__(name, agent)
 
 

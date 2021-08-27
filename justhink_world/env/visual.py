@@ -31,22 +31,18 @@ class EnvironmentScene(Scene):
 
     def on_update(self):
         # Update the selected edges.
-        added_nodes = set()
         for u, v, d in self.graphics.layout.edges(data=True):
-            is_added = self.state.network.subgraph.has_edge(u, v)
+            is_selected = self.state.network.subgraph.has_edge(u, v)
             e = self.state.network.suggested_edge
             is_suggested = (e == (u, v)) or (e == (v, u))
-            d['added_sprite'].visible = is_added
-            d['selectable_sprite'].visible = not is_added
-            d['selected_sprite'].visible = False
+            d['selectable_sprite'].visible = not is_selected
+            d['selected_sprite'].visible = is_selected
             d['suggested_sprite'].visible = is_suggested
 
-            if is_added:
-                added_nodes.update((u, v))
-
         # Update the selected nodes.
+        selected_nodes = self.state.network.get_selected_nodes()
         for u, d in self.graphics.layout.nodes(data=True):
-            d['added_sprite'].visible = u in added_nodes
+            d['selected_sprite'].visible = u in selected_nodes
 
         # Process highlight for edges.
         for u, v, d in self.graphics.layout.edges(data=True):
@@ -217,14 +213,14 @@ class EnvironmentScene(Scene):
 
             ref = image_source.joinpath(d['higlight_image_file'])
             image = center_image(load_image_from_reference(ref))
-            d['added_sprite'] = pyglet.sprite.Sprite(
+            d['selected_sprite'] = pyglet.sprite.Sprite(
                 image, d['x'], d['y'], batch=batch, group=groups[3])
-            d['added_sprite'].visible = False
+            d['selected_sprite'].visible = False
 
         # Create edge images.
-        ref = image_source.joinpath('railroad_added.png')
-        edge_added_image = center_image(load_image_from_reference(ref))
-        graphics.edge_added_image = edge_added_image
+        ref = image_source.joinpath('railroad_selected.png')
+        edge_selected_image = center_image(load_image_from_reference(ref))
+        graphics.edge_selected_image = edge_selected_image
 
         ref = image_source.joinpath('railroad_selected.png')
         edge_selected_image = center_image(load_image_from_reference(ref))
@@ -248,8 +244,8 @@ class EnvironmentScene(Scene):
                 edge_selected_image, ud['x'], ud['y'], vd['x'], vd['y'],
                 batch=batch, group=groups[1], visible=False)
 
-            d['added_sprite'] = create_edge_sprite(
-                edge_added_image, ud['x'], ud['y'], vd['x'], vd['y'],
+            d['selected_sprite'] = create_edge_sprite(
+                edge_selected_image, ud['x'], ud['y'], vd['x'], vd['y'],
                 batch=batch, group=groups[1], visible=False)
 
             d['suggested_sprite'] = create_edge_sprite(

@@ -120,9 +120,17 @@ class MentalScene(Scene):
                 beliefs = self.state.beliefs['me']['you']['me']
 
             for u, v, d in self.graphics.layout.edges(data=True):
-                p = beliefs['world'][u][v]['is_opt']
+                p = beliefs['world'][u][v]['is_optimal']
                 s = '{:.1f}'.format(p) if p is not None else '?'
                 d[level]['label'].text = s
+
+                # is selected.
+                d[level]['selected_sprite'].visible = \
+                    beliefs['world'][u][v]['is_selected']
+
+                # # is suggested.
+                # d[level]['suggested_sprite'].visible = \
+                #     beliefs['world'][u][v]['is_suggested']
 
     def _init_graphics(self, graph, width, height, max_level, batch=None):
         font_size = 24
@@ -400,9 +408,10 @@ def create_network_graphics(
         d[key]['selectable_sprite'] = label
 
         label = create_edge(
-            ux, uy, vx, vy, width=24, visible=False, rx=rx, ry=ry, batch=batch,
+            ux, uy, vx, vy, width=48, visible=False, rx=rx, ry=ry, batch=batch,
             group=groups[1])
-        d[key]['added_sprite'] = label
+        # d[key]['selected_sprite'] = label # 24
+        d[key]['selected_sprite'] = label
 
         # Create edge data label.
         text = label_func(d)

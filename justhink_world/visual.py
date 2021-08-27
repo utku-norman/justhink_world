@@ -371,7 +371,7 @@ class WorldScene(EnvironmentScene):
             if node is not None:
                 d = self.graphics.layout.nodes[node]
                 self.temp_from = (d['x'], d['y'], node)
-                d['added_sprite'].visible = True
+                d['selected_sprite'].visible = True
 
         # If the agent is already drawing from a node.
         else:
@@ -382,13 +382,13 @@ class WorldScene(EnvironmentScene):
                     node != self.temp_from[2]:
                 self.temp_to = node
                 d = self.graphics.layout.nodes[node]
-                d['added_sprite'].visible = True
+                d['selected_sprite'].visible = True
 
             # If mouse is not on a node, reset the previous drawing to node.
             elif self.temp_to is not None \
                     and self.temp_to not in selected:
                 d = self.graphics.layout.nodes[self.temp_to]
-                d['added_sprite'].visible = False
+                d['selected_sprite'].visible = False
                 self.temp_to = None
 
             # Update the temporary drawing edge to the new mouse position.
@@ -474,10 +474,10 @@ class WorldScene(EnvironmentScene):
             if node is not None:
                 from_node = self.temp_from[2]
                 edge = from_node, node
-                is_added = self.state.network.subgraph.has_edge(*edge)
+                is_selected = self.state.network.subgraph.has_edge(*edge)
                 has_edge = self.graphics.layout.has_edge(*edge)
 
-                if has_edge and (from_node != node) and not is_added:
+                if has_edge and (from_node != node) and not is_selected:
                     action = self._pick_action_type(edge, agent=self._role)
 
         # Clear selection.
@@ -485,12 +485,12 @@ class WorldScene(EnvironmentScene):
         if self.temp_from is not None \
                 and self.temp_from[2] not in selected:
             node_data = self.graphics.layout.nodes[self.temp_from[2]]
-            node_data['added_sprite'].visible = False
+            node_data['selected_sprite'].visible = False
 
         if self.temp_to is not None \
                 and self.temp_to not in selected:
             node_data = self.graphics.layout.nodes[self.temp_to]
-            node_data['added_sprite'].visible = False
+            node_data['selected_sprite'].visible = False
             self.temp_to = None
 
         self._reset_drawing()
@@ -534,7 +534,7 @@ class TutorialWorldScene(WorldScene):
 
         super().__init__(**kwargs)
 
-        self.temp_edge_image = self.graphics.edge_added_image
+        self.temp_edge_image = self.graphics.edge_selected_image
         self._pick_action_type = PickAction
         self._submit_action_type = SubmitAction
 
@@ -552,7 +552,7 @@ class IndividualWorldScene(WorldScene):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.temp_edge_image = self.graphics.edge_added_image
+        self.temp_edge_image = self.graphics.edge_selected_image
         self._pick_action_type = PickAction
         self._submit_action_type = AttemptSubmitAction
 

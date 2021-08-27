@@ -163,6 +163,9 @@ class Explanation(object):
 
 
 class ConnectedExplanation(object):
+    def __init__(self):
+        self.others = set()
+
     def __repr__(self):
         return 'All are connected now!'
 

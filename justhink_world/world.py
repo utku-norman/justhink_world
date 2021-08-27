@@ -105,16 +105,27 @@ def create_world(name, history=None, state_no=None, verbose=False):
     return world
 
 
-def belief_update(agent, action, observation=None, is_executed=True):
+def update_belief(agent, action, observation=None, is_executed=True):
     """TODO"""
     # print('### updating belief for', action, is_executed)
     cur_env_state = agent.cur_belief.mpe()
 
-    # next_state = agent.state
     if is_executed:
         next_state = copy.deepcopy(agent.state)
     else:
         next_state = agent.state
+
+    # Update next state subgraph.
+    beliefs_list = [
+        next_state.beliefs['me'],
+        next_state.beliefs['me']['you'],
+        next_state.beliefs['me']['you']['me'],
+    ]
+    suggested = cur_env_state.network.suggested_edge
+    for beliefs in beliefs_list:
+        for u, v, d in beliefs['world'].edges(data=True):
+            d['is_selected'] = cur_env_state.network.subgraph.has_edge(u, v)
+            d['is_suggested'] = u, v == suggested or v, u == suggested
 
     if is_executed:
         if action.agent is Human:
@@ -133,25 +144,25 @@ def belief_update(agent, action, observation=None, is_executed=True):
                 or isinstance(action, SuggestPickAction):
             u, v = action.edge
             # print('### setting pick belief', action)
-            beliefs['world'][u][v]['is_opt'] = 1.0
+            beliefs['world'][u][v]['is_optimal'] = 1.0
 
         elif isinstance(action, AgreeAction):
             u, v = cur_env_state.network.suggested_edge
-            beliefs['world'][u][v]['is_opt'] = 1.0
+            beliefs['world'][u][v]['is_optimal'] = 1.0
 
         elif isinstance(action, DisagreeAction):
             u, v = cur_env_state.network.suggested_edge
-            beliefs['world'][u][v]['is_opt'] = 0.0
+            beliefs['world'][u][v]['is_optimal'] = 0.0
 
         elif isinstance(action, ClearAction):
             for u, v in cur_env_state.network.subgraph.edges():
-                value = beliefs['world'][u][v]['is_opt']
+                value = beliefs['world'][u][v]['is_optimal']
                 if value is None:
                     value = 0
                 value = value - 0.1
                 if value < 0:
                     value = 0
-                beliefs['world'][u][v]['is_opt'] = value
+                beliefs['world'][u][v]['is_optimal'] = value
 
         elif isinstance(action, SubmitAction) or \
                 isinstance(action, AttemptSubmitAction):
@@ -160,20 +171,31 @@ def belief_update(agent, action, observation=None, is_executed=True):
                     value = 1.0
                 else:
                     value = 0.0
-                beliefs['world'][u][v]['is_opt'] = value
+                beliefs['world'][u][v]['is_optimal'] = value
 
         elif isinstance(action, ContinueAction):
             for u, v in cur_env_state.network.subgraph.edges():
-                value = beliefs['world'][u][v]['is_opt']
+                value = beliefs['world'][u][v]['is_optimal']
                 if value is None:
                     value = 0
                 value = value - 0.1
                 if value < 0:
                     value = 0
-                beliefs['world'][u][v]['is_opt'] = value
+                beliefs['world'][u][v]['is_optimal'] = value
 
     except Exception as e:
         print(beliefs, e)
+
+    # If robot, update others as not believed to be true.
+    if action.agent is Robot:
+        for action in agent.planner.explanation.others:
+            if isinstance(action, PickAction):
+                u, v = action.edge
+                if cur_env_state.network.subgraph.has_edge(u, v):
+                    value = None
+                else:
+                    value = 0.0
+                beliefs['world'][u][v]['is_optimal'] = value
 
     # Update the current node if any.
     next_state.cur_node = agent.planner.cur_node
@@ -250,8 +272,8 @@ class World(pomdp_py.POMDP):
             self.act(ObserveAction(agent=Robot))
 
         # Have the robot make a plan and update its beliefs.
-        action = self.agent.planner.plan()
-        belief_update(self.agent, action, is_executed=False)
+        robot_action = self.agent.planner.plan()
+        update_belief(self.agent, robot_action, is_executed=False)
         # print('### Robot made a plan to', action)
 
     def __str__(self):
@@ -330,13 +352,8 @@ class World(pomdp_py.POMDP):
 
         self.agent.update_history(action, real_observation)
         # problem.agent.update_history(real_action, real_observation)
-        belief_update(self.agent, action, real_observation)
+        update_belief(self.agent, action, real_observation)
         self.agent.policy_model.update(state, next_state, action)
-
-        # Reasoning.
-        self.agent.planner.update(action, real_observation)
-        robot_action = self.agent.planner.plan()
-        belief_update(self.agent, robot_action, is_executed=False)
 
         # TODO: run a belief update function.
         # Fully observable: immediate access to the state.
@@ -345,6 +362,11 @@ class World(pomdp_py.POMDP):
 
         # Move to the new state.
         self.state_no = self.num_states
+
+        # Reasoning.
+        self.agent.planner.update(action, real_observation)
+        robot_action = self.agent.planner.plan()
+        update_belief(self.agent, robot_action, is_executed=False)
 
         # Update the planner.
         # if planner is not None:

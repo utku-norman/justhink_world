@@ -15,6 +15,7 @@ class MentalState(object):
 
     def __init__(self, graph, agents=set({Human, Robot})):
         if Human in agents:
+            # self.subgraph = nx.Graph()
             self.beliefs = {
                 'me': {
                     'world': self._create_view(graph),
@@ -37,10 +38,14 @@ class MentalState(object):
 
     def _create_view(self, from_graph):
         # graph = copy.deepcopy(from_graph) for u, v, d in graph.edges
-        # (data=True): d['is_opt'] = None
+        # (data=True): d['is_optimal'] = None
 
         # About choices.
-        d = {'is_opt': None}
+        d = {
+            'is_optimal': None,
+            'is_selected': False,
+            'is_suggested': False,
+        }
 
         graph = nx.Graph()
         for u, v in from_graph.edges():
@@ -66,7 +71,7 @@ class MentalState(object):
                  ('me-by-you', self.beliefs['me']['you']['me'])]
         for key, beliefs in pairs:
             for u, v, d in beliefs['world'].edges(data=True):
-                value = d['is_opt']
+                value = d['is_optimal']
                 if value is not None:
                     belief_list.append(('you', u, v, value))
 
