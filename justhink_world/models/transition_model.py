@@ -9,9 +9,11 @@ from ..domain.action import PickAction, SuggestPickAction, \
     AgreeAction, DisagreeAction, ClearAction, ResetAction, \
     AttemptSubmitAction, ContinueAction, SubmitAction
 
-
 from ..domain.state import Button
 from ..agent import Human, Robot
+
+
+from justhink_world.tools.write import Bcolors
 
 EPSILON = 1e-9
 
@@ -177,8 +179,9 @@ class CollaborativeTransitionModel(TransitionModel):
         # Validation.
         # If the agent can act.
         if action.agent not in state.agents:
-            print('Invalid action {}: agent {} is not an active ({}).'.format(
-                action, action.agent.name, state.agents))
+            s = 'Invalid action {}: agent {} is not an active ({}).'.format(
+                action, action.agent.name, state.agents)
+            print(Bcolors.fail(s))
             # raise ValueError
 
         next_state = copy.deepcopy(state)

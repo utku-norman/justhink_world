@@ -4,7 +4,7 @@ import pomdp_py
 
 import networkx as nx
 
-from ..tools.networks import find_mst, is_subgraph_spanning, \
+from ..tools.network import find_mst, is_subgraph_spanning, \
     compute_total_cost, compute_subgraph_cost
 
 from ..agent import Human, Robot

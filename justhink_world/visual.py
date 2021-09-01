@@ -63,9 +63,9 @@ def show_all(world, state_no=None):
     pyglet.app.run()
 
 
-def show_world(world, state_no=None):
+def show_world(world, state_no=None, screen_index=-1):
     """TODO By default showing the last state."""
-    WorldWindow(world, state_no=state_no)
+    WorldWindow(world, state_no=state_no, screen_index=screen_index)
 
     # Enter the main event loop.
     pyglet.app.run()

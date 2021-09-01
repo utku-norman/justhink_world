@@ -35,7 +35,7 @@ def load_graph_from_json(file):
     return network
 
 
-def load_all_logs(log_resource='justhink_spring21_transition_logs.pickle'):
+def load_all_logs(log_resource='justhink_spring21_transition_lists.pickle'):
 
     # Create a container for the image resources.
     data_container = importlib_resources.files(

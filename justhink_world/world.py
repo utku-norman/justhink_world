@@ -18,7 +18,7 @@ from .models.transition_model import IntroTransitionModel, \
 from .models.observation_model import MstObservationModel
 from .models.reward_model import MstRewardModel
 
-from .tools.loaders import make_network_resources, load_network
+from .tools.read import make_network_resources, load_network
 
 from .agent import Human, Robot, RobotAgent
 from .agent.reasoning import TraversalPlanner
@@ -33,7 +33,7 @@ def list_worlds():
             names.append(name)
     for i in range(1, 3):
         names.append('collaboration-{}'.format(i))
-    names.append('debriefing')
+    names.append('bye')
 
     return names
 

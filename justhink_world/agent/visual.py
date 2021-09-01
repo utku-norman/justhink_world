@@ -4,7 +4,7 @@ from pyglet.window import key
 import networkx as nx
 
 from justhink_world.tools.graphics import Scene, Graphics, Surface, \
-    crop_edge, create_ellipse, transform_position, WHITEA, BLACK
+    crop_edge, create_ellipse, transform_position, WHITE, WHITEA, BLACK
 
 
 def show_mind(world):
@@ -402,16 +402,17 @@ def create_network_graphics(
         ux, uy = transform_func(u_node['x'], u_node['y'])
         vx, vy = transform_func(v_node['x'], v_node['y'])
 
-        label = create_edge(
+        d[key]['selectable_sprite'] = create_edge(
             ux, uy, vx, vy, width=3, opacity=128, rx=rx, ry=ry, batch=batch,
             group=groups[1])
-        d[key]['selectable_sprite'] = label
 
-        label = create_edge(
+        d[key]['selected_sprite'] = create_edge(
             ux, uy, vx, vy, width=48, visible=False, rx=rx, ry=ry, batch=batch,
             group=groups[1])
-        # d[key]['selected_sprite'] = label # 24
-        d[key]['selected_sprite'] = label
+
+        d[key]['suggested_sprite'] = create_edge(
+            ux, uy, vx, vy, width=26, visible=False, rx=rx, ry=ry, batch=batch,
+            color=(255, 0, 0), group=groups[1])
 
         # Create edge data label.
         text = label_func(d)
@@ -423,7 +424,8 @@ def create_network_graphics(
 
 
 def create_edge(
-        ux, uy, vx, vy, rx=0, ry=0, width=1, visible=True, opacity=255,
+        ux, uy, vx, vy, rx=0, ry=0, width=1, visible=True,
+        color=WHITE, opacity=255,
         batch=None, group=None):
     ux_new, uy_new, vx_new, vy_new = crop_edge(ux, uy, vx, vy, rx, ry)
 
