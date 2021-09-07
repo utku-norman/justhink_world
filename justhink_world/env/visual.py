@@ -38,6 +38,8 @@ class EnvironmentScene(Scene):
             d['selectable_sprite'].visible = not is_selected
             d['selected_sprite'].visible = is_selected
             d['suggested_sprite'].visible = is_suggested
+            # if is_suggested:
+            #     print('##### is_suggested', u, v)
 
         # Update the selected nodes.
         selected_nodes = self.state.network.get_selected_nodes()

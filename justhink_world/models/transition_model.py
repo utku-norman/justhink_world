@@ -246,8 +246,9 @@ class CollaborativeTransitionModel(TransitionModel):
         # Attempt to submit action.
         elif isinstance(action, AttemptSubmitAction):
             next_state.is_submitting = True
-            # Maintain the agents that can act: suggestions swap turns.
-            next_state.agents = toggle_agent(state.agents)
+            # # Maintain the agents that can act:
+            # # submit attempts result in swaps.
+            # next_state.agents = toggle_agent(state.agents)
 
         elif isinstance(action, ContinueAction):
             next_state.is_submitting = False

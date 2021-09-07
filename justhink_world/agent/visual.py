@@ -124,13 +124,13 @@ class MentalScene(Scene):
                 s = '{:.1f}'.format(p) if p is not None else '?'
                 d[level]['label'].text = s
 
+                # is suggested.
+                d[level]['suggested_sprite'].visible = \
+                    beliefs['world'][u][v]['is_suggested']
+
                 # is selected.
                 d[level]['selected_sprite'].visible = \
                     beliefs['world'][u][v]['is_selected']
-
-                # # is suggested.
-                # d[level]['suggested_sprite'].visible = \
-                #     beliefs['world'][u][v]['is_suggested']
 
     def _init_graphics(self, graph, width, height, max_level, batch=None):
         font_size = 24
@@ -407,11 +407,11 @@ def create_network_graphics(
             group=groups[1])
 
         d[key]['selected_sprite'] = create_edge(
-            ux, uy, vx, vy, width=48, visible=False, rx=rx, ry=ry, batch=batch,
+            ux, uy, vx, vy, width=42, visible=False, rx=rx, ry=ry, batch=batch,
             group=groups[1])
 
         d[key]['suggested_sprite'] = create_edge(
-            ux, uy, vx, vy, width=26, visible=False, rx=rx, ry=ry, batch=batch,
+            ux, uy, vx, vy, width=16, visible=False, rx=rx, ry=ry, batch=batch,
             color=(255, 0, 0), group=groups[1])
 
         # Create edge data label.
@@ -430,7 +430,8 @@ def create_edge(
     ux_new, uy_new, vx_new, vy_new = crop_edge(ux, uy, vx, vy, rx, ry)
 
     line = pyglet.shapes.Line(
-        ux_new, uy_new, vx_new, vy_new, width=width, batch=batch, group=group)
+        ux_new, uy_new, vx_new, vy_new, color=color, width=width, batch=batch,
+        group=group)
     line.opacity = opacity
     line.visible = visible
 
@@ -483,7 +484,7 @@ def create_node_border(
 
 
 def make_strategy_text(p, agent='self'):
-    p_text = '{:1.1f}'.format(p) if p is not None else '?'
+    p_text = '{:1.1f}'.format(p) if p is not None else 'NotImpl.'
     return 'P_{} = {}'.format(agent, p_text)
     # return 'P_{}(correct) = {:1.1f}'.format(agent, p_text)
 

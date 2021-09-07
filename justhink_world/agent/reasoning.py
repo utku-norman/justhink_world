@@ -1,4 +1,5 @@
-from justhink_world.domain.action import PickAction, SubmitAction
+from justhink_world.domain.action import SuggestPickAction, SubmitAction
+
 from justhink_world.agent import Robot
 
 from pqdict import PQDict
@@ -17,33 +18,37 @@ class TraversalPlanner(object):
             # print('Available starting points: {}'.format(available_starts))
             self.cur_node = available_starts[0]
         else:
+
             self.cur_node = start
 
         # self.rejections = set()
 
         self.explanation = None
 
-    def plan(self):  # , agent, verbose=False):
+    def plan(self, agent):
         """select the next action by greedy traversal planning"""
         # Select greedy.
-        # state = self.world.agent.cur_belief.mpe()
-        state = self.state
+        self.state = agent.cur_belief.mpe()
+        self.cur_node = agent.state.cur_node
+
+        # state = self.state
 
         v = None
         # note_iter = iter(state.graph.nodes)
         # while v is None and (len(state.graph.edges)
         # < state.graph.number_of_edges()-1):
         expl, v = get_greedy_neighbour(
-            state.network.graph, self.cur_node, state.network.subgraph)
+            self.state.network.graph, self.cur_node,
+            self.state.network.subgraph)
 
         # Refine the explanation in terms of actions.
         if v is None:
             expl = ConnectedExplanation()
             expl.best = SubmitAction(agent=Robot)
         else:
-            expl.others = {PickAction((self.cur_node, u), agent=Robot)
+            expl.others = {SuggestPickAction((self.cur_node, u), agent=Robot)
                            for u in expl.others}
-            expl.best = PickAction((self.cur_node, v), agent=Robot)
+            expl.best = SuggestPickAction((self.cur_node, v), agent=Robot)
 
         # Choose the action.
         action = expl.best
@@ -51,17 +56,20 @@ class TraversalPlanner(object):
 
         return action
 
-    # def update(self, agent, action, observation):
-    def update(self, action, observation):
-        """Update the current node."""
-        if isinstance(action, PickAction):
-            self.cur_node = action.edge[1]
+    # # def update(self, agent, action, observation):
+    # def update(self, action, state):  # observation):
+    #     """Update the current node."""
+    #     if isinstance(action, SuggestPickAction):
+    #         self.cur_node = action.edge[1]
+    #         print('##### moved current to', self.cur_node,
+    #               self.state.network.get_node_name(self.cur_node))
 
-        self.state = observation.state
-        # if self.cur_node == action.edge[1]:
-        #     self.cur_node = action.edge[0]
-        # else:
-        #     self.cur_node = action.edge[1]
+    #     # self.state = observation.state
+    #     self.state = state
+    #     # if self.cur_node == action.edge[1]:
+    #     #     self.cur_node = action.edge[0]
+    #     # else:
+    #     #     self.cur_node = action.edge[1]
 
 
 def get_greedy_neighbour(graph, u, visited):
@@ -85,7 +93,7 @@ def get_greedy_neighbour(graph, u, visited):
 
 
 class PrimsPlanner():
-    """Define a  Prim's (or JPD (Jarnik/Prim/Dijkstra)) planner."""
+    """Define a Prim's (or JPD (Jarnik/Prim/Dijkstra)) planner."""
 
     def __init__(self, world, start=None):
         self.world = world
@@ -110,8 +118,8 @@ class PrimsPlanner():
             expl.best = SubmitAction()
             expl = ConnectedExplanation()
         else:
-            expl.best = PickAction(e)
-            expl.others = {PickAction(edge) for edge in expl.others}
+            expl.best = SuggestPickAction(e)
+            expl.others = {SuggestPickAction(edge) for edge in expl.others}
 
         # Choose the action.
         action = expl.best
@@ -121,7 +129,7 @@ class PrimsPlanner():
 
     def update(self, agent, action, observation):
         """Update the current node"""
-        if isinstance(action, PickAction):
+        if isinstance(action, SuggestPickAction):
             if self.current == action.edge[1]:
                 self.current = action.edge[0]
             else:

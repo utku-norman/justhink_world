@@ -13,7 +13,7 @@ from ..agent import Human, Robot
 class MentalState(object):
     """TODO: docstring for MentalState"""
 
-    def __init__(self, graph, agents=set({Human, Robot})):
+    def __init__(self, graph, cur_node=None, agents=set({Human, Robot})):
         if Human in agents:
             # self.subgraph = nx.Graph()
             self.beliefs = {
@@ -34,7 +34,7 @@ class MentalState(object):
                     'world': self._create_view(graph),
                 }
             }
-        self.cur_node = None
+        self.cur_node = cur_node
 
     def _create_view(self, from_graph):
         # graph = copy.deepcopy(from_graph) for u, v, d in graph.edges
@@ -73,7 +73,7 @@ class MentalState(object):
             for u, v, d in beliefs['world'].edges(data=True):
                 value = d['is_optimal']
                 if value is not None:
-                    belief_list.append(('you', u, v, value))
+                    belief_list.append((key, u, v, value))
 
         return sorted(belief_list)
 
