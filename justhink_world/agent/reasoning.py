@@ -6,22 +6,19 @@ from pqdict import PQDict
 
 
 class TraversalPlanner(object):
-    """Define a greedy traversal planner."""
+    """Define a greedy traversal planner.
+
+    It will produce a suboptimal result."""
 
     def __init__(self, state, start=None):
-        # self.world = world
         self.state = state
 
         if start is None:
             available_starts = sorted(state.network.graph.nodes())
-            # available_starts = sorted(world.env.state.network.graph.nodes())
-            # print('Available starting points: {}'.format(available_starts))
             self.cur_node = available_starts[0]
         else:
 
             self.cur_node = start
-
-        # self.rejections = set()
 
         self.explanation = None
 
