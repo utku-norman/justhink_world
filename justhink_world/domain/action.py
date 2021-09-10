@@ -1,7 +1,7 @@
 import pomdp_py
 
 from ..agent.agent import Actor, Human, Admin
-from .state import EnvironmentState
+from .state import EnvState
 
 
 class Action(pomdp_py.Action):
@@ -54,14 +54,14 @@ class SetStateAction(Action):
     """TODO
 
     Attributes:
-        state (EnvironmentState):
+        state (EnvState):
             the state that he action will set the environment
         agent (Actor, optional):
             the agent of the action (default Human)
     """
 
     def __init__(self, state, agent=Admin):
-        assert isinstance(state, EnvironmentState)
+        assert isinstance(state, EnvState)
         assert issubclass(agent, Actor)
 
         self.state = state

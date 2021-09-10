@@ -232,7 +232,7 @@ class NetworkState(object):
         return False
 
 
-class EnvironmentState(pomdp_py.State):
+class EnvState(pomdp_py.State):
     """A class to represent a JUSThink world's environment's state.
 
     Contains information on the current solution (i.e. the network),
@@ -323,7 +323,7 @@ class EnvironmentState(pomdp_py.State):
             if len(self.agents) > 0 else 'x'
         attempt_str = 'inf' if self.max_attempts is None else self.max_attempts
 
-        s = 'EnvironmentState('
+        s = 'EnvState('
         s += '{}@{}/{},a:{};p:{:d},t:{:d},s:{:d},h:{:d})'.format(
             self.network, self.attempt_no, attempt_str, agents_str,
             self.is_paused, self.is_terminal, self.is_submitting,

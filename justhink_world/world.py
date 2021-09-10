@@ -4,7 +4,7 @@ import importlib_resources
 
 import pomdp_py
 
-from .domain.state import EnvironmentState, MentalState
+from .domain.state import EnvState, MentalState
 from .domain.action import ObserveAction, PickAction, SuggestPickAction, \
     AgreeAction,  DisagreeAction, SetStateAction, ClearAction, \
     AttemptSubmitAction, ContinueAction, SubmitAction
@@ -78,17 +78,17 @@ def create_world(name, history=None, state_no=None, verbose=False):
     # Construct the initial state.
     if history is None:
         if world_type is IndividualWorld:
-            init_state = EnvironmentState(
+            init_state = EnvState(
                 network=network, agents=frozenset({Human}),
                 attempt_no=1, max_attempts=None, is_paused=False)
         elif world_type is CollaborativeWorld:
-            init_state = EnvironmentState(
+            init_state = EnvState(
                 network=network, agents=frozenset({Robot}),
                 attempt_no=1, max_attempts=4, is_paused=False)
         elif world_type is IntroWorld:
-            init_state = EnvironmentState(network=network)
+            init_state = EnvState(network=network)
         elif world_type is TutorialWorld:
-            init_state = EnvironmentState(network=network)
+            init_state = EnvState(network=network)
         else:
             raise NotImplementedError
         history = [init_state]
