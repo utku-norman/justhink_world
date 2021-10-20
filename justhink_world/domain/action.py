@@ -92,6 +92,14 @@ class PickAction(Action):
         name = 'pick({},{})'.format(self.edge[0], self.edge[1])
         super().__init__(name, agent)
 
+    # def __eq__(self, other):
+    #     """"Check if two actions are equivalent."""
+    #     u, v = self.edge
+    #     uu, vv = other.edge
+    #     return isinstance(other, PickAction) \
+    #         and (((u == uu) and (v == vv)) or ((u == vv) and (v == uu))) \
+    #         and self.agent == other.agent
+
 
 class UnpickAction(Action):
     def __init__(self, edge, agent=Human):

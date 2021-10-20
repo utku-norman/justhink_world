@@ -25,8 +25,6 @@ Conceretely, the current solution's state for a given activity is an instance of
 State transitions (i.e. <state, action, next state\> triples) for an individual activity is defined in `IndividualTransitionModel`, and for a collaborative activity in `CollaborativeTransitionModel` (see [transition_model.py](justhink_world/models/transition_model.py)).
 The action space of the available actions at a given state are determined by `IndividualPolicyModel` and `CollaborativePolicyModel` (see [policy_model.py](justhink_world/models/policy_model.py)).
 
-
-
 **Keywords:** artificial intelligence, human-robot interaction, mutual understanding, collaborative learning, computational thinking
 
 ### License
@@ -322,8 +320,8 @@ Please report bugs and request features using the [Issue Tracker](https://github
 [1] Zheng, K., & Tellex, S. (2020). pomdp_py: A Framework to Build and Solve POMDP Problems. arXiv preprint arXiv:2004.10099.
 
 
-[QTrobot]: https://luxai.com
 [ROS]: http://www.ros.org
+[QTrobot]: https://luxai.com
 [justhink_world]: https://github.com/utku-norman/justhink_world
 [justhink_scenario]: https://github.com/utku-norman/justhink_scenario
 [justhink_agent]: https://github.com/utku-norman/justhink_agent

@@ -18,6 +18,7 @@ from .models.observation_model import MstObservationModel
 from .models.reward_model import MstRewardModel
 
 from .tools.read import make_network_resources, load_network
+from .tools.write import Bcolors
 
 from .agent import Human, Robot, RobotAgent
 from .agent.reasoning import TraversalPlanner
@@ -324,13 +325,22 @@ class World(pomdp_py.POMDP):
     @property
     def cur_mental_state(self):
         """Current state of the environment."""
-        index = self.state_no - 1  # - 2  #1
+        index = self.state_no - 1
         if index >= 0 and index < len(self.agent.mental_history):
             return self.agent.mental_history[index]
         else:
             return self.agent.mental_history[0]
 
     def act(self, action, verbose=False):
+        """TODO"""
+        # Validation: check if the action is feasible.
+        if action not in self.agent.all_actions:
+            s = 'Invalid action {}: it not feasible (i.e. in {}).'.format(
+                action, self.agent.all_actions)
+            s += '\nIgnoring the action request.'
+            print(Bcolors.fail(s))
+            return False
+
         # Relocate in history if not at the last state.
         if self.state_no != self.num_states:
             # Rebase.
@@ -363,14 +373,9 @@ class World(pomdp_py.POMDP):
         # Move to the new state.
         self.state_no = self.num_states
 
-        # Reasoning.
-        # self.agent.planner.update(action, next_state)  # real_observation)
+        # Update the agent.
         robot_action = self.agent.planner.plan(self.agent)
         update_belief(self.agent, robot_action, is_executed=False)
-
-        # Update the planner.
-        # if planner is not None:
-        #     planner.update(self.agent, action, real_observation)
 
         # Print info.
         if verbose:
@@ -392,8 +397,8 @@ class World(pomdp_py.POMDP):
             print("------------")
             print()
 
-        # To print the world after the action.
-        return self
+        # Action successfully taken.
+        return True
 
 
 class IntroWorld(World):

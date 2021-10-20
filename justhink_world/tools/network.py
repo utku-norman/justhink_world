@@ -91,7 +91,7 @@ def compute_subgraph_cost(graph, subgraph, weight_key='cost') -> float:
 
 
 def in_edgelist(u, v, edges) -> bool:
-    '''Check if an undirected edge is in a collection of undirected edges.
+    """Check if an undirected edge is in a collection of undirected edges.
 
     Args:
         u (str): One node of the edge.
@@ -100,5 +100,5 @@ def in_edgelist(u, v, edges) -> bool:
 
     Returns:
         bool: True if exists, False otherwise.
-    '''
+    """
     return (u, v) in edges or (v, u) in edges

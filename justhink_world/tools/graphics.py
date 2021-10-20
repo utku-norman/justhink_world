@@ -144,7 +144,7 @@ def transform_position(x, y, from_view, to_view):
 
 
 def translate(value, left_min, left_max, right_min, right_max):
-    ''' # from https://stackoverflow.com/a/1969274'''
+    """from https://stackoverflow.com/a/1969274"""
     # Figure out how 'wide' each range is.
     left_span = left_max - left_min
     right_span = right_max - right_min

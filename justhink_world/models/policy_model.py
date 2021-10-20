@@ -6,15 +6,15 @@ from ..domain.action import PickAction, SuggestPickAction, \
     AgreeAction, DisagreeAction, \
     ClearAction, AttemptSubmitAction, ContinueAction
 
-from ..agent.agent import Human, Robot
+from ..agent.agent import Human
 
 
 class PolicyModel(pomdp_py.RolloutPolicy):
-    '''a PolicyModel:
+    """a PolicyModel:
     (1) determines the action space at a given history or state, and
     (2) samples an action from this space according
     to some probability distribution.
-    '''
+    """
 
     def probability(self, action, state, normalized=False, **kwargs):
         raise NotImplementedError  # Never used
@@ -43,7 +43,7 @@ class PolicyModel(pomdp_py.RolloutPolicy):
 
 
 class IndividualPolicyModel(PolicyModel):
-    '''TODO'''
+    """TODO"""
 
     def update_available_actions(self, state):
         actions = set()
@@ -58,6 +58,7 @@ class IndividualPolicyModel(PolicyModel):
                 for u, v in state.network.graph.edges():
                     if not state.network.subgraph.has_edge(u, v):
                         actions.add(PickAction((u, v)))
+                        actions.add(PickAction((v, u)))
 
                 # Can clear if there is at least one edge.
                 if state.network.subgraph.number_of_edges() > 0:
@@ -75,7 +76,7 @@ class IndividualPolicyModel(PolicyModel):
 
 
 class CollaborativePolicyModel(PolicyModel):
-    '''TODO'''
+    """TODO"""
 
     def update_available_actions(self, state):
         actions = set()
@@ -95,6 +96,8 @@ class CollaborativePolicyModel(PolicyModel):
                         for u, v in state.network.graph.edges():
                             if not state.network.subgraph.has_edge(u, v):
                                 action = SuggestPickAction((u, v), agent=agent)
+                                actions.add(action)
+                                action = SuggestPickAction((v, u), agent=agent)
                                 actions.add(action)
 
                         # The agent can submit.
@@ -132,8 +135,8 @@ class TutorialPolicyModel(PolicyModel):
         if state.step_no < 4:
             for u, v in state.network.graph.edges():
                 if not state.network.subgraph.has_edge(u, v):
-                    action = PickAction((u, v), agent=Human)
-                    actions.add(action)
+                    actions.add(PickAction((u, v), agent=Human))
+                    actions.add(PickAction((v, u), agent=Human))
 
         if state.step_no < 4 and num_edges > 0:
             actions.add(ClearAction(agent=Human))
