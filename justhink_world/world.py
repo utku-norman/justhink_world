@@ -104,7 +104,8 @@ def create_world(name, history=None, state_no=None, verbose=False):
     return world
 
 
-def update_belief(agent, action, observation=None, is_executed=True):
+def update_belief(
+        agent, action, observation=None, is_executed=True, verbose=False):
     """TODO"""
     if observation is not None:
         next_state = observation.state
@@ -211,7 +212,8 @@ def update_belief(agent, action, observation=None, is_executed=True):
             _, new_cur_node = cur_env_state.network.suggested_edge
         if new_cur_node is not None:
             next_state.cur_node = new_cur_node
-            print('######### moved current to', new_cur_node)
+            if verbose:
+                print('Moved current to'.format(new_cur_node))
 
     if is_executed:
         agent.mental_history.append(next_state)

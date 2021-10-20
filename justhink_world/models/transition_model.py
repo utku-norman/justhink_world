@@ -9,7 +9,7 @@ from ..domain.action import PickAction, SuggestPickAction, \
     AgreeAction, DisagreeAction, ClearAction, ResetAction, \
     AttemptSubmitAction, ContinueAction, SubmitAction
 
-from ..domain.state import Button
+# from ..domain.state import Button
 from ..agent import Human, Robot
 
 
@@ -122,7 +122,7 @@ class IndividualTransitionModel(TransitionModel):
                         and not network.subgraph.has_edge(u, v):
                     next_network.subgraph.add_edge(u, v)
                 next_state.is_submitting = False
-                next_state.clear_button = Button.ENABLED
+                # next_state.clear_button = Button.ENABLED
 
         # Clear action.
         elif isinstance(action, ClearAction):

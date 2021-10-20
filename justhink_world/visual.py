@@ -3,13 +3,14 @@ import copy
 import pyglet
 from pyglet.window import key
 
-from justhink_world.tools.graphics import Graphics, check_node_hit, BLACKA
+from justhink_world.tools.graphics import Button, Graphics, check_node_hit, \
+    BLACKA
 
 from justhink_world.agent.visual import MentalWindow
 from justhink_world.env.visual import EnvironmentScene, create_edge_sprite
 
 from justhink_world.world import IndividualWorld, CollaborativeWorld
-from justhink_world.domain.state import Human, Robot, Button
+from justhink_world.domain.state import Human, Robot
 from justhink_world.domain.action import SetPauseAction,  \
     PickAction, SuggestPickAction, ClearAction, AgreeAction, DisagreeAction, \
     AttemptSubmitAction, ContinueAction, SubmitAction
@@ -168,13 +169,9 @@ class WorldWindow(pyglet.window.Window):
 
     def execute_action(self, action):
         """TODO"""
-        # print('### executing action in world_window')
         self.world.act(action)
         self.scene.state = self.world.cur_state
-        # print('### executing action in world_window DONE!')
-        # print('###  dispatching on_update')
         self.dispatch_event('on_update')
-        # print('###  dispatching on_update DONE!')
 
     def on_update(self):
         """TODO"""
@@ -186,6 +183,7 @@ class WorldWindow(pyglet.window.Window):
         self._update_role_label()
         self._update_next_label()
         self._update_prev_label()
+        self._update_paused_label()
 
     # Private methods.
 
@@ -213,6 +211,11 @@ class WorldWindow(pyglet.window.Window):
             '', x=20, y=height-20, anchor_y='center', color=BLACKA,
             font_name='Sans', font_size=24, batch=graphics.batch, group=group)
 
+        # Paused or not label.
+        graphics.paused_label = pyglet.text.Label(
+            '', x=width-300, y=height-60, anchor_y='center', color=BLACKA,
+            font_name='Sans', font_size=24, batch=graphics.batch, group=group)
+
         self.graphics = graphics
 
     def _update_role_label(self):
@@ -226,6 +229,10 @@ class WorldWindow(pyglet.window.Window):
     def _update_prev_label(self):
         self.graphics.prev_label.text = 'Previous: {}'.format(
             self._make_action_text(offset=-1))
+
+    def _update_paused_label(self):
+        self.graphics.paused_label.text = 'Paused: {}'.format(
+            self.world.cur_state.is_paused)
 
     def _update_hist_label(self):
         self.graphics.hist_label.text = 'State: {}/{}'.format(

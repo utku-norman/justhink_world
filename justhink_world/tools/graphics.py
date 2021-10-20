@@ -4,7 +4,7 @@ import math
 
 import pyglet
 
-from justhink_world.domain.state import Button
+# from justhink_world.domain.state import Button
 
 # from justhink_world.tools.graphics import center_image, Rectangle
 
@@ -297,6 +297,27 @@ class TextWidget(object):
 
     def set_content(self, value):
         self.document.text = value
+
+
+class Button(object):
+    """A class to represent an abstract button and its possible states.
+
+    Attributes:
+        NA:
+            the button is not available and will not be displayed.
+        ENABLED:
+            the button is available, e.g. can be pressed to trigger an action.
+        DISABLED:
+            the button is shown, but e.g. is grayed out, to indicate it was
+            and/or will become available during the interaction
+        SELECTED:
+            the button is "selected", e.g. for a submit button, to indicate
+            that the current solution is submitted for a submit button
+    """
+    NA = 'N'
+    ENABLED = 'E'
+    DISABLED = 'D'
+    SELECTED = 'S'
 
 
 class ButtonWidget(Button):
