@@ -21,9 +21,13 @@ A `world` in [justhink_world] is used to represent an activity via describing an
 * an `agent` operates in this environment by taking `action`s, receiving observations (fully observable), and updating its belief.
 Furthermore, an agent can list the available actions for a given state via its `policy model`.
 
-Conceretely, [state](justhink_world/domain/state.py)
+Conceretely, the current solution's state for a given activity is an instance of `NetworkState`, as part of the complete specification of the activity state as an `Env(ironment)State` (see [state.py](justhink_world/domain/state.py)). 
+State transitions (i.e. <state, action, next state\> triples) for an individual activity is defined in `IndividualTransitionModel`, and for a collaborative activity in `CollaborativeTransitionModel` (see [transition_model.py](justhink_world/models/transition_model.py)).
+The action space of the available actions at a given state are determined by `IndividualPolicyModel` and `CollaborativePolicyModel` (see [policy_model.py](justhink_world/models/policy_model.py)).
 
-**Keywords:** mutual understanding, human-robot collaboration, collaborative learning, computational thinking
+
+
+**Keywords:** artificial intelligence, human-robot interaction, mutual understanding, collaborative learning, computational thinking
 
 ### License
 
