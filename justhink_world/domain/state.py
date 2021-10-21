@@ -23,22 +23,22 @@ class NetworkState(object):
            the subgraph of the selected edges (default networkx.Graph())
         suggested_edge (tuple or None, optional)
             a suggested edge, e.g. (1, 2) (default None)
-        weight_key (str, optional)
+        edge_weight_key (str, optional)
             the key for the cost of an edge in edge attribute dictionary
             (default 'cost')
-        name_key (str, optional)
+        node_name_key (str, optional)
             the key for the name of a node in node attribute dictionary
             (default 'text')
     """
 
     def __init__(self, graph, subgraph=nx.Graph(), suggested_edge=None,
-                 weight_key='cost', name_key='text'):
+                 edge_weight_key='cost', node_name_key='text'):
         self.graph = graph
         self.subgraph = subgraph
         self.suggested_edge = suggested_edge
 
-        self._weight_key = weight_key
-        self._name_key = name_key
+        self._edge_weight_key = edge_weight_key
+        self._node_name_key = node_name_key
 
     def __hash__(self):
         return hash((self.graph, self.subgraph, self.suggested_edge))
@@ -87,7 +87,7 @@ class NetworkState(object):
         Returns:
             str: name of an edge e.g. "Montreux to Neuchatel".
         """
-        name = self.graph.nodes[node][self._name_key]
+        name = self.graph.nodes[node][self._node_name_key]
         if is_shortened:
             name = name.split()[-1]
         return name
@@ -115,7 +115,7 @@ class NetworkState(object):
             float: the cost.
         """
         return compute_subgraph_cost(
-            self.graph, self.subgraph, weight_key=self._weight_key)
+            self.graph, self.subgraph, edge_weight_key=self._edge_weight_key)
 
     def get_mst_cost(self) -> float:
         """Compute the cost of a minimum-spanning tree of the state's network.
@@ -123,7 +123,8 @@ class NetworkState(object):
         Returns:
             bool: The return value. True for success, False otherwise.
         """
-        return compute_total_cost(self.get_mst(), weight_key=self._weight_key)
+        return compute_total_cost(
+            self.get_mst(), edge_weight_key=self._edge_weight_key)
 
     def get_mst(self) -> nx.Graph:
         """Get a minimum-spanning tree of the state's network.
@@ -131,7 +132,7 @@ class NetworkState(object):
         Returns:
             nx.Graph: TODO
         """
-        return find_mst(self.graph, weight_key=self._weight_key)
+        return find_mst(self.graph, edge_weight_key=self._edge_weight_key)
 
     def get_max_cost(self) -> float:
         """Compute the total cost on the state's network.
@@ -139,7 +140,8 @@ class NetworkState(object):
         Returns:
             float: the cost.
         """
-        return compute_total_cost(self.graph, weight_key=self._weight_key)
+        return compute_total_cost(
+            self.graph, edge_weight_key=self._edge_weight_key)
 
     def is_spanning(self) -> bool:
         """Check if the selected edges spans the state's network.

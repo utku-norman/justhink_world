@@ -30,37 +30,37 @@ def is_subgraph_spanning(graph, subgraph) -> bool:
     return is_edgelist_spanning(graph, subgraph.edges)
 
 
-def find_mst(graph, weight_key='cost') -> nx.Graph:
+def find_mst(graph, edge_weight_key='cost') -> nx.Graph:
     """Find a minimum-spanning tree for a given graph.
 
     Args:
         graph (nx.Graph): The graph with a cost function on edges.
-        weight_key (str, optional): The attribute key for the weight.
+        edge_weight_key (str, optional): The attribute key for the weight.
             Defaults to 'cost'.
 
     Returns:
         bool: True for spanning, False otherwise.
     """
     # TODO: catch exception if weight key is not available.
-    return nx.minimum_spanning_tree(graph, weight=weight_key)
+    return nx.minimum_spanning_tree(graph, weight=edge_weight_key)
 
 
-def compute_total_cost(graph, weight_key='cost') -> float:
+def compute_total_cost(graph, edge_weight_key='cost') -> float:
     """Compute the total cost for a given graph.
 
     Args:
         graph (nx.Graph): The graph with a cost function on edges.
-        weight_key (str, optional): The attribute key for the weight.
+        edge_weight_key (str, optional): The attribute key for the weight.
             Defaults to 'cost'.
 
     Returns:
         float: the cost.
     """
     # TODO: catch exception if weight key is not available for that edge.
-    return sum([d[weight_key] for u, v, d in graph.edges(data=True)])
+    return sum([d[edge_weight_key] for u, v, d in graph.edges(data=True)])
 
 
-def compute_edgelist_cost(graph, edges, weight_key='cost') -> float:
+def compute_edgelist_cost(graph, edges, edge_weight_key='cost') -> float:
     """Compute the total cost on the selected edges for a given graph.
 
     Args:
@@ -72,10 +72,10 @@ def compute_edgelist_cost(graph, edges, weight_key='cost') -> float:
     """
     # TODO: catch exception if weight key is not available for that edge.
     # TODO: catch exception of an edge is not in the graph.
-    return sum([graph[u][v][weight_key] for u, v in edges])
+    return sum([graph[u][v][edge_weight_key] for u, v in edges])
 
 
-def compute_subgraph_cost(graph, subgraph, weight_key='cost') -> float:
+def compute_subgraph_cost(graph, subgraph, edge_weight_key='cost') -> float:
     """Compute the total cost on the selected edges for a given graph.
 
     Args:
@@ -87,7 +87,8 @@ def compute_subgraph_cost(graph, subgraph, weight_key='cost') -> float:
     """
     # TODO: catch exception if weight key is not available for that edge.
     # TODO: catch exception of an edge is not in the graph.
-    return compute_edgelist_cost(graph, subgraph.edges, weight_key=weight_key)
+    return compute_edgelist_cost(
+        graph, subgraph.edges, edge_weight_key=edge_weight_key)
 
 
 def in_edgelist(u, v, edges) -> bool:
