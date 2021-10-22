@@ -106,7 +106,7 @@ def create_world(name, history=None, state_no=None, verbose=False):
 
 
 def update_belief(
-        agent, action, observation=None, is_executed=True, verbose=False):
+        agent, action, observation=None, is_executed=True, verbose=True):
     """TODO"""
     if observation is not None:
         next_state = observation.state
@@ -199,7 +199,8 @@ def update_belief(
             if isinstance(a, SuggestPickAction):
                 u, v = a.edge
                 if cur_env_state.network.subgraph.has_edge(u, v):
-                    value = None
+                    # value = None
+                    continue
                 else:
                     value = 0.0
                 next_state.beliefs['me']['world'][u][v]['is_optimal'] = value
@@ -208,13 +209,15 @@ def update_belief(
         new_cur_node = None
         if isinstance(action, PickAction):
             _, new_cur_node = action.edge
+        elif isinstance(action, SuggestPickAction):
+            new_cur_node, _ = action.edge
         elif isinstance(action, AgreeAction):
             # Move the current to the agreed end.
             _, new_cur_node = cur_env_state.network.suggested_edge
         if new_cur_node is not None:
             next_state.cur_node = new_cur_node
             if verbose:
-                print('Moved current to'.format(new_cur_node))
+                print('Robot Moved current to {}'.format(new_cur_node))
 
     if is_executed:
         agent.mental_history.append(next_state)

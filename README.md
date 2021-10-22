@@ -271,17 +271,22 @@ show_world(world, state_no=1)
 <img src="doc/example_collab_log.gif" width="768" />
 
 
-#### Playground
+#### Access information about a world/state.
 
-Showing both activity and mental windows:
+Create a world and print the available actions with human-readible form.
 ```
 from justhink_world import create_world, show_all
 
 world = create_world('collaboration-1')
-show_all(world)
+
+for action in sorted(world.agent.all_actions):
+    if hasattr(action, 'edge'):
+      u, v = world.env.state.network.get_edge_name(action.edge)
+      action = action.__class__(edge=(u, v), agent=action.agent)
+    print(action)
 ```
 
-Print available actions at the current state.
+Print available actions at the current state (nodes are not human-readible).
 ```
 print(world.agent.all_actions)
 ```
@@ -292,12 +297,21 @@ state = world.cur_state
 print(state, state.network.get_cost(), state.network.get_mst_cost())
 ```
 
+Show both activity and mental windows:
+```
+from justhink_world import create_world, show_all
+
+world = create_world('collaboration-1')
+
+show_all(world)
+```
+
 Print world history.
 ```
 print(world.history)
 ```
 
-Visualising a mental state for the robot:
+Visualise a mental state for the robot.
 ```
 from justhink_world import create_world, show_mind, show_all
 

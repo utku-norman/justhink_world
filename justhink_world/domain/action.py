@@ -38,6 +38,9 @@ class Action(pomdp_py.Action):
             and self.name == other.name \
             and self.agent == other.agent
 
+    def __lt__(self, other):
+        return str(self) < str(other)
+
     def __str__(self):
         return self.__repr__()
 
