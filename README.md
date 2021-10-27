@@ -288,7 +288,7 @@ for action in sorted(world.agent.all_actions):
 
 Get the node name from node id and vice versa.
 ```
-from justhink_world import create_world, show_all
+from justhink_world import create_world
 world = create_world('collaboration-1')
 
 print(world.env.state.network.get_node_name(1))  # Prints: Luzern
@@ -298,7 +298,7 @@ print(world.env.state.network.get_node_id('Luzern'))  # Prints: 1
 
 Get the edge's node's names from node id tuple and vice versa.
 ```
-from justhink_world import create_world, show_all
+from justhink_world import create_world
 world = create_world('collaboration-1')
 
 print(world.env.state.network.get_edge_name((1, 2)))  # Prints: ('Luzern', 'Zurich')
