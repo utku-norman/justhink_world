@@ -38,10 +38,7 @@ def show_all(world, state_no=None):
         else:
             s = str(world.agent.history[index][1])
 
-        # s += 'state #{}'.format(world.state_no)
         mental_window.cur_scene.graphics.observes_label.text = s
-
-        # mental_window.state = world_window.world.agent.state
         mental_window.cur_scene.state = world_window.world.cur_mental_state
         print('Showing state:', mental_window.cur_scene.state)
 

@@ -21,7 +21,7 @@ from .tools.read import make_network_resources, load_network
 from .tools.write import Bcolors
 
 from .agent import Human, Robot, RobotAgent
-from .agent.reasoning import TraversalPlanner
+from .agent.reasoning import TraversalPlanner, TraversalJumpingPlanner
 
 
 def list_worlds():
@@ -204,6 +204,16 @@ def update_belief(
                 else:
                     value = 0.0
                 next_state.beliefs['me']['world'][u][v]['is_optimal'] = value
+        # update optimals believed to be true.
+        for a in agent.planner.explanation.best:
+            if isinstance(a, SuggestPickAction):
+                u, v = a.edge
+                if cur_env_state.network.subgraph.has_edge(u, v):
+                    # value = None
+                    continue
+                else:
+                    value = 1.0
+                next_state.beliefs['me']['world'][u][v]['is_optimal'] = value
 
     if is_executed:
         new_cur_node = None
@@ -217,7 +227,9 @@ def update_belief(
         if new_cur_node is not None:
             next_state.cur_node = new_cur_node
             if verbose:
-                print('Robot Moved current to {}'.format(new_cur_node))
+                print('Robot moved current to {} (Node {})'.format(
+                    cur_env_state.network.get_node_name(new_cur_node),
+                    new_cur_node))
 
     if is_executed:
         agent.mental_history.append(next_state)
@@ -258,7 +270,9 @@ class World(pomdp_py.POMDP):
 
         # Initialise an agent.
         # The state is fully observable.
-        planner = TraversalPlanner(cur_state)
+        # planner = TraversalPlanner(cur_state)
+        planner = TraversalJumpingPlanner(cur_state)
+        
         mental_state = MentalState(
             cur_state.network.graph, cur_node=planner.cur_node)
         agent = RobotAgent(
@@ -327,7 +341,7 @@ class World(pomdp_py.POMDP):
 
     @property
     def cur_mental_state(self):
-        """Current state of the environment."""
+        """Current mental state of the agent in the environment."""
         index = self.state_no - 1
         if index >= 0 and index < len(self.agent.mental_history):
             return self.agent.mental_history[index]

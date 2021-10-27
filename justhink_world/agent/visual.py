@@ -99,7 +99,7 @@ class MentalScene(Scene):
         if cur_node is not None:
             for u, d in self.graphics.layout.nodes(data=True):
                 if u == cur_node:
-                    color = (255, 0, 0, 255)
+                    color = (255, 255, 0, 255)
                     is_bold = True
                 else:
                     color = (255, 255, 255, 255)
@@ -338,28 +338,28 @@ class MentalScene(Scene):
                 edge_font_size=18, scale=2.3, batch=batch)
             d[context] = s
 
-            # Initialise strategy surface.
-            context = 'strategy'
-            s = Surface(
-                height=height//3, width=width//3, pad=pad,
-                x=outer_pad[0]+level*(width//3), y=outer_pad[1]+height//3+50)
+            # # Initialise strategy surface.
+            # context = 'strategy'
+            # s = Surface(
+            #     height=height//3, width=width//3, pad=pad,
+            #     x=outer_pad[0]+level*(width//3), y=outer_pad[1]+height//3+50)
 
-            if key not in graphics.labels:
-                graphics.labels[level] = dict()
+            # if key not in graphics.labels:
+            #     graphics.labels[level] = dict()
 
-            target = 'self'
-            text = make_strategy_text(None, target)
-            graphics.labels[level][target] = pyglet.text.Label(
-                text, x=s.x+s.width//2, y=s.y+s.height//2+font_size,
-                font_name='Sans', font_size=font_size, anchor_x='center',
-                anchor_y='center', batch=batch, group=groups[5])
+            # target = 'self'
+            # text = make_strategy_text(None, target)
+            # graphics.labels[level][target] = pyglet.text.Label(
+            #     text, x=s.x+s.width//2, y=s.y+s.height//2+font_size,
+            #     font_name='Sans', font_size=font_size, anchor_x='center',
+            #     anchor_y='center', batch=batch, group=groups[5])
 
-            target = 'other'
-            text = make_strategy_text(None, target)
-            graphics.labels[level][target] = pyglet.text.Label(
-                text, x=s.x+s.width//2, y=s.y+s.height//2-font_size,
-                font_name='Sans', font_size=font_size, anchor_x='center',
-                anchor_y='center', batch=batch, group=groups[5])
+            # target = 'other'
+            # text = make_strategy_text(None, target)
+            # graphics.labels[level][target] = pyglet.text.Label(
+            #     text, x=s.x+s.width//2, y=s.y+s.height//2-font_size,
+            #     font_name='Sans', font_size=font_size, anchor_x='center',
+            #     anchor_y='center', batch=batch, group=groups[5])
 
             # Set as the panels of the current level.
             graphics.surfaces[key] = d
@@ -487,150 +487,3 @@ def make_strategy_text(p, agent='self'):
     p_text = '{:1.1f}'.format(p) if p is not None else 'NotImpl.'
     return 'P_{} = {}'.format(agent, p_text)
     # return 'P_{}(correct) = {:1.1f}'.format(agent, p_text)
-
-
-# def make_edge_key(level, context='world'):
-    # return 'L{}-{}'.format(level, context)
-
-
-# def _init_graphics(width, height):
-#     graphics = Graphics(width, height)
-#     group = pyglet.graphics.OrderedGroup(5)
-
-#     # History label.
-#     graphics.hist_label = pyglet.text.Label(
-#         '', x=20, y=height-120, anchor_y='center', color=BLACKA,
-#         font_name='Sans', font_size=32, batch=graphics.batch, group=group)
-
-#     # Role label.
-#     graphics.role_label = pyglet.text.Label(
-#         '', x=20, y=height-60, anchor_y='center', color=BLACKA,
-#         font_name='Sans', font_size=32, batch=graphics.batch, group=group)
-
-#     # Next action if any label.
-#     graphics.next_label = pyglet.text.Label(
-#         '', x=width//2, y=height-20, anchor_y='center', color=BLACKA,
-#         font_name='Sans', font_size=24, batch=graphics.batch, group=group)
-
-#     # Previous action if any label.
-#     graphics.prev_label = pyglet.text.Label(
-#         '', x=20, y=height-20, anchor_y='center', color=BLACKA,
-#         font_name='Sans', font_size=24, batch=graphics.batch, group=group)
-
-#     return graphics
-
-
-# def update_mental_state_from_plan(problem):
-#     state = problem.mental_history[-1]
-#     state = copy.deepcopy(state)
-#     state.step = state.step + 1
-
-#     # Update state's self-beliefs about correctness of choices.
-#     if hasattr(problem.agent, 'tree'):
-#         print('##### Updating from plan')
-#         root = problem.agent.tree
-#         if root is not None:
-#             actions = get_actions(root, max_depth=10)  # 7)
-#             edges = [a.edge for a in actions if isinstance(a, PickAction)]
-#             key = make_edge_key(level=0, context='choice')
-#             for u, v, d in state.probs['choices'].edges(data=True):
-#                 # print(d)
-#                 if in_undirected_edgeset(u, v, edges):
-#                     d[key] = 1.0
-#                 else:
-#                     d[key] = 0.0
-
-#     problem.mental_history.append(state)
-
-
-# def update_mental_state(problem, action):  # ,  # =None,
-#     # ,
-#     # edges=set(), is_spanning=False,
-#     # terminal=False,
-#     # step=0):
-#     world_state = problem.env.state
-#     # scene.update_state(
-#     #     self._problem.env.state.edges,
-#     #     self._problem.env.state.is_spanning(),
-#     #     self._problem.env.state.terminal,
-#     #     self._step,
-#     # )
-
-#     # print('Updating mental state step = {}'.format(step))
-#     # Save the previous state.
-#     state = problem.mental_history[-1]
-#     state = copy.deepcopy(state)
-#     state.step = state.step + 1
-
-#     # Update the mental state.
-#     # state.step = step
-#     # Update state's edge list: "about the world".
-#     # Add the new edges.
-#     for u, v in world_state.edges:
-#         if not state.graph.has_edge(u, v):
-#             state.graph.add_edge(u, v)
-#     # Remove extra edges.
-#     for u, v in state.graph.edges():
-#         if not in_undirected_edgeset(u, v, world_state.edges):
-#             state.graph.remove_edge(u, v)
-
-#     # Update state's L1 and L2 choices.
-#     target, key = make_choice_index(action)
-#     if isinstance(action, PickAction):
-#         u, v = action.edge
-#         # d = state.graph.edges[u, v]
-#         d = state.probs['choices'].edges[u, v]
-#         d[key] = 1.0
-#     # elif isinstance(action, SubmitAction):
-#     #     for u, v, d in state.graph.edges(data=True):
-#     #         if tuple(sorted([u, v])) in self._edges:
-#     #             d[key] = 1.0
-#     #         else:
-#     #             d[key] = 0.0
-#     # Update L0 strategy.
-#     target, key = make_strategy_index(action, level=0)
-#     if isinstance(action, PickAction):
-#         delta = 0.2
-#         # if key not in state.probs:
-#         #     print('Key {} not found'.format(key))
-#         #     print(state.probs.keys())
-#         p = state.probs[key][target]
-#         if action.quality == 'optimal':
-#             p = p + delta
-#             if p > 1.0:
-#                 p = 1.0
-#         else:  # 'sub-optimal'
-#             p = p - delta
-#             if p < 0.0:
-#                 p = 0.0
-#         state.probs[key][target] = p
-#     elif isinstance(action, SubmitAction):
-#         delta = 0.2
-#         p = state.probs[key][target]
-#         if world_state.terminal:
-#             p = p + delta
-#             if p > 1.0:
-#                 p = 1.0
-#         else:  # 'sub-optimal'
-#             p = p - delta
-#             if p < 0.0:
-#                 p = 0.0
-#         state.probs[key][target] = p
-#     # Update L0, L1, L2 self-or-other.
-#     levels = [0, 1, 2]
-#     for level in levels:
-#         target, key = make_strategy_index(action, level=level)
-#         if isinstance(action, SubmitAction):
-#             delta = 0.3
-#             p = state.probs[key][target]
-#             if world_state.terminal:
-#                 p = p + delta
-#                 if p > 1.0:
-#                     p = 1.0
-#             else:  # 'sub-optimal'
-#                 p = p - delta
-#                 if p < 0.0:
-#                     p = 0.0
-#             state.probs[key][target] = p
-
-#     problem.mental_history.append(state)

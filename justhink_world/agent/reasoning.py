@@ -23,70 +23,135 @@ class TraversalPlanner(object):
         self.explanation = None
 
     def plan(self, agent):
-        """select the next action by greedy traversal planning"""
+        """Select the next action by greedy traversal planning."""
         # Select greedy.
         self.state = agent.cur_belief.mpe()
         self.cur_node = agent.state.cur_node
 
-        # state = self.state
-
-        v = None
+        # v = None
         # note_iter = iter(state.graph.nodes)
         # while v is None and (len(state.graph.edges)
         # < state.graph.number_of_edges()-1):
-        expl, v = get_greedy_neighbour(
+        # expl, min_v, alternatives = get_greedy_neighbour(
+        min_nodes, other_nodes = get_greedy_neighbour(
             self.state.network.graph, self.cur_node,
             self.state.network.subgraph)
 
-        # Refine the explanation in terms of actions.
-        if v is None:
+        # Make an explanation in terms of actions.
+        expl = BetterThanExplanation()
+        if len(min_nodes) == 0:
             expl = ConnectedExplanation()
-            expl.best = SubmitAction(agent=Robot)
+            expl.best = {SubmitAction(agent=Robot)}
         else:
+            expl.best = {SuggestPickAction((self.cur_node, u), agent=Robot)
+                         for u in min_nodes}
             expl.others = {SuggestPickAction((self.cur_node, u), agent=Robot)
-                           for u in expl.others}
-            expl.best = SuggestPickAction((self.cur_node, v), agent=Robot)
+                           for u in other_nodes}
+            # expl.others = {SuggestPickAction((self.cur_node, u), agent=Robot)
+            #                for u in expl.others}
+            # expl.best = SuggestPickAction((self.cur_node, v), agent=Robot)
 
         # Choose the action.
-        action = expl.best
+        action = sorted(expl.best)[0]
         self.explanation = expl
 
         return action
 
-    # # def update(self, agent, action, observation):
-    # def update(self, action, state):  # observation):
-    #     """Update the current node."""
-    #     if isinstance(action, SuggestPickAction):
-    #         self.cur_node = action.edge[1]
-    #         print('##### moved current to', self.cur_node,
-    #               self.state.network.get_node_name(self.cur_node))
 
-    #     # self.state = observation.state
-    #     self.state = state
-    #     # if self.cur_node == action.edge[1]:
-    #     #     self.cur_node = action.edge[0]
-    #     # else:
-    #     #     self.cur_node = action.edge[1]
+class TraversalJumpingPlanner(object):
+    """Define a greedy traversal jumping planner.
+    Instead of submitting, it will go around and try to continue connecting.
+
+    It will produce a suboptimal result."""
+
+    def __init__(self, state, start=None):
+        self.state = state
+
+        if start is None:
+            available_starts = sorted(state.network.graph.nodes())
+            self.cur_node = available_starts[0]
+        else:
+
+            self.cur_node = start
+
+        self.explanation = None
+
+    def plan(self, agent):
+        """Select the next action by greedy traversal planning."""
+        # Select greedy.
+        self.state = agent.cur_belief.mpe()
+        self.cur_node = agent.state.cur_node
+
+        # v = None
+        # note_iter = iter(state.graph.nodes)
+        # while v is None and (len(state.graph.edges)
+        # < state.graph.number_of_edges()-1):
+        # expl, min_v, alternatives = get_greedy_neighbour(
+        min_nodes, other_nodes = get_greedy_neighbour(
+            self.state.network.graph, self.cur_node,
+            self.state.network.subgraph)
+
+        # Decide to pick an edge if any, instead of submitting.
+        if len(min_nodes) == 0:
+            # For each selected node.
+            for u in sorted(self.state.network.get_selected_nodes()):
+                # Move the current.
+                self.cur_node = u
+                # For each available action.
+                min_nodes, other_nodes = get_greedy_neighbour(
+                    self.state.network.graph, self.cur_node,
+                    self.state.network.subgraph)
+                if len(min_nodes) != 0:
+                    break
+
+        # Make an explanation in terms of actions.
+        expl = BetterThanExplanation()
+        if len(min_nodes) == 0:
+            expl = ConnectedExplanation()
+            expl.best = {SubmitAction(agent=Robot)}
+        else:
+            expl.best = {SuggestPickAction((self.cur_node, u), agent=Robot)
+                         for u in min_nodes}
+            expl.others = {SuggestPickAction((self.cur_node, u), agent=Robot)
+                           for u in other_nodes}
+            # expl.others = {SuggestPickAction((self.cur_node, u), agent=Robot)
+            #                for u in expl.others}
+            # expl.best = SuggestPickAction((self.cur_node, v), agent=Robot)
+
+        # Choose the action.
+        action = sorted(expl.best)[0]
+        self.explanation = expl
+
+        return action
 
 
-def get_greedy_neighbour(graph, u, visited):
-    """TODO"""
+def get_greedy_neighbour(graph, u, excluded_subgraph):
+    """TODO: Docstring."""
     # Default explanation template.
-    expl = BetterThanExplanation()
+    # expl = BetterThanExplanation()
 
-    # Find the minimum cost neighbuor.
-    min_v = None
+    # Find a minimum cost neighbour.
     min_cost = None
+    min_nodes = set()
+    other_nodes = set()
+
+    # Find the min cost.
     for v in graph.neighbors(u):
-        expl.others.add(v)
-        if not visited.has_edge(u, v):
-            cost = graph.edges[u, v]['cost']
-            if min_v is None or cost < min_cost:
-                min_v = v
+        cost = graph.edges[u, v]['cost']
+        if not excluded_subgraph.has_edge(u, v):
+            if min_cost is None or cost < min_cost:
                 min_cost = cost
-                expl.best = v
-                expl.others.discard(v)
-    return expl, min_v
+
+    # Find the list of optimal/minimum and suboptimal nodes.
+    for v in graph.neighbors(u):
+        if not excluded_subgraph.has_edge(u, v):
+            cost = graph.edges[u, v]['cost']
+            if cost == min_cost:
+                min_nodes.add(v)
+            else:
+                other_nodes.add(v)
+
+    return min_nodes, other_nodes
 
 
 class PrimsPlanner():
@@ -170,19 +235,18 @@ class Explanation(object):
 class ConnectedExplanation(object):
     def __init__(self):
         self.others = set()
+        self.alternatives = set()
 
     def __repr__(self):
         return 'All are connected now!'
 
 
 class BetterThanExplanation():
-    def __init__(self, best=None, others=None):
-        """action a is better than actions b"""
+    def __init__(self, best=None, others=set(), alternatives=set()):
+        """Action best is better than actions in others, with alternatives."""
         self.best = best
-        if others is None:
-            self.others = set()
-        else:
-            self.others = others
+        self.others = others
+        self.alternatives = alternatives
 
     def __repr__(self):
         o = ','.join([str(a) for a in self.others])
