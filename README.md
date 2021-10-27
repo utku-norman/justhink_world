@@ -51,11 +51,11 @@ If you use this work in an academic context, please cite the following publicati
 * U. Norman, B. Bruno, and P. Dillenbourg, **Mutual Modelling Ability for a Humanoid Robot: How can it improve my learning as we solve a problem together?,** in Robots for Learning Workshop in 16th annual IEEE/ACM Conference on Human-Robot Interaction (HRI 2021). ([PDF](http://infoscience.epfl.ch/record/283614))
 
         @inproceedings{norman_mutual_2021,
-        	author = {Norman, Utku and Bruno, Barbara and Dillenbourg, Pierre},
-        	booktitle = {Robots for Learning Workshop in 16th annual {IEEE}/{ACM} Conference on Human-Robot Interaction ({HRI} 2021)},
-        	title = {Mutual Modelling Ability for a Humanoid Robot: How can it improve my learning as we solve a problem together?},
-        	url = {http://infoscience.epfl.ch/record/283614},
-        	year = {2021},
+            author = {Norman, Utku and Bruno, Barbara and Dillenbourg, Pierre},
+            booktitle = {Robots for Learning Workshop in 16th annual {IEEE}/{ACM} Conference on Human-Robot Interaction ({HRI} 2021)},
+            title = {Mutual Modelling Ability for a Humanoid Robot: How can it improve my learning as we solve a problem together?},
+            url = {http://infoscience.epfl.ch/record/283614},
+            year = {2021},
         }
 
 
@@ -236,7 +236,7 @@ show_world(world, screen_index=0)
 from justhink_world import create_world, show_world
 from justhink_world.agent import Human, Robot
 from justhink_world.domain.action import SuggestPickAction, \
-	AgreeAction, DisagreeAction
+    AgreeAction, DisagreeAction
 
 # Create a world.
 world = create_world('collaboration-1')
@@ -275,7 +275,7 @@ show_world(world, state_no=1)
 
 Create a world and print the available actions with human-readible form.
 ```
-from justhink_world import create_world, show_all
+from justhink_world import create_world
 
 world = create_world('collaboration-1')
 
@@ -284,6 +284,26 @@ for action in sorted(world.agent.all_actions):
       u, v = world.env.state.network.get_edge_name(action.edge)
       action = action.__class__(edge=(u, v), agent=action.agent)
     print(action)
+```
+
+Get the node name from node id and vice versa.
+```
+from justhink_world import create_world, show_all
+world = create_world('collaboration-1')
+
+print(world.env.state.network.get_node_name(1))  # Prints: Luzern
+
+print(world.env.state.network.get_node_id('Luzern'))  # Prints: 1
+```
+
+Get the edge's node's names from node id tuple and vice versa.
+```
+from justhink_world import create_world, show_all
+world = create_world('collaboration-1')
+
+print(world.env.state.network.get_edge_name((1, 2)))  # Prints: ('Luzern', 'Zurich')
+
+print(world.env.state.network.get_edge_ids(('Luzern', 'Zurich')))  # Prints: (1, 2)
 ```
 
 Print available actions at the current state (nodes are not human-readible).

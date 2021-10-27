@@ -177,18 +177,48 @@ class NetworkState(object):
         """Get the name of a node e.g. "Montreux".
 
         Attributes:
-            node (int or str):
-                a node in the graph.
+            node (int):
+                a node id in the graph.
             is_shortened (bool, optional)
                 Whether to shorten the node name e.g. from
                 "Mount Montreux" to "Montreux" (default True)
         Returns:
-            str: name of an edge e.g. "Montreux to Neuchatel".
+            str: name of a node e.g. "Montreux" from the node's id e.g. 1.
         """
+        if node not in self.graph.nodes:
+            print('Node {} not found.'.format(node))
+            return None
         name = self.graph.nodes[node][self._node_name_key]
         if is_shortened:
             name = name.split()[-1]
         return name
+
+    def get_node_id(self, name) -> int:
+        """Get the id of a node from its name, e.g. "Montreux" to '1'.
+
+        Attributes:
+            name (str):
+                name of a node in the graph.
+        Returns:
+            int: id of a node e.g. 1, from the node's name e.g. "Montreux"
+        """
+        node_id = None
+        for node_id in self.graph.nodes:
+            node_name = self.graph.nodes[node_id][self._node_name_key]
+            if name in node_name:
+                break
+        return node_id
+
+    def get_edge_ids(self, edge) -> tuple:
+        """Get the ids of the nodes of an edge.
+
+        Attributes:
+            edge (tuple):
+                node id tuple of an edge in the graph.
+        Returns:
+            tuple: ids for an edge by the node id pair e.g. (1, 2).
+        """
+        return (self.get_node_id(edge[0]), self.get_node_id(edge[1]))
 
     def get_edge_name(self, edge) -> tuple:
         """Construct the name of an edge e.g. (Montreux, Neuchatel).
@@ -197,7 +227,7 @@ class NetworkState(object):
             edge (tuple):
                 an edge in the graph.
         Returns:
-            tuple: name of an edge by the node name pair (Montreux, Neuchatel.
+            tuple: name of an edge by the node name pair (Montreux, Neuchatel).
         """
         return self.get_node_name(edge[0]), self.get_node_name(edge[1])
 
