@@ -136,6 +136,13 @@ class EnvironmentScene(Scene):
         graphics.cloud_sprite = s
         pyglet.clock.schedule_interval(slide_x, 1.0/60, graphics.cloud_sprite)
 
+        # Cross sprite.
+        ref = image_source.joinpath('cross.png')
+        image = center_image(load_image_from_reference(ref))
+        s = pyglet.sprite.Sprite(image, group=groups[12])
+        s.scale = 0.5
+        graphics.cross_sprite = s
+
         # cow_img = pyglet.image.load(
         # str(self._images_dir.joinpath('cloud.png')))
         # self.cow = pyglet.sprite.Sprite(cow_img)

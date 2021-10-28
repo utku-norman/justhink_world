@@ -17,7 +17,7 @@ from justhink_world.domain.action import SetPauseAction,  \
 
 
 def show_all(world, state_no=None):
-    """TODO"""
+    """TODO docstring for show_all"""
     world_window = WorldWindow(world, state_no=state_no)
     mental_window = MentalWindow(world)  # , offset=(1920, 0))
 
@@ -62,7 +62,9 @@ def show_all(world, state_no=None):
 
 
 def show_world(world, state_no=None, screen_index=-1):
-    """TODO By default showing the last state."""
+    """TODO docstring for show_world
+
+    By default showing the last state."""
     WorldWindow(world, state_no=state_no, screen_index=screen_index)
 
     # Enter the main event loop.
@@ -70,7 +72,7 @@ def show_world(world, state_no=None, screen_index=-1):
 
 
 class WorldWindow(pyglet.window.Window):
-    """TODO"""
+    """TODO docstring for WorldWindow"""
 
     def __init__(
             self, world, state_no=None, caption='World', width=1920,
@@ -126,19 +128,24 @@ class WorldWindow(pyglet.window.Window):
     # GUI methods.
 
     def on_draw(self):
+        """TODO docstring for on_draw"""
         self.scene.on_draw()
         self.graphics.batch.draw()
 
     def on_mouse_press(self, x, y, button, modifiers):
+        """TODO docstring for on_mouse_press"""
         self.scene.on_mouse_press(x, y, button, modifiers, win=self)
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+        """TODO docstring for on_mouse_drag"""
         self.scene.on_mouse_drag(x, y, dx, dy, buttons, modifiers, win=self)
 
     def on_mouse_release(self, x, y, button, modifiers):
+        """TODO docstring for on_mouse_release"""
         self.scene.on_mouse_release(x, y, button, modifiers, win=self)
 
     def on_key_press(self, symbol, modifiers):
+        """TODO docstring for on_key_press"""
         if symbol == key.ESCAPE:
             self.close()
         elif symbol == key.LEFT:
@@ -165,13 +172,13 @@ class WorldWindow(pyglet.window.Window):
     # Custom public methods.
 
     def execute_action(self, action):
-        """TODO"""
+        """TODO docstring for execute_action"""
         self.world.act(action)
         self.scene.state = self.world.cur_state
         self.dispatch_event('on_update')
 
     def on_update(self):
-        """TODO"""
+        """TODO docstring for on_update"""
         # Update the scene.
         self.scene.on_update()
 
@@ -185,6 +192,7 @@ class WorldWindow(pyglet.window.Window):
     # Private methods.
 
     def _init_graphics(self, width, height):
+        """TODO docstring for _init_graphics"""
         graphics = Graphics(width, height)
         group = pyglet.graphics.OrderedGroup(5)
 
@@ -255,7 +263,7 @@ class WorldWindow(pyglet.window.Window):
 
 
 class WorldScene(EnvironmentScene):
-    """TODO"""
+    """TODO: docstring for WorldScene"""
 
     def __init__(self, world, role=Human, name=None, width=1920, height=1080):
         if name is None:
@@ -275,6 +283,8 @@ class WorldScene(EnvironmentScene):
 
         self._temp_from = None
         self._temp_to = None
+
+        self._is_crossed = False
 
     @property
     def temp_from(self):
@@ -298,6 +308,9 @@ class WorldScene(EnvironmentScene):
         self.graphics.batch.draw()
         if self.graphics.temp_suggested_sprite is not None:
             self.graphics.temp_suggested_sprite.draw()
+
+        if self._is_crossed:
+            self.graphics.cross_sprite.draw()
 
     def on_mouse_press(self, x, y, button, modifiers, win):
         if self.state.is_paused:
@@ -339,12 +352,13 @@ class WorldScene(EnvironmentScene):
                 win.execute_action(action)
 
     def on_key_press(self, symbol, modifiers, win):
+        """TODO docstring for on_key_press of WorldScene"""
         pass
 
     # Custom public methods.
 
     def on_update(self):
-        """TODO"""
+        """TODO docstring for on_update of WorldScene"""
         super().on_update()
 
         self._update_feasible_actions()
@@ -353,7 +367,7 @@ class WorldScene(EnvironmentScene):
         self._update_status_label()
 
     def toggle_role(self):
-        """TODO"""
+        """TODO docstring for toggle_role of WorldScene"""
         if self._role == Robot:
             self._role = Human
         elif self._role == Human:
@@ -366,14 +380,16 @@ class WorldScene(EnvironmentScene):
     # Private methods.
 
     def _process_drawing(self, x, y):
-        """TODO"""
+        """TODO docstring for _process_drawing"""
         # Check if a node is pressed.
         node = check_node_hit(self.graphics.layout, x, y)
+
+        node_data = self.graphics.layout.nodes
 
         # Check if the agent started drawing from a node.
         if self.temp_from is None:
             if node is not None:
-                d = self.graphics.layout.nodes[node]
+                d = node_data[node]
                 self.temp_from = (d['x'], d['y'], node)
                 d['selected_sprite'].visible = True
 
@@ -381,19 +397,36 @@ class WorldScene(EnvironmentScene):
         else:
             selected = self.state.network.get_selected_nodes()
 
-            # If mouse is on a new node that is not already selected
+            # If mouse is on a new node that is not already selected.
             if node is not None and node not in selected and \
                     node != self.temp_from[2]:
                 self.temp_to = node
-                d = self.graphics.layout.nodes[node]
+                d = node_data[node]
                 d['selected_sprite'].visible = True
 
-            # If mouse is not on a node, reset the previous drawing to node.
+                # Put a cross on edge if this picking the edge is not feasible.
+                from_node = self.temp_from[2]
+                u, v = from_node, node
+                is_selected = self.state.network.subgraph.has_edge(u, v)
+                has_edge = self.graphics.layout.has_edge(u, v)
+
+                # if has_edge and (from_node != node) and not is_selected:
+                if not has_edge or is_selected:
+                    self.graphics.cross_sprite.update(
+                        x=(node_data[u]['x']+node_data[v]['x'])/2, 
+                        y=(node_data[u]['y']+node_data[v]['y'])/2)
+                    self._is_crossed = True
+                else:
+                    self._is_crossed = False
+
+            # If mouse was on a node and no longer is on a node, 
+            # reset the previous drawing-to node.
             elif self.temp_to is not None \
                     and self.temp_to not in selected:
-                d = self.graphics.layout.nodes[self.temp_to]
+                d = node_data[self.temp_to]
                 d['selected_sprite'].visible = False
                 self.temp_to = None
+                self._is_crossed = False
 
             # Update the temporary drawing edge to the new mouse position.
             # if self.temp_from is not None:
@@ -404,7 +437,7 @@ class WorldScene(EnvironmentScene):
     # Private methods.
 
     def _check_buttons(self, x, y):
-        """TODO"""
+        """TODO docstring for _check_buttons"""
         action = None
 
         if self.graphics.submit_button.state == Button.ENABLED \
@@ -426,7 +459,7 @@ class WorldScene(EnvironmentScene):
         return action
 
     def _check_confirm_hit(self, x, y):
-        """TODO"""
+        """TODO docstring for _check_confirm_hit"""
         return (-320 < x - self.graphics.width//2 < -40 and
                 -100 < y - self.graphics.height//2 < 60)
 
@@ -447,7 +480,7 @@ class WorldScene(EnvironmentScene):
         self._set_paused(self.state.is_terminal or self.state.is_paused)
 
     def _update_buttons(self):
-        """TODO"""
+        """TODO docstring for _update_buttons"""
         if self._submit_action_type(self._role) in self._actions:
             button_state = Button.ENABLED
         elif self.state.is_terminal:
@@ -466,7 +499,7 @@ class WorldScene(EnvironmentScene):
         pass
 
     def _process_drawing_done(self, x, y):
-        """TODO"""
+        """TODO docstring for _process_drawing_done"""
         action = None
 
         # self.graphics.layout = self.graphics.self.graphics.layout
@@ -474,14 +507,14 @@ class WorldScene(EnvironmentScene):
         # Check if an edge is drawn.
         if self.temp_from is not None:
             # Drawing action.
-            node = check_node_hit(self.graphics.layout, x, y)
-            if node is not None:
+            to_node = check_node_hit(self.graphics.layout, x, y)
+            if to_node is not None:
                 from_node = self.temp_from[2]
-                edge = from_node, node
+                edge = from_node, to_node
                 is_selected = self.state.network.subgraph.has_edge(*edge)
                 has_edge = self.graphics.layout.has_edge(*edge)
 
-                if has_edge and (from_node != node) and not is_selected:
+                if has_edge and (from_node != to_node) and not is_selected:
                     action = self._pick_action_type(edge, agent=self._role)
 
         # Clear selection.
@@ -502,9 +535,11 @@ class WorldScene(EnvironmentScene):
         return action
 
     def _reset_drawing(self):
+        """TODO docstring for _reset_drawing"""
         self.temp_from = None
         self.temp_to = None
         self.graphics.temp_suggested_sprite = None
+        self._is_crossed = False
 
 
 class IntroWorldScene(WorldScene):
