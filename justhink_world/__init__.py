@@ -1,4 +1,4 @@
-from .world import create_world, create_all_worlds, list_worlds, update_belief
+from .world import create_world, create_all_worlds, list_worlds
 
 from .tools.read import load_all_logs, load_log
 

@@ -105,137 +105,6 @@ def create_world(name, history=None, state_no=None, verbose=False):
     return world
 
 
-def update_belief(
-        agent, action, observation=None, is_executed=True, verbose=True):
-    """TODO: docstring for update_belief"""
-    if observation is not None:
-        next_state = observation.state
-
-    cur_env_state = agent.cur_belief.mpe()
-
-    if is_executed:
-        next_state = copy.deepcopy(agent.state)
-    else:
-        next_state = agent.state
-
-    # Update next state subgraph.
-    beliefs_list = [
-        next_state.beliefs['me'],
-        next_state.beliefs['me']['you'],
-        next_state.beliefs['me']['you']['me'],
-    ]
-    suggested = cur_env_state.network.suggested_edge
-    for beliefs in beliefs_list:
-        for u, v, d in beliefs['world'].edges(data=True):
-            d['is_selected'] = cur_env_state.network.subgraph.has_edge(u, v)
-            d['is_suggested'] = suggested is not None \
-                and set({u, v}) == set(suggested)
-
-    if is_executed:
-        if action.agent is Human:
-            beliefs = next_state.beliefs['me']['you']
-        elif action.agent is Robot:
-            beliefs = next_state.beliefs['me']['you']['me']
-        else:
-            return  # raise ValueError
-    else:
-        beliefs = next_state.beliefs['me']
-
-    try:
-        # Choice belief updates.
-        if isinstance(action, PickAction) \
-                or isinstance(action, SuggestPickAction):
-            u, v = action.edge
-            # print('### setting pick belief', action)
-            beliefs['world'][u][v]['is_optimal'] = 1.0
-
-        elif isinstance(action, AgreeAction):
-            u, v = cur_env_state.network.suggested_edge
-            beliefs['world'][u][v]['is_optimal'] = 1.0
-
-        elif isinstance(action, DisagreeAction):
-            u, v = cur_env_state.network.suggested_edge
-            beliefs['world'][u][v]['is_optimal'] = 0.0
-
-        elif isinstance(action, ClearAction):
-            # reset the beliefs.
-            for u, v in cur_env_state.network.graph.edges():
-                beliefs['world'][u][v]['is_optimal'] = None
-            # # decrement the cleared.
-            # for u, v in cur_env_state.network.subgraph.edges():
-            #     value = beliefs['world'][u][v]['is_optimal']
-            #     if value is None:
-            #         value = 0
-            #     value = value - 0.1
-            #     if value < 0:
-            #         value = 0
-            #     beliefs['world'][u][v]['is_optimal'] = value
-
-        elif isinstance(action, SubmitAction) or \
-                isinstance(action, AttemptSubmitAction):
-            for u, v in cur_env_state.network.graph.edges():
-                if cur_env_state.network.subgraph.has_edge(u, v):
-                    value = 1.0
-                else:
-                    value = 0.0
-                beliefs['world'][u][v]['is_optimal'] = value
-
-        elif isinstance(action, ContinueAction):
-            for u, v in cur_env_state.network.subgraph.edges():
-                value = beliefs['world'][u][v]['is_optimal']
-                if value is None:
-                    value = 0
-                value = value - 0.1
-                if value < 0:
-                    value = 0
-                beliefs['world'][u][v]['is_optimal'] = value
-
-    except Exception as e:
-        print(beliefs, e)
-
-    # If robot, update others as not believed to be true.
-    if action.agent is Robot:
-        for a in agent.planner.explanation.others:
-            if isinstance(a, SuggestPickAction):
-                u, v = a.edge
-                if cur_env_state.network.subgraph.has_edge(u, v):
-                    # value = None
-                    continue
-                else:
-                    value = 0.0
-                next_state.beliefs['me']['world'][u][v]['is_optimal'] = value
-        # update optimals believed to be true.
-        for a in agent.planner.explanation.best:
-            if isinstance(a, SuggestPickAction):
-                u, v = a.edge
-                if cur_env_state.network.subgraph.has_edge(u, v):
-                    # value = None
-                    continue
-                else:
-                    value = 1.0
-                next_state.beliefs['me']['world'][u][v]['is_optimal'] = value
-
-    if is_executed:
-        new_cur_node = None
-        if isinstance(action, PickAction):
-            _, new_cur_node = action.edge
-        elif isinstance(action, SuggestPickAction):
-            new_cur_node, _ = action.edge
-        elif isinstance(action, AgreeAction):
-            # Move the current to the agreed end.
-            _, new_cur_node = cur_env_state.network.suggested_edge
-        if new_cur_node is not None:
-            next_state.cur_node = new_cur_node
-            if verbose:
-                print('Robot moved current to {} (Node {})'.format(
-                    cur_env_state.network.get_node_name(new_cur_node),
-                    new_cur_node))
-
-    # if is_executed:
-    #     agent.mental_history.append(next_state)
-    #     agent.state = next_state
-
-
 class World(pomdp_py.POMDP):
     """A world describing the interaction between an agent and the environment.
 
@@ -380,7 +249,7 @@ class World(pomdp_py.POMDP):
         self.agent.update_history(action, real_observation)
         # problem.agent.update_history(real_action, real_observation)
         self.agent.policy_model.update(state, next_state, action)
-        update_belief(self.agent, action, real_observation)
+        # update_belief(self.agent, action, real_observation)
 
         # TODO: run a belief update function.
         # Fully observable: immediate access to the state.

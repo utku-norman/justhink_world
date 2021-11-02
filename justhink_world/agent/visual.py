@@ -5,14 +5,19 @@ from justhink_world.tools.graphics import Scene, Graphics, WHITEA
 
 
 def show_observer(world):
-    ObserverWindow(world)
+    """TODO: docstring for show_observer"""
+    window = ObserverWindow(world)
 
     # Enter the main event loop.
-    pyglet.app.run()
+    try:
+        pyglet.app.run()
+    except KeyboardInterrupt:
+        window.close()
+        print('Window is closed.')
 
 
 class ObserverWindow(pyglet.window.Window):
-    """docstring for MentalWindow"""
+    """TODO: docstring for MentalWindow"""
 
     def __init__(self, world, caption="Robot's Mind", width=1920, height=1080,
                  offset=(1920, 0), screen_index=0, max_level=2):
@@ -119,3 +124,5 @@ class ObserverScene(Scene):
         graphics.observes_label = pyglet.text.Label(
             '', x=outer_pad[0]+x_pad, y=y, align='center', font_name='Sans',
             font_size=font_size, batch=batch)
+
+        self.graphics = graphics
