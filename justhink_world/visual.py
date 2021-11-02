@@ -208,8 +208,8 @@ class WorldWindow(pyglet.window.Window):
 
         # State label.
         graphics.state_label = pyglet.text.Label(
-            '', x=20, y=20, anchor_y='center', color=REDA,
-            font_name='Sans', font_size=24, batch=graphics.batch, group=group)
+            '', x=20, y=height-20, anchor_y='center', color=REDA,
+            font_name='Sans', font_size=20, batch=graphics.batch, group=group)
 
         # Create a label for the state no.
         graphics.state_no_label = pyglet.text.Label(
@@ -223,13 +223,13 @@ class WorldWindow(pyglet.window.Window):
 
         # Next action if any label.
         graphics.next_label = pyglet.text.Label(
-            '', x=width//2, y=height-20, anchor_y='center', color=REDA,
-            font_name='Sans', font_size=24, batch=graphics.batch, group=group)
+            '', x=width//2, y=80, anchor_y='center', color=REDA,
+            font_name='Sans', font_size=20, batch=graphics.batch, group=group)
 
         # Previous action if any label.
         graphics.prev_label = pyglet.text.Label(
-            '', x=20, y=height-20, anchor_y='center', color=REDA,
-            font_name='Sans', font_size=24, batch=graphics.batch, group=group)
+            '', x=20, y=80, anchor_y='center', color=REDA,
+            font_name='Sans', font_size=20, batch=graphics.batch, group=group)
 
         self.graphics = graphics
 

@@ -182,7 +182,10 @@ world.act(PickAction((5, 6)))
 
 # Visualise the world, from the last state by default.
 show_world(world)
+```
 
+Take more actions and show the world again.
+```
 # Take a few more actions.
 world.act(AttemptSubmitAction())
 world.act(SubmitAction())
