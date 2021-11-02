@@ -107,7 +107,7 @@ def create_world(name, history=None, state_no=None, verbose=False):
 
 def update_belief(
         agent, action, observation=None, is_executed=True, verbose=True):
-    """TODO"""
+    """TODO: docstring for update_belief"""
     if observation is not None:
         next_state = observation.state
 
@@ -307,7 +307,6 @@ class World(pomdp_py.POMDP):
 
     @state_no.setter
     def state_no(self, value):
-        # if value is not None:
         if value < 1:
             value = 1
         elif value > self.num_states:
@@ -325,7 +324,7 @@ class World(pomdp_py.POMDP):
 
     @property
     def num_states(self):
-        """number of states in the history"""
+        """Number of states in the history"""
         return len(self._history) // 2 + 1
         # return len(self.agent.history)
 
@@ -349,7 +348,7 @@ class World(pomdp_py.POMDP):
             return self.agent.mental_history[0]
 
     def act(self, action, verbose=False):
-        """TODO"""
+        """TODO: docstring for act of World"""
         # Validation: check if the action is feasible.
         if action not in self.agent.all_actions:
             s = 'Invalid action {}: it not feasible (i.e. in {}).'.format(

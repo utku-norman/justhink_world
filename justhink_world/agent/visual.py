@@ -133,7 +133,7 @@ class MentalScene(Scene):
                     beliefs['world'][u][v]['is_selected']
 
     def _init_graphics(self, graph, width, height, max_level, batch=None):
-        font_size = 24
+        font_size = 20
         graphics = Graphics(width, height, from_graph=graph, batch=batch)
         batch = graphics.batch
 

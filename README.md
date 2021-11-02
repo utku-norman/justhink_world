@@ -322,6 +322,7 @@ Show both activity and mental windows:
 from justhink_world import create_world, show_all
 
 world = create_world('collaboration-1')
+world = create_world('pretest-1')
 
 show_all(world)
 ```

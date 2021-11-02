@@ -1,4 +1,4 @@
-from justhink_world.domain.action import SuggestPickAction, SubmitAction
+from justhink_world.domain.action import SuggestPickAction, AttemptSubmitAction
 
 from justhink_world.agent import Robot
 
@@ -41,7 +41,7 @@ class TraversalPlanner(object):
         expl = BetterThanExplanation()
         if len(min_nodes) == 0:
             expl = ConnectedExplanation()
-            expl.best = {SubmitAction(agent=Robot)}
+            expl.best = {AttemptSubmitAction(agent=Robot)}
         else:
             expl.best = {SuggestPickAction((self.cur_node, u), agent=Robot)
                          for u in min_nodes}
@@ -97,6 +97,7 @@ class TraversalJumpingPlanner(object):
             for u in sorted(self.state.network.get_selected_nodes()):
                 # Move the current.
                 self.cur_node = u
+                agent.state.cur_node = u
                 # For each available action.
                 min_nodes, other_nodes = get_greedy_neighbour(
                     self.state.network.graph, self.cur_node,
@@ -108,7 +109,7 @@ class TraversalJumpingPlanner(object):
         expl = BetterThanExplanation()
         if len(min_nodes) == 0:
             expl = ConnectedExplanation()
-            expl.best = {SubmitAction(agent=Robot)}
+            expl.best = {AttemptSubmitAction(agent=Robot)}
         else:
             expl.best = {SuggestPickAction((self.cur_node, u), agent=Robot)
                          for u in min_nodes}
@@ -177,7 +178,7 @@ class PrimsPlanner():
 
         # Refine the explanation in terms of actions.
         if e is None:
-            expl.best = SubmitAction()
+            expl.best = AttemptSubmitAction()
             expl = ConnectedExplanation()
         else:
             expl.best = SuggestPickAction(e)

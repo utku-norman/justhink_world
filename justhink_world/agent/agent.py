@@ -5,6 +5,7 @@ from .belief import initialize_belief
 
 
 class Actor(object):
+    """TODO: docstring for Actor"""
     def __str__(self):
         return self.__repr__()
 
@@ -13,18 +14,22 @@ class Actor(object):
 
 
 class Human(Actor):
+    """TODO: docstring for Human"""
     name = 'Human'
 
 
 class Robot(Actor):
+    """TODO: docstring for Robot"""
     name = 'Robot'
 
 
 class Admin(Actor):
+    """TODO: docstring for Admin"""
     name = 'Admin'
 
 
 class RobotAgent(pomdp_py.Agent):
+    """TODO: docstring for RobotAgent"""
     def __init__(
             self, init_state, policy_model, transition_model,
             observation_model, reward_model, mental_state):

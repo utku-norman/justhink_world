@@ -4,9 +4,10 @@ import pomdp_py
 from ..domain.action import PickAction, SuggestPickAction, \
     SubmitAction, \
     AgreeAction, DisagreeAction, \
-    ClearAction, AttemptSubmitAction, ContinueAction
+    ClearAction, AttemptSubmitAction, ContinueAction, \
+    SetPauseAction
 
-from ..agent.agent import Human
+from ..agent.agent import Human, Admin
 
 
 class PolicyModel(pomdp_py.RolloutPolicy):
@@ -72,6 +73,9 @@ class IndividualPolicyModel(PolicyModel):
                 actions.add(ContinueAction())
                 actions.add(SubmitAction())
 
+        actions.add(SetPauseAction(True, Admin))
+        actions.add(SetPauseAction(False, Admin))
+
         self.actions = actions
 
 
@@ -117,6 +121,9 @@ class CollaborativePolicyModel(PolicyModel):
                 else:
                     actions.add(ContinueAction(agent=agent))
                     actions.add(SubmitAction(agent=agent))
+
+        actions.add(SetPauseAction(True, Admin))
+        actions.add(SetPauseAction(False, Admin))
 
         self.actions = actions
 

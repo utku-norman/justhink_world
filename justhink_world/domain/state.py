@@ -93,15 +93,31 @@ class EnvState(pomdp_py.State):
         return self.__repr__()
 
     def __repr__(self):
-        agents_str = ''.join([a.name[0] for a in self.agents]) \
-            if len(self.agents) > 0 else 'x'
-        attempt_str = 'inf' if self.max_attempts is None else self.max_attempts
+        # agents_str = ''.join([a.name[0] for a in self.agents]) \
+        #     if len(self.agents) > 0 else 'x'
+        # attempt_str = 'inf' if self.max_attempts is None else \
+        # self.max_attempts
+        # s = 'EnvState('
+        # s += '{}@{}/{},a:{};p:{:d},t:{:d},s:{:d},h:{:d})'.format(
+        #     self.network, self.attempt_no, attempt_str, agents_str,
+        #     self.is_paused, self.is_terminal, self.is_submitting,
+        #     self.is_highlighted)
 
-        s = 'EnvState('
-        s += '{}@{}/{},a:{};p:{:d},t:{:d},s:{:d},h:{:d})'.format(
-            self.network, self.attempt_no, attempt_str, agents_str,
-            self.is_paused, self.is_terminal, self.is_submitting,
-            self.is_highlighted)
+        s = 'Situation({}'.format(self.network)
+        if self.max_attempts is not None:
+            s += ', attempt={}/{}'.format(
+                self.attempt_no, self.max_attempts)
+        if len(self.agents) > 0:
+            s += ', {}'.format(''.join([a.name for a in self.agents]))
+        if self.is_paused:
+            s += ', paused'
+        if self.is_terminal:
+            s += ', terminal'
+        if self.is_submitting:
+            s += ', submitting'
+        if self.is_highlighted:
+            s += ', highlighted'
+        s += ')'
 
         return s
 
@@ -163,11 +179,24 @@ class NetworkState(object):
         return self.__repr__()
 
     def __repr__(self):
-        return 'NetworkState(e:{}+{},c:{}|n:{},e:{};s:{:d})'.format(
-            self.subgraph.number_of_edges(),
-            0 if self.suggested_edge is None else 1,
-            self.get_cost(), self.graph.number_of_nodes(),
-            self.graph.number_of_edges(), self.is_spanning())
+        # return 'NetworkState(e:{}+{},c:{}|n:{},e:{};s:{:d})'.format(
+        #     self.subgraph.number_of_edges(),
+        #     0 if self.suggested_edge is None else 1,
+        #     self.get_cost(), self.graph.number_of_nodes(),
+        #     self.graph.number_of_edges(), self.is_spanning())
+        num_edges = self.subgraph.number_of_edges()
+
+        extra_info = ''
+        if self.is_mst():
+            extra_info += ' that minimally spans'
+        elif self.is_spanning():
+            extra_info += ' that spans'
+        extra_info += ' with cost={}'.format(self.get_cost())
+
+        return 'Network(|E\'|={}{} in G(|V|={}, |E|={})){}'.format(
+            num_edges, '' if self.suggested_edge is None else '+1',
+            self.graph.number_of_nodes(), self.graph.number_of_edges(),
+            extra_info)
 
     def get_selected_nodes(self) -> nx.Graph.nodes:
         """Get an iterable for selected nodes from the selection subgraph."""
@@ -338,7 +367,7 @@ class MentalState(object):
         return 'MentalState({})'.format(self.get_beliefs())
 
     def get_beliefs(self):
-        """TODO"""
+        """TODO: docsring for get_beliefs"""
         belief_list = list()
 
         pairs = [('world', self.beliefs['me']),

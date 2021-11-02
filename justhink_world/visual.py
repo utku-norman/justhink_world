@@ -10,7 +10,7 @@ from justhink_world.agent.visual import MentalWindow
 from justhink_world.env.visual import EnvironmentScene, create_edge_sprite
 
 from justhink_world.world import IndividualWorld, CollaborativeWorld
-from justhink_world.domain.state import Human, Robot
+from justhink_world.agent import Human, Robot, Admin
 from justhink_world.domain.action import SetPauseAction,  \
     PickAction, SuggestPickAction, ClearAction, AgreeAction, DisagreeAction, \
     AttemptSubmitAction, ContinueAction, SubmitAction
@@ -58,6 +58,7 @@ def show_all(world, state_no=None):
             world_window.close()
             return True
 
+    # Enter the main event loop.
     pyglet.app.run()
 
 
@@ -165,7 +166,7 @@ class WorldWindow(pyglet.window.Window):
             self.scene.state = self.world.cur_state
         elif symbol == key.P:
             is_paused = self.world.cur_state.is_paused
-            self.execute_action(SetPauseAction(not is_paused))
+            self.execute_action(SetPauseAction(not is_paused, Admin))
 
         self.dispatch_event('on_update')
 
@@ -413,13 +414,13 @@ class WorldScene(EnvironmentScene):
                 # if has_edge and (from_node != node) and not is_selected:
                 if not has_edge or is_selected:
                     self.graphics.cross_sprite.update(
-                        x=(node_data[u]['x']+node_data[v]['x'])/2, 
+                        x=(node_data[u]['x']+node_data[v]['x'])/2,
                         y=(node_data[u]['y']+node_data[v]['y'])/2)
                     self._is_crossed = True
                 else:
                     self._is_crossed = False
 
-            # If mouse was on a node and no longer is on a node, 
+            # If mouse was on a node and no longer is on a node,
             # reset the previous drawing-to node.
             elif self.temp_to is not None \
                     and self.temp_to not in selected:
@@ -502,8 +503,6 @@ class WorldScene(EnvironmentScene):
         """TODO docstring for _process_drawing_done"""
         action = None
 
-        # self.graphics.layout = self.graphics.self.graphics.layout
-
         # Check if an edge is drawn.
         if self.temp_from is not None:
             # Drawing action.
@@ -543,7 +542,7 @@ class WorldScene(EnvironmentScene):
 
 
 class IntroWorldScene(WorldScene):
-    """TODO"""
+    """TODO: docstring for IntroWorldScene"""
 
     def __init__(self, **kwargs):
 
@@ -567,7 +566,7 @@ class IntroWorldScene(WorldScene):
 
 
 class TutorialWorldScene(WorldScene):
-    """TODO"""
+    """TODO: docstring for TutorialWorldScene"""
 
     def __init__(self, **kwargs):
 
@@ -586,7 +585,7 @@ class TutorialWorldScene(WorldScene):
 
 
 class IndividualWorldScene(WorldScene):
-    """TODO"""
+    """TODO: docstring for IndividualWorldScene"""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -599,18 +598,9 @@ class IndividualWorldScene(WorldScene):
         for u, d in self.graphics.layout.nodes(data=True):
             d['label'].text = ''
 
-    # @property
-    # def graphics(self):
-    #     return self._graphics
-
-    # @graphics.setter
-    # def graphics(self, value):
-    #     # print('Setting temp to', value)
-    #     self._graphics = value
-
 
 class CollaborativeWorldScene(WorldScene):
-    """TODO"""
+    """TODO: docstring for CollaborativeWorldScene"""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
