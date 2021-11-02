@@ -6,7 +6,7 @@ from pyglet.window import key
 from justhink_world.tools.graphics import Button, Graphics, check_node_hit, \
     BLACKA
 
-from justhink_world.agent.visual import MentalWindow
+from justhink_world.agent.visual import ObserverWindow
 from justhink_world.env.visual import EnvironmentScene, create_edge_sprite
 
 from justhink_world.world import IndividualWorld, CollaborativeWorld
@@ -19,16 +19,16 @@ from justhink_world.domain.action import SetPauseAction,  \
 def show_all(world, state_no=None):
     """TODO docstring for show_all"""
     world_window = WorldWindow(world, state_no=state_no)
-    mental_window = MentalWindow(world)  # , offset=(1920, 0))
+    observer_window = ObserverWindow(world)  # , offset=(1920, 0))
 
     @world_window.event
     def on_update():
         world_window.on_update()
 
-        mental_window.cur_scene.graphics.next_label.text = \
+        observer_window.cur_scene.graphics.next_label.text = \
             world_window.graphics.next_label.text
 
-        mental_window.cur_scene.graphics.prev_label.text = \
+        observer_window.cur_scene.graphics.prev_label.text = \
             world_window.graphics.prev_label.text
 
         # Offset for the observe.
@@ -38,23 +38,23 @@ def show_all(world, state_no=None):
         else:
             s = str(world.agent.history[index][1])
 
-        mental_window.cur_scene.graphics.observes_label.text = s
-        mental_window.cur_scene.state = world_window.world.cur_mental_state
-        print('Showing state:', mental_window.cur_scene.state)
+        observer_window.cur_scene.graphics.observes_label.text = s
+        # observer_window.cur_scene.state = world_window.world.cur_mental_state
+        print('Showing state:', observer_window.cur_scene.state)
 
-        mental_window.dispatch_event('on_update')
+        observer_window.dispatch_event('on_update')
 
         # Event is handled: do not run another on_update.
         return True
 
     world_window.push_handlers(on_update)
 
-    @mental_window.event
+    @observer_window.event
     @world_window.event
     def on_key_press(symbol, modifiers):
         # print('Key pressed in mental')
         if symbol == key.ESCAPE:
-            mental_window.close()
+            observer_window.close()
             world_window.close()
             return True
 

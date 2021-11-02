@@ -4,7 +4,7 @@ import importlib_resources
 
 import pomdp_py
 
-from .domain.state import EnvState, MentalState
+from .domain.state import EnvState #, MentalState
 from .domain.action import ObserveAction, PickAction, SuggestPickAction, \
     AgreeAction,  DisagreeAction, SetStateAction, ClearAction, \
     AttemptSubmitAction, ContinueAction, SubmitAction
@@ -21,7 +21,7 @@ from .tools.read import make_network_resources, load_network
 from .tools.write import Bcolors
 
 from .agent import Human, Robot, RobotAgent
-from .agent.reasoning import TraversalPlanner, TraversalJumpingPlanner
+# from .agent.reasoning import TraversalJumpingPlanner
 
 
 def list_worlds():
@@ -231,9 +231,9 @@ def update_belief(
                     cur_env_state.network.get_node_name(new_cur_node),
                     new_cur_node))
 
-    if is_executed:
-        agent.mental_history.append(next_state)
-        agent.state = next_state
+    # if is_executed:
+    #     agent.mental_history.append(next_state)
+    #     agent.state = next_state
 
 
 class World(pomdp_py.POMDP):
@@ -271,15 +271,16 @@ class World(pomdp_py.POMDP):
         # Initialise an agent.
         # The state is fully observable.
         # planner = TraversalPlanner(cur_state)
-        planner = TraversalJumpingPlanner(cur_state)
+        # planner = TraversalJumpingPlanner(cur_state)
         
-        mental_state = MentalState(
-            cur_state.network.graph, cur_node=planner.cur_node)
+        # mental_state = MentalState(
+        #     cur_state.network.graph, cur_node=planner.cur_node)
         agent = RobotAgent(
             cur_state, policy_model, transition_model=transition_model,
-            observation_model=observation_model, reward_model=reward_model,
-            mental_state=mental_state)
-        agent.planner = planner
+            observation_model=observation_model, reward_model=reward_model)
+        # ,
+        # mental_state=mental_state)
+        # agent.planner = planner
 
         # Initialise an environment.
         env = pomdp_py.Environment(cur_state, transition_model, reward_model)
@@ -291,9 +292,9 @@ class World(pomdp_py.POMDP):
         if self.num_states == 0:
             self.act(ObserveAction(agent=Robot))
 
-        # Have the robot make a plan and update its beliefs.
-        robot_action = self.agent.planner.plan(self.agent)
-        update_belief(self.agent, robot_action, is_executed=False)
+        # # Have the robot make a plan and update its beliefs.
+        # robot_action = self.agent.planner.plan(self.agent)
+        # update_belief(self.agent, robot_action, is_executed=False)
 
     def __str__(self):
         return self.__repr__()
@@ -338,14 +339,14 @@ class World(pomdp_py.POMDP):
         # else:
         #     return self.agent.history[self.state_no-1][1].state
 
-    @property
-    def cur_mental_state(self):
-        """Current mental state of the agent in the environment."""
-        index = self.state_no - 1
-        if index >= 0 and index < len(self.agent.mental_history):
-            return self.agent.mental_history[index]
-        else:
-            return self.agent.mental_history[0]
+    # @property
+    # def cur_mental_state(self):
+    #     """Current mental state of the agent in the environment."""
+    #     index = self.state_no - 1
+    #     if index >= 0 and index < len(self.agent.mental_history):
+    #         return self.agent.mental_history[index]
+    #     else:
+    #         return self.agent.mental_history[0]
 
     def act(self, action, verbose=False):
         """TODO: docstring for act of World"""
@@ -389,9 +390,9 @@ class World(pomdp_py.POMDP):
         # Move to the new state.
         self.state_no = self.num_states
 
-        # Update the agent.
-        robot_action = self.agent.planner.plan(self.agent)
-        update_belief(self.agent, robot_action, is_executed=False)
+        # # Update the agent.
+        # robot_action = self.agent.planner.plan(self.agent)
+        # update_belief(self.agent, robot_action, is_executed=False)
 
         # Print info.
         if verbose:

@@ -332,12 +332,12 @@ Print world history.
 print(world.history)
 ```
 
-Visualise a mental state for the robot.
+Visualise an observer.
 ```
-from justhink_world import create_world, show_mind, show_all
+from justhink_world import create_world, show_observer, show_all
 
 world = create_world('pretest-1')
-show_mind(world)
+show_observer(world)
 ```
 
 

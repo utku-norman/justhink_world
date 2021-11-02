@@ -32,11 +32,11 @@ class RobotAgent(pomdp_py.Agent):
     """TODO: docstring for RobotAgent"""
     def __init__(
             self, init_state, policy_model, transition_model,
-            observation_model, reward_model, mental_state):
+            observation_model, reward_model):  #, mental_state):
 
-        self.state = mental_state
+        # self.state = mental_state
 
-        self.mental_history = [self.state]
+        # self.mental_history = [self.state]
 
         # Defines the agent. There's nothing special
         # about the MST agent in fact, except that
