@@ -16,8 +16,8 @@ from justhink_world.domain.action import SetPauseAction,  \
     AttemptSubmitAction, ContinueAction, SubmitAction
 
 
-def show_all(world, state_no=None):
-    """TODO docstring for show_all"""
+def show_world_and_observer(world, state_no=None):
+    """TODO docstring for show_world_and_observer"""
     world_window = WorldWindow(world, state_no=state_no)
     observer_window = ObserverWindow(world)  # , offset=(1920, 0))
 
@@ -310,7 +310,7 @@ class WorldScene(EnvironmentScene):
         self._temp_from = None
         self._temp_to = None
 
-        self._is_crossed = False
+        self._cross_shown = False
 
     @property
     def temp_from(self):
@@ -335,7 +335,7 @@ class WorldScene(EnvironmentScene):
         if self.graphics.temp_suggested_sprite is not None:
             self.graphics.temp_suggested_sprite.draw()
 
-        if self._is_crossed:
+        if self._cross_shown:
             self.graphics.cross_sprite.draw()
 
     def on_mouse_press(self, x, y, button, modifiers, win):
@@ -353,9 +353,17 @@ class WorldScene(EnvironmentScene):
             # If can pick or suggest-pick an edge
             action = self._check_buttons(x, y)
 
-            if self._role in self.state.agents and \
-                    self._pick_action_type in self._action_types:
-                self._process_drawing(x, y)
+            if self._role in self.state.agents:
+                if self._pick_action_type in self._action_types:
+                    self._process_drawing(x, y)
+                else:
+                    # Put a cross at the node.
+                    u = check_node_hit(self.graphics.layout, x, y)
+                    if u is not None:
+                        node_data = self.graphics.layout.nodes
+                        self.graphics.cross_sprite.update(
+                            x=node_data[u]['x'], y=node_data[u]['y'])
+                        self._cross_shown = True
 
         if action in self._actions:
             win.execute_action(action)
@@ -441,9 +449,9 @@ class WorldScene(EnvironmentScene):
                     self.graphics.cross_sprite.update(
                         x=(node_data[u]['x']+node_data[v]['x'])/2,
                         y=(node_data[u]['y']+node_data[v]['y'])/2)
-                    self._is_crossed = True
+                    self._cross_shown = True
                 else:
-                    self._is_crossed = False
+                    self._cross_shown = False
 
             # If mouse was on a node and no longer is on a node,
             # reset the previous drawing-to node.
@@ -452,7 +460,7 @@ class WorldScene(EnvironmentScene):
                 d = node_data[self.temp_to]
                 d['selected_sprite'].visible = False
                 self.temp_to = None
-                self._is_crossed = False
+                self._cross_shown = False
 
             # Update the temporary drawing edge to the new mouse position.
             # if self.temp_from is not None:
@@ -563,7 +571,7 @@ class WorldScene(EnvironmentScene):
         self.temp_from = None
         self.temp_to = None
         self.graphics.temp_suggested_sprite = None
-        self._is_crossed = False
+        self._cross_shown = False
 
 
 class IntroWorldScene(WorldScene):

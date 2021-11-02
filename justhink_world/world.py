@@ -4,7 +4,7 @@ import importlib_resources
 
 import pomdp_py
 
-from .domain.state import EnvState #, MentalState
+from .domain.state import EnvState
 from .domain.action import ObserveAction, PickAction, SuggestPickAction, \
     AgreeAction,  DisagreeAction, SetStateAction, ClearAction, \
     AttemptSubmitAction, ContinueAction, SubmitAction
@@ -20,7 +20,7 @@ from .models.reward_model import MstRewardModel
 from .tools.read import make_network_resources, load_network
 from .tools.write import Bcolors
 
-from .agent import Human, Robot, RobotAgent
+from .agent import Human, Robot, Agent
 # from .agent.reasoning import TraversalJumpingPlanner
 
 
@@ -144,7 +144,7 @@ class World(pomdp_py.POMDP):
         
         # mental_state = MentalState(
         #     cur_state.network.graph, cur_node=planner.cur_node)
-        agent = RobotAgent(
+        agent = Agent(
             cur_state, policy_model, transition_model=transition_model,
             observation_model=observation_model, reward_model=reward_model)
         # ,
@@ -157,9 +157,9 @@ class World(pomdp_py.POMDP):
         # Construct an instance from the agent and the environment.
         super().__init__(agent, env, name=name)
 
-        # Update the agent.
-        if self.num_states == 0:
-            self.act(ObserveAction(agent=Robot))
+        # # Update the agent.
+        # if self.num_states == 0:
+        #     self.act(ObserveAction(agent=Robot))
 
         # # Have the robot make a plan and update its beliefs.
         # robot_action = self.agent.planner.plan(self.agent)

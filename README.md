@@ -322,12 +322,12 @@ print(state, state.network.get_cost(), state.network.get_mst_cost())
 
 Show both activity and mental windows:
 ```
-from justhink_world import create_world, show_all
+from justhink_world import create_world, show_world_and_observer
 
 world = create_world('collaboration-1')
-world = create_world('pretest-1')
+# world = create_world('pretest-1')
 
-show_all(world)
+show_world_and_observer(world)
 ```
 
 Print world history.
@@ -337,7 +337,7 @@ print(world.history)
 
 Visualise an observer.
 ```
-from justhink_world import create_world, show_observer, show_all
+from justhink_world import create_world, show_observer, show_world_and_observer
 
 world = create_world('pretest-1')
 show_observer(world)
