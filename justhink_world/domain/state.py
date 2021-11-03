@@ -5,7 +5,7 @@ import networkx as nx
 
 from ..tools.network import find_mst, is_subgraph_spanning, \
     compute_total_cost, compute_subgraph_cost
-from ..agent import Human, Robot
+from ..agent import Agent
 
 
 class EnvState(pomdp_py.State):
@@ -25,7 +25,7 @@ class EnvState(pomdp_py.State):
             and image file names of the nodes etc.
         agents (frozenset, optional):
             the set of "active" agents that can are allowed to take actions
-            in the environment (default frozenset({Human, Robot}))
+            in the environment (default frozenset({Agent.HUMAN, Agent.ROBOT}))
         attempt_no (int, optional):
             the current attempt number starting from 1 up to and including
             max_attempts (default 1). Can do infinitely many submissions,
@@ -54,7 +54,7 @@ class EnvState(pomdp_py.State):
     """
 
     def __init__(
-            self, network, agents=frozenset({Human, Robot}),
+            self, network, agents=frozenset({Agent.HUMAN, Agent.ROBOT}),
             attempt_no=1, max_attempts=None, step_no=1, is_submitting=False,
             is_paused=False, is_terminal=False, is_highlighted=False):
         self.network = network
@@ -109,7 +109,7 @@ class EnvState(pomdp_py.State):
             s += ', attempt={}/{}'.format(
                 self.attempt_no, self.max_attempts)
         if len(self.agents) > 0:
-            s += ', {}'.format(''.join([a.name for a in self.agents]))
+            s += ', {}'.format(''.join(self.agents))  # [a.name for a in ]))
         if self.is_paused:
             s += ', paused'
         if self.is_terminal:

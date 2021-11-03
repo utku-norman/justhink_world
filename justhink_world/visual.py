@@ -6,29 +6,29 @@ from pyglet.window import key
 from justhink_world.tools.graphics import Button, Graphics, check_node_hit, \
     REDA, WHITEA
 
-from justhink_world.agent.visual import ObserverWindow
+from justhink_world.agent.visual import MentalWindow
 from justhink_world.env.visual import EnvironmentScene, create_edge_sprite
 
 from justhink_world.world import IndividualWorld, CollaborativeWorld
-from justhink_world.agent import Human, Robot, Admin
+from justhink_world.agent import Agent
 from justhink_world.domain.action import SetPauseAction,  \
     PickAction, SuggestPickAction, ClearAction, AgreeAction, DisagreeAction, \
     AttemptSubmitAction, ContinueAction, SubmitAction
 
 
-def show_world_and_observer(world, state_no=None):
-    """TODO docstring for show_world_and_observer"""
+def show_all(world, state_no=None):
+    """TODO docstring for show_all"""
     world_window = WorldWindow(world, state_no=state_no)
-    observer_window = ObserverWindow(world)  # , offset=(1920, 0))
+    mind_window = MentalWindow(world)  # , offset=(1920, 0))
 
     @world_window.event
     def on_update():
         world_window.on_update()
 
-        observer_window.cur_scene.graphics.next_label.text = \
+        mind_window.cur_scene.graphics.next_label.text = \
             world_window.graphics.next_label.text
 
-        observer_window.cur_scene.graphics.prev_label.text = \
+        mind_window.cur_scene.graphics.prev_label.text = \
             world_window.graphics.prev_label.text
 
         # Offset for the observe.
@@ -38,23 +38,23 @@ def show_world_and_observer(world, state_no=None):
         else:
             s = str(world.agent.history[index][1])
 
-        observer_window.cur_scene.graphics.observes_label.text = s
-        # observer_window.cur_scene.state = world_window.world.cur_mental_state
-        # print('Showing state:', observer_window.cur_scene.state)
+        mind_window.cur_scene.graphics.observes_label.text = s
+        # mind_window.cur_scene.state = world_window.world.cur_mental_state
+        # print('Showing state:', mind_window.cur_scene.state)
 
-        observer_window.dispatch_event('on_update')
+        mind_window.dispatch_event('on_update')
 
         # Event is handled: do not run another on_update.
         return True
 
     world_window.push_handlers(on_update)
 
-    @observer_window.event
+    @mind_window.event
     @world_window.event
     def on_key_press(symbol, modifiers):
         # print('Key pressed in mental')
         if symbol == key.ESCAPE:
-            observer_window.close()
+            mind_window.close()
             world_window.close()
             return True
 
@@ -62,15 +62,15 @@ def show_world_and_observer(world, state_no=None):
     try:
         pyglet.app.run()
     except KeyboardInterrupt:
-        observer_window.close()
+        mind_window.close()
         world_window.close()
         print('Windows are closed.')
 
 
-def show_world(world, state_no=None, screen_index=-1):
+def show_world(world, state_no=None, screen_index=0):
     """TODO docstring for show_world
 
-    By default showing the last state."""
+    By default showing the last state on the primary window."""
     window = WorldWindow(world, state_no=state_no, screen_index=screen_index)
 
     # Enter the main event loop.
@@ -175,7 +175,7 @@ class WorldWindow(pyglet.window.Window):
             self.scene.state = self.world.cur_state
         elif symbol == key.P:
             is_paused = self.world.cur_state.is_paused
-            self.execute_action(SetPauseAction(not is_paused, Admin))
+            self.execute_action(SetPauseAction(not is_paused, Agent.MANAGER))
 
         self.dispatch_event('on_update')
 
@@ -244,8 +244,7 @@ class WorldWindow(pyglet.window.Window):
         self._update_label_color(self.graphics.state_no_label)
 
     def _update_role_label(self):
-        self.graphics.role_label.text = 'Role: {}'.format(
-            self.scene._role.name)
+        self.graphics.role_label.text = 'Role: {}'.format(self.scene._role)
         self._update_label_color(self.graphics.role_label)
 
     def _update_next_label(self):
@@ -291,7 +290,7 @@ class WorldWindow(pyglet.window.Window):
 class WorldScene(EnvironmentScene):
     """TODO: docstring for WorldScene"""
 
-    def __init__(self, world, role=Human, name=None, width=1920, height=1080):
+    def __init__(self, world, role=Agent.HUMAN, name=None, width=1920, height=1080):
         if name is None:
             name = world.name
         super().__init__(
@@ -402,10 +401,10 @@ class WorldScene(EnvironmentScene):
 
     def toggle_role(self):
         """TODO docstring for toggle_role of WorldScene"""
-        if self._role == Robot:
-            self._role = Human
-        elif self._role == Human:
-            self._role = Robot
+        if self._role == Agent.ROBOT:
+            self._role = Agent.HUMAN
+        elif self._role == Agent.HUMAN:
+            self._role = Agent.ROBOT
         else:
             raise NotImplementedError
 

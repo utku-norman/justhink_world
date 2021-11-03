@@ -160,7 +160,7 @@ from justhink_world import create_world, show_world
 world = create_world('pretest-1')
 
 # Visualise the world on the current screen.
-show_world(world, screen_index=0)
+show_world(world)
 ```
 
 ##### Execute actions via Python commands (and visualise the world at its latest state).
@@ -191,7 +191,7 @@ world.act(AttemptSubmitAction())
 world.act(SubmitAction())
 
 # Visualise the world, from the first state, on the current screen.
-show_world(world, state_no=1, screen_index=0)
+show_world(world, state_no=1)
 ```
 
 ##### Render and navigate through an individual world with real log data from a child.
@@ -237,7 +237,7 @@ show_world(world, screen_index=0)
 ##### Execute actions via Python commands (and visualise the world at its latest state).
 ```
 from justhink_world import create_world, show_world
-from justhink_world.agent import Human, Robot
+from justhink_world.agent import Agent
 from justhink_world.domain.action import SuggestPickAction, \
     AgreeAction, DisagreeAction
 
@@ -245,11 +245,11 @@ from justhink_world.domain.action import SuggestPickAction, \
 world = create_world('collaboration-1')
 
 # Act on the world.
-world.act(SuggestPickAction((3, 1), agent=Robot))
-world.act(AgreeAction(agent=Human))
-world.act(SuggestPickAction((1, 4), agent=Human))
-world.act(DisagreeAction(agent=Robot))
-world.act(SuggestPickAction((4, 5), agent=Robot))
+world.act(SuggestPickAction((3, 1), Agent.ROBOT))
+world.act(AgreeAction(Agent.HUMAN))
+world.act(SuggestPickAction((1, 4), Agent.HUMAN))
+world.act(DisagreeAction(Agent.ROBOT))
+world.act(SuggestPickAction((4, 5), Agent.ROBOT))
 
 # Visualise the world, from the last state by default.
 show_world(world)
@@ -322,12 +322,13 @@ print(state, state.network.get_cost(), state.network.get_mst_cost())
 
 Show both activity and mental windows:
 ```
-from justhink_world import create_world, show_world_and_observer
+from justhink_world import create_world, show_all
 
 world = create_world('collaboration-1')
 # world = create_world('pretest-1')
 
-show_world_and_observer(world)
+
+show_all(world)
 ```
 
 Print world history.
@@ -335,13 +336,17 @@ Print world history.
 print(world.history)
 ```
 
+
+
 Visualise an observer.
 ```
-from justhink_world import create_world, show_observer, show_world_and_observer
+from justhink_world import create_world, show_mind
 
 world = create_world('pretest-1')
-show_observer(world)
+show_mind(world)
 ```
+
+
 
 
 ## Acknowledgements

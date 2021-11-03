@@ -5,22 +5,20 @@ import importlib_resources
 import pomdp_py
 
 from .domain.state import EnvState
-from .domain.action import ObserveAction, PickAction, SuggestPickAction, \
-    AgreeAction,  DisagreeAction, SetStateAction, ClearAction, \
-    AttemptSubmitAction, ContinueAction, SubmitAction
+from .domain.action import SetStateAction
 
 from .models.policy_model import IntroPolicyModel, TutorialPolicyModel, \
     IndividualPolicyModel, CollaborativePolicyModel
 from .models.transition_model import IntroTransitionModel, \
     TutorialTransitionModel, \
     IndividualTransitionModel, CollaborativeTransitionModel
-from .models.observation_model import MstObservationModel
-from .models.reward_model import MstRewardModel
+from .models.observation_model import FullObservationModel
+from .models.reward_model import NullRewardModel
 
 from .tools.read import make_network_resources, load_network
 from .tools.write import Bcolors
 
-from .agent import Human, Robot, Agent
+from .agent import Agent, TaskAgent
 # from .agent.reasoning import TraversalJumpingPlanner
 
 
@@ -44,7 +42,9 @@ def create_all_worlds(verbose=False):
     names = list_worlds()
 
     # Initialise each world.
-    worlds = {name: create_world(name, verbose=verbose) for name in names}
+    worlds = dict()
+    for name in names:
+        worlds[name] = create_world(name, verbose=verbose)
 
     return worlds
 
@@ -80,11 +80,11 @@ def create_world(name, history=None, state_no=None, verbose=False):
     if history is None:
         if world_type is IndividualWorld:
             init_state = EnvState(
-                network=network, agents=frozenset({Human}),
+                network=network, agents=frozenset({Agent.HUMAN}),
                 attempt_no=1, max_attempts=None, is_paused=False)
         elif world_type is CollaborativeWorld:
             init_state = EnvState(
-                network=network, agents=frozenset({Robot}),
+                network=network, agents=frozenset({Agent.ROBOT}),
                 attempt_no=1, max_attempts=4, is_paused=False)
         elif world_type is IntroWorld:
             init_state = EnvState(network=network)
@@ -113,8 +113,8 @@ class World(pomdp_py.POMDP):
     An Environment maintains the true state of the world.
     """
 
-    def __init__(self, history, transition_model, policy_model,
-                 state_no=None, name='World'):
+    def __init__(self, transition_model, policy_model, name='World',
+                 history=[], state_no=None):
 
         self.name = name
 
@@ -134,20 +134,21 @@ class World(pomdp_py.POMDP):
         cur_state = history[self.state_index]
 
         # Create a reward model.
-        reward_model = MstRewardModel()
-        observation_model = MstObservationModel()
+        reward_model = NullRewardModel()
+
+        # Create an observation model.
+        observation_model = FullObservationModel()
 
         # Initialise an agent.
         # The state is fully observable.
         # planner = TraversalPlanner(cur_state)
         # planner = TraversalJumpingPlanner(cur_state)
-        
+
         # mental_state = MentalState(
         #     cur_state.network.graph, cur_node=planner.cur_node)
-        agent = Agent(
-            cur_state, policy_model, transition_model=transition_model,
-            observation_model=observation_model, reward_model=reward_model)
-        # ,
+        agent = TaskAgent(cur_state, policy_model, transition_model,
+                          observation_model=observation_model, 
+                          reward_model=reward_model)
         # mental_state=mental_state)
         # agent.planner = planner
 
@@ -159,7 +160,7 @@ class World(pomdp_py.POMDP):
 
         # # Update the agent.
         # if self.num_states == 0:
-        #     self.act(ObserveAction(agent=Robot))
+        #     self.act(ObserveAction(agent=Agent.ROBOT))
 
         # # Have the robot make a plan and update its beliefs.
         # robot_action = self.agent.planner.plan(self.agent)
@@ -194,7 +195,7 @@ class World(pomdp_py.POMDP):
 
     @property
     def num_states(self):
-        """Number of states in the history"""
+        """Number of states in the history."""
         return len(self._history) // 2 + 1
         # return len(self.agent.history)
 
@@ -202,11 +203,6 @@ class World(pomdp_py.POMDP):
     def cur_state(self):
         """Current state of the environment."""
         return self._history[self.state_index]
-        # Similarly from observation history
-        # if self.state_no == 0:
-        #     return None
-        # else:
-        #     return self.agent.history[self.state_no-1][1].state
 
     # @property
     # def cur_mental_state(self):
@@ -217,7 +213,7 @@ class World(pomdp_py.POMDP):
     #     else:
     #         return self.agent.mental_history[0]
 
-    def act(self, action, verbose=False):
+    def act(self, action):
         """TODO: docstring for act of World"""
         # Validation: check if the action is feasible.
         if action not in self.agent.all_actions:
@@ -263,26 +259,6 @@ class World(pomdp_py.POMDP):
         # robot_action = self.agent.planner.plan(self.agent)
         # update_belief(self.agent, robot_action, is_executed=False)
 
-        # Print info.
-        if verbose:
-            print()
-            print("---acting---")
-            # print("==== Step %d ====" % (self._step+1))
-            # self._step = self._step + 1
-            print("True state: %s" % str(state))
-            print("Action: %s" % repr(action))
-            # print("Belief: %s" % str(cur_belief))
-            # print(">> Observation: %s" % str(real_observation))
-            print("Reward: %s" % str(env_reward))
-            # print("Reward (Cumulative): %s" % str(self._total_reward))
-            # print("Reward (Cumulative Discounted): %s" %
-            #       str(self._total_discounted_reward))
-            print("Next state: %s" % str(next_state))
-
-            print("New Belief: %s" % str(new_belief))
-            print("------------")
-            print()
-
         # Action successfully taken.
         return True
 
@@ -290,46 +266,46 @@ class World(pomdp_py.POMDP):
 class IntroWorld(World):
     """TODO"""
 
-    def __init__(self, state, name='IntroWorld', **kwargs):
+    def __init__(self, history, name='IntroWorld', **kwargs):
         transition_model = IntroTransitionModel()
         policy_model = IntroPolicyModel()
 
         super().__init__(
-            state, transition_model=transition_model,
+            history=history, transition_model=transition_model,
             policy_model=policy_model, name=name, **kwargs)
 
 
 class TutorialWorld(World):
     """TODO"""
 
-    def __init__(self, state, name='TutorialWorld', **kwargs):
+    def __init__(self, history, name='TutorialWorld', **kwargs):
         transition_model = TutorialTransitionModel()
         policy_model = TutorialPolicyModel()
 
         super().__init__(
-            state, transition_model=transition_model,
+            history=history, transition_model=transition_model,
             policy_model=policy_model, name=name, **kwargs)
 
 
 class IndividualWorld(World):
     """TODO"""
 
-    def __init__(self, state, name='IndividualWorld', **kwargs):
+    def __init__(self, history, name='IndividualWorld', **kwargs):
         transition_model = IndividualTransitionModel()
         policy_model = IndividualPolicyModel()
 
         super().__init__(
-            state, transition_model=transition_model,
+            history=history, transition_model=transition_model,
             policy_model=policy_model, name=name, **kwargs)
 
 
 class CollaborativeWorld(World):
     """TODO"""
 
-    def __init__(self, state, name='CollaborativeWorld', **kwargs):
+    def __init__(self, history, name='CollaborativeWorld', **kwargs):
         transition_model = CollaborativeTransitionModel()
         policy_model = CollaborativePolicyModel()
 
         super().__init__(
-            state, transition_model=transition_model,
+            history=history, transition_model=transition_model,
             policy_model=policy_model, name=name, **kwargs)
