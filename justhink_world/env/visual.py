@@ -345,7 +345,7 @@ class EnvironmentScene(Scene):
         graphics.buttons['clear'] = button
 
         # Yes button.
-        button_pads, scale = (300, 170), 0.3
+        button_pads, scale = (290, 160), 0.3
         paths = {
             ButtonWidget.ENABLED: c.joinpath('check_enabled.png'),
             ButtonWidget.DISABLED: c.joinpath('check_disabled.png'),

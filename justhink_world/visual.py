@@ -4,13 +4,13 @@ import pyglet
 from pyglet.window import key
 
 from justhink_world.tools.graphics import Button, Graphics, check_node_hit, \
-    REDA, WHITEA
+    BLACKA
 
 from justhink_world.agent.visual import MentalWindow
 from justhink_world.env.visual import EnvironmentScene, create_edge_sprite
 
 from justhink_world.world import IndividualWorld, CollaborativeWorld
-from justhink_world.agent import Agent
+from justhink_world.agent import Human, Robot, Admin
 from justhink_world.domain.action import SetPauseAction,  \
     PickAction, SuggestPickAction, ClearAction, AgreeAction, DisagreeAction, \
     AttemptSubmitAction, ContinueAction, SubmitAction
@@ -19,16 +19,16 @@ from justhink_world.domain.action import SetPauseAction,  \
 def show_all(world, state_no=None):
     """TODO docstring for show_all"""
     world_window = WorldWindow(world, state_no=state_no)
-    mind_window = MentalWindow(world)  # , offset=(1920, 0))
+    mental_window = MentalWindow(world)  # , offset=(1920, 0))
 
     @world_window.event
     def on_update():
         world_window.on_update()
 
-        mind_window.cur_scene.graphics.next_label.text = \
+        mental_window.cur_scene.graphics.next_label.text = \
             world_window.graphics.next_label.text
 
-        mind_window.cur_scene.graphics.prev_label.text = \
+        mental_window.cur_scene.graphics.prev_label.text = \
             world_window.graphics.prev_label.text
 
         # Offset for the observe.
@@ -38,47 +38,38 @@ def show_all(world, state_no=None):
         else:
             s = str(world.agent.history[index][1])
 
-        mind_window.cur_scene.graphics.observes_label.text = s
-        # mind_window.cur_scene.state = world_window.world.cur_mental_state
-        # print('Showing state:', mind_window.cur_scene.state)
+        mental_window.cur_scene.graphics.observes_label.text = s
+        mental_window.cur_scene.state = world_window.world.cur_mental_state
+        print('Showing state:', mental_window.cur_scene.state)
 
-        mind_window.dispatch_event('on_update')
+        mental_window.dispatch_event('on_update')
 
         # Event is handled: do not run another on_update.
         return True
 
     world_window.push_handlers(on_update)
 
-    @mind_window.event
+    @mental_window.event
     @world_window.event
     def on_key_press(symbol, modifiers):
         # print('Key pressed in mental')
         if symbol == key.ESCAPE:
-            mind_window.close()
+            mental_window.close()
             world_window.close()
             return True
 
     # Enter the main event loop.
-    try:
-        pyglet.app.run()
-    except KeyboardInterrupt:
-        mind_window.close()
-        world_window.close()
-        print('Windows are closed.')
+    pyglet.app.run()
 
 
-def show_world(world, state_no=None, screen_index=0):
+def show_world(world, state_no=None, screen_index=-1):
     """TODO docstring for show_world
 
-    By default showing the last state on the primary window."""
-    window = WorldWindow(world, state_no=state_no, screen_index=screen_index)
+    By default showing the last state."""
+    WorldWindow(world, state_no=state_no, screen_index=screen_index)
 
     # Enter the main event loop.
-    try:
-        pyglet.app.run()
-    except KeyboardInterrupt:
-        window.close()
-        print('Window is closed.')
+    pyglet.app.run()
 
 
 class WorldWindow(pyglet.window.Window):
@@ -175,7 +166,7 @@ class WorldWindow(pyglet.window.Window):
             self.scene.state = self.world.cur_state
         elif symbol == key.P:
             is_paused = self.world.cur_state.is_paused
-            self.execute_action(SetPauseAction(not is_paused, Agent.MANAGER))
+            self.execute_action(SetPauseAction(not is_paused, Admin))
 
         self.dispatch_event('on_update')
 
@@ -193,11 +184,11 @@ class WorldWindow(pyglet.window.Window):
         self.scene.on_update()
 
         # Update the window labels.
-        self._update_state_label()
-        self._update_state_no_label()
+        self._update_hist_label()
         self._update_role_label()
         self._update_next_label()
         self._update_prev_label()
+        self._update_paused_label()
 
     # Private methods.
 
@@ -206,63 +197,52 @@ class WorldWindow(pyglet.window.Window):
         graphics = Graphics(width, height)
         group = pyglet.graphics.OrderedGroup(5)
 
-        # State label.
-        graphics.state_label = pyglet.text.Label(
-            '', x=20, y=height-20, anchor_y='center', color=REDA,
-            font_name='Sans', font_size=20, batch=graphics.batch, group=group)
-
-        # Create a label for the state no.
-        graphics.state_no_label = pyglet.text.Label(
-            '', x=20, y=height-120, anchor_y='center', color=REDA,
+        # History label.
+        graphics.hist_label = pyglet.text.Label(
+            '', x=20, y=height-120, anchor_y='center', color=BLACKA,
             font_name='Sans', font_size=32, batch=graphics.batch, group=group)
 
         # Role label.
         graphics.role_label = pyglet.text.Label(
-            '', x=20, y=height-60, anchor_y='center', color=REDA,
+            '', x=20, y=height-60, anchor_y='center', color=BLACKA,
             font_name='Sans', font_size=32, batch=graphics.batch, group=group)
 
         # Next action if any label.
         graphics.next_label = pyglet.text.Label(
-            '', x=width//2, y=80, anchor_y='center', color=REDA,
-            font_name='Sans', font_size=20, batch=graphics.batch, group=group)
+            '', x=width//2, y=height-20, anchor_y='center', color=BLACKA,
+            font_name='Sans', font_size=24, batch=graphics.batch, group=group)
 
         # Previous action if any label.
         graphics.prev_label = pyglet.text.Label(
-            '', x=20, y=80, anchor_y='center', color=REDA,
-            font_name='Sans', font_size=20, batch=graphics.batch, group=group)
+            '', x=20, y=height-20, anchor_y='center', color=BLACKA,
+            font_name='Sans', font_size=24, batch=graphics.batch, group=group)
+
+        # Paused or not label.
+        graphics.paused_label = pyglet.text.Label(
+            '', x=width-300, y=height-60, anchor_y='center', color=BLACKA,
+            font_name='Sans', font_size=24, batch=graphics.batch, group=group)
 
         self.graphics = graphics
 
-    def _update_state_label(self):
-        self.graphics.state_label.text = 'State: {}'.format(
-            self.world.cur_state)
-        self._update_label_color(self.graphics.state_label)
-
-    def _update_state_no_label(self):
-        self.graphics.state_no_label.text = 'State: {}/{}'.format(
-            self.world.state_no, self.world.num_states)
-        self._update_label_color(self.graphics.state_no_label)
-
     def _update_role_label(self):
-        self.graphics.role_label.text = 'Role: {}'.format(self.scene._role)
-        self._update_label_color(self.graphics.role_label)
+        self.graphics.role_label.text = 'Role: {}'.format(
+            self.scene._role.name)
 
     def _update_next_label(self):
         self.graphics.next_label.text = 'Next: {}'.format(
             self._make_action_text(offset=1))
-        self._update_label_color(self.graphics.next_label)
 
     def _update_prev_label(self):
         self.graphics.prev_label.text = 'Previous: {}'.format(
             self._make_action_text(offset=-1))
-        self._update_label_color(self.graphics.prev_label)
 
-    def _update_label_color(self, label):
-        if self.world.cur_state.is_terminal or self.world.cur_state.is_paused:
-            color = WHITEA
-        else:
-            color = REDA
-        label.color = color
+    def _update_paused_label(self):
+        self.graphics.paused_label.text = 'Paused: {}'.format(
+            self.world.cur_state.is_paused)
+
+    def _update_hist_label(self):
+        self.graphics.hist_label.text = 'State: {}/{}'.format(
+            self.world.state_no, self.world.num_states)
 
     def _make_action_text(self, offset=1):
         index = self.world.state_index + offset
@@ -280,17 +260,13 @@ class WorldWindow(pyglet.window.Window):
                     u, v = self.world.env.state.network.get_edge_name(
                         action.edge)
                     action = action.__class__(edge=(u, v), agent=action.agent)
-
-        if action is None:
-            return '<No action>'
-
         return str(action)
 
 
 class WorldScene(EnvironmentScene):
     """TODO: docstring for WorldScene"""
 
-    def __init__(self, world, role=Agent.HUMAN, name=None, width=1920, height=1080):
+    def __init__(self, world, role=Human, name=None, width=1920, height=1080):
         if name is None:
             name = world.name
         super().__init__(
@@ -309,7 +285,7 @@ class WorldScene(EnvironmentScene):
         self._temp_from = None
         self._temp_to = None
 
-        self._cross_shown = False
+        self._is_crossed = False
 
     @property
     def temp_from(self):
@@ -334,7 +310,7 @@ class WorldScene(EnvironmentScene):
         if self.graphics.temp_suggested_sprite is not None:
             self.graphics.temp_suggested_sprite.draw()
 
-        if self._cross_shown:
+        if self._is_crossed:
             self.graphics.cross_sprite.draw()
 
     def on_mouse_press(self, x, y, button, modifiers, win):
@@ -352,17 +328,9 @@ class WorldScene(EnvironmentScene):
             # If can pick or suggest-pick an edge
             action = self._check_buttons(x, y)
 
-            if self._role in self.state.agents:
-                if self._pick_action_type in self._action_types:
-                    self._process_drawing(x, y)
-                else:
-                    # Put a cross at the node.
-                    u = check_node_hit(self.graphics.layout, x, y)
-                    if u is not None:
-                        node_data = self.graphics.layout.nodes
-                        self.graphics.cross_sprite.update(
-                            x=node_data[u]['x'], y=node_data[u]['y'])
-                        self._cross_shown = True
+            if self._role in self.state.agents and \
+                    self._pick_action_type in self._action_types:
+                self._process_drawing(x, y)
 
         if action in self._actions:
             win.execute_action(action)
@@ -401,10 +369,10 @@ class WorldScene(EnvironmentScene):
 
     def toggle_role(self):
         """TODO docstring for toggle_role of WorldScene"""
-        if self._role == Agent.ROBOT:
-            self._role = Agent.HUMAN
-        elif self._role == Agent.HUMAN:
-            self._role = Agent.ROBOT
+        if self._role == Robot:
+            self._role = Human
+        elif self._role == Human:
+            self._role = Robot
         else:
             raise NotImplementedError
 
@@ -448,9 +416,9 @@ class WorldScene(EnvironmentScene):
                     self.graphics.cross_sprite.update(
                         x=(node_data[u]['x']+node_data[v]['x'])/2,
                         y=(node_data[u]['y']+node_data[v]['y'])/2)
-                    self._cross_shown = True
+                    self._is_crossed = True
                 else:
-                    self._cross_shown = False
+                    self._is_crossed = False
 
             # If mouse was on a node and no longer is on a node,
             # reset the previous drawing-to node.
@@ -459,7 +427,7 @@ class WorldScene(EnvironmentScene):
                 d = node_data[self.temp_to]
                 d['selected_sprite'].visible = False
                 self.temp_to = None
-                self._cross_shown = False
+                self._is_crossed = False
 
             # Update the temporary drawing edge to the new mouse position.
             # if self.temp_from is not None:
@@ -570,7 +538,7 @@ class WorldScene(EnvironmentScene):
         self.temp_from = None
         self.temp_to = None
         self.graphics.temp_suggested_sprite = None
-        self._cross_shown = False
+        self._is_crossed = False
 
 
 class IntroWorldScene(WorldScene):

@@ -10,7 +10,7 @@ from ..domain.action import PickAction, SuggestPickAction, \
     AttemptSubmitAction, ContinueAction, SubmitAction
 
 # from ..domain.state import Button
-from ..agent import Agent
+from ..agent import Human, Robot
 
 
 # from justhink_world.tools.write import Bcolors
@@ -100,7 +100,7 @@ class IndividualTransitionModel(TransitionModel):
 
         elif isinstance(action, ResetAction):
             next_state.network.subgraph = nx.Graph()
-            next_state.agents = frozenset({Agent.HUMAN})
+            next_state.agents = frozenset({Human})
             next_state.attempt_no = 1
             next_state.is_submitting = False
             next_state.is_paused = False
@@ -165,7 +165,7 @@ class CollaborativeTransitionModel(TransitionModel):
 
         elif isinstance(action, ResetAction):
             next_state.network.subgraph = nx.Graph()
-            next_state.agents = frozenset({Agent.ROBOT})
+            next_state.agents = frozenset({Robot})
             next_state.attempt_no = 1
             next_state.is_submitting = False
             next_state.is_paused = False
@@ -276,7 +276,7 @@ class CollaborativeTransitionModel(TransitionModel):
 
 
 def toggle_agent(agents):
-    if Agent.ROBOT in agents:
-        return frozenset({Agent.HUMAN})
+    if Robot in agents:
+        return frozenset({Human})
     else:
-        return frozenset({Agent.ROBOT})
+        return frozenset({Robot})

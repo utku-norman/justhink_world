@@ -2,10 +2,12 @@ import random
 import pomdp_py
 
 from ..domain.action import PickAction, SuggestPickAction, \
-    AttemptSubmitAction, ContinueAction, SubmitAction, \
-    AgreeAction, DisagreeAction, ClearAction, SetPauseAction
+    SubmitAction, \
+    AgreeAction, DisagreeAction, \
+    ClearAction, AttemptSubmitAction, ContinueAction, \
+    SetPauseAction
 
-from ..agent import Agent
+from ..agent.agent import Human, Admin
 
 
 class PolicyModel(pomdp_py.RolloutPolicy):
@@ -71,8 +73,8 @@ class IndividualPolicyModel(PolicyModel):
                 actions.add(ContinueAction())
                 actions.add(SubmitAction())
 
-        actions.add(SetPauseAction(True, Agent.MANAGER))
-        actions.add(SetPauseAction(False, Agent.MANAGER))
+        actions.add(SetPauseAction(True, Admin))
+        actions.add(SetPauseAction(False, Admin))
 
         self.actions = actions
 
@@ -120,15 +122,15 @@ class CollaborativePolicyModel(PolicyModel):
                     actions.add(ContinueAction(agent=agent))
                     actions.add(SubmitAction(agent=agent))
 
-        actions.add(SetPauseAction(True, Agent.MANAGER))
-        actions.add(SetPauseAction(False, Agent.MANAGER))
+        actions.add(SetPauseAction(True, Admin))
+        actions.add(SetPauseAction(False, Admin))
 
         self.actions = actions
 
 
 class IntroPolicyModel(PolicyModel):
     def update_available_actions(self, state):
-        self.actions = {SubmitAction(agent=Agent.HUMAN)}
+        self.actions = {SubmitAction(agent=Human)}
 
 
 class TutorialPolicyModel(PolicyModel):
@@ -140,15 +142,13 @@ class TutorialPolicyModel(PolicyModel):
         if state.step_no < 4:
             for u, v in state.network.graph.edges():
                 if not state.network.subgraph.has_edge(u, v):
-                    for e in [(u, v), (v, u)]:
-                        actions.add(PickAction(e, agent=Agent.HUMAN))
+                    actions.add(PickAction((u, v), agent=Human))
+                    actions.add(PickAction((v, u), agent=Human))
 
         if state.step_no < 4 and num_edges > 0:
-            actions.add(ClearAction(agent=Agent.HUMAN))
+            actions.add(ClearAction(agent=Human))
 
-        # Submit anytime.
         # if state.step_no == 3 and num_edges == 1:
-        # Submit anytime.
-        actions.add(SubmitAction(agent=Agent.HUMAN))
+        actions.add(SubmitAction(agent=Human))
 
         self.actions = actions

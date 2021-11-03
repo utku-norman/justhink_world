@@ -4,22 +4,24 @@ import importlib_resources
 
 import pomdp_py
 
-from .domain.state import EnvState
-from .domain.action import SetStateAction
+from .domain.state import EnvState, MentalState
+from .domain.action import ObserveAction, PickAction, SuggestPickAction, \
+    AgreeAction,  DisagreeAction, SetStateAction, ClearAction, \
+    AttemptSubmitAction, ContinueAction, SubmitAction
 
 from .models.policy_model import IntroPolicyModel, TutorialPolicyModel, \
     IndividualPolicyModel, CollaborativePolicyModel
 from .models.transition_model import IntroTransitionModel, \
     TutorialTransitionModel, \
     IndividualTransitionModel, CollaborativeTransitionModel
-from .models.observation_model import FullObservationModel
-from .models.reward_model import NullRewardModel
+from .models.observation_model import MstObservationModel
+from .models.reward_model import MstRewardModel
 
 from .tools.read import make_network_resources, load_network
 from .tools.write import Bcolors
 
-from .agent import Agent, TaskAgent
-# from .agent.reasoning import TraversalJumpingPlanner
+from .agent import Human, Robot, RobotAgent
+from .agent.reasoning import TraversalPlanner, TraversalJumpingPlanner
 
 
 def list_worlds():
@@ -42,9 +44,7 @@ def create_all_worlds(verbose=False):
     names = list_worlds()
 
     # Initialise each world.
-    worlds = dict()
-    for name in names:
-        worlds[name] = create_world(name, verbose=verbose)
+    worlds = {name: create_world(name, verbose=verbose) for name in names}
 
     return worlds
 
@@ -80,11 +80,11 @@ def create_world(name, history=None, state_no=None, verbose=False):
     if history is None:
         if world_type is IndividualWorld:
             init_state = EnvState(
-                network=network, agents=frozenset({Agent.HUMAN}),
+                network=network, agents=frozenset({Human}),
                 attempt_no=1, max_attempts=None, is_paused=False)
         elif world_type is CollaborativeWorld:
             init_state = EnvState(
-                network=network, agents=frozenset({Agent.ROBOT}),
+                network=network, agents=frozenset({Robot}),
                 attempt_no=1, max_attempts=4, is_paused=False)
         elif world_type is IntroWorld:
             init_state = EnvState(network=network)
@@ -105,6 +105,137 @@ def create_world(name, history=None, state_no=None, verbose=False):
     return world
 
 
+def update_belief(
+        agent, action, observation=None, is_executed=True, verbose=True):
+    """TODO: docstring for update_belief"""
+    if observation is not None:
+        next_state = observation.state
+
+    cur_env_state = agent.cur_belief.mpe()
+
+    if is_executed:
+        next_state = copy.deepcopy(agent.state)
+    else:
+        next_state = agent.state
+
+    # Update next state subgraph.
+    beliefs_list = [
+        next_state.beliefs['me'],
+        next_state.beliefs['me']['you'],
+        next_state.beliefs['me']['you']['me'],
+    ]
+    suggested = cur_env_state.network.suggested_edge
+    for beliefs in beliefs_list:
+        for u, v, d in beliefs['world'].edges(data=True):
+            d['is_selected'] = cur_env_state.network.subgraph.has_edge(u, v)
+            d['is_suggested'] = suggested is not None \
+                and set({u, v}) == set(suggested)
+
+    if is_executed:
+        if action.agent is Human:
+            beliefs = next_state.beliefs['me']['you']
+        elif action.agent is Robot:
+            beliefs = next_state.beliefs['me']['you']['me']
+        else:
+            return  # raise ValueError
+    else:
+        beliefs = next_state.beliefs['me']
+
+    try:
+        # Choice belief updates.
+        if isinstance(action, PickAction) \
+                or isinstance(action, SuggestPickAction):
+            u, v = action.edge
+            # print('### setting pick belief', action)
+            beliefs['world'][u][v]['is_optimal'] = 1.0
+
+        elif isinstance(action, AgreeAction):
+            u, v = cur_env_state.network.suggested_edge
+            beliefs['world'][u][v]['is_optimal'] = 1.0
+
+        elif isinstance(action, DisagreeAction):
+            u, v = cur_env_state.network.suggested_edge
+            beliefs['world'][u][v]['is_optimal'] = 0.0
+
+        elif isinstance(action, ClearAction):
+            # reset the beliefs.
+            for u, v in cur_env_state.network.graph.edges():
+                beliefs['world'][u][v]['is_optimal'] = None
+            # # decrement the cleared.
+            # for u, v in cur_env_state.network.subgraph.edges():
+            #     value = beliefs['world'][u][v]['is_optimal']
+            #     if value is None:
+            #         value = 0
+            #     value = value - 0.1
+            #     if value < 0:
+            #         value = 0
+            #     beliefs['world'][u][v]['is_optimal'] = value
+
+        elif isinstance(action, SubmitAction) or \
+                isinstance(action, AttemptSubmitAction):
+            for u, v in cur_env_state.network.graph.edges():
+                if cur_env_state.network.subgraph.has_edge(u, v):
+                    value = 1.0
+                else:
+                    value = 0.0
+                beliefs['world'][u][v]['is_optimal'] = value
+
+        elif isinstance(action, ContinueAction):
+            for u, v in cur_env_state.network.subgraph.edges():
+                value = beliefs['world'][u][v]['is_optimal']
+                if value is None:
+                    value = 0
+                value = value - 0.1
+                if value < 0:
+                    value = 0
+                beliefs['world'][u][v]['is_optimal'] = value
+
+    except Exception as e:
+        print(beliefs, e)
+
+    # If robot, update others as not believed to be true.
+    if action.agent is Robot:
+        for a in agent.planner.explanation.others:
+            if isinstance(a, SuggestPickAction):
+                u, v = a.edge
+                if cur_env_state.network.subgraph.has_edge(u, v):
+                    # value = None
+                    continue
+                else:
+                    value = 0.0
+                next_state.beliefs['me']['world'][u][v]['is_optimal'] = value
+        # update optimals believed to be true.
+        for a in agent.planner.explanation.best:
+            if isinstance(a, SuggestPickAction):
+                u, v = a.edge
+                if cur_env_state.network.subgraph.has_edge(u, v):
+                    # value = None
+                    continue
+                else:
+                    value = 1.0
+                next_state.beliefs['me']['world'][u][v]['is_optimal'] = value
+
+    if is_executed:
+        new_cur_node = None
+        if isinstance(action, PickAction):
+            _, new_cur_node = action.edge
+        elif isinstance(action, SuggestPickAction):
+            new_cur_node, _ = action.edge
+        elif isinstance(action, AgreeAction):
+            # Move the current to the agreed end.
+            _, new_cur_node = cur_env_state.network.suggested_edge
+        if new_cur_node is not None:
+            next_state.cur_node = new_cur_node
+            if verbose:
+                print('Robot moved current to {} (Node {})'.format(
+                    cur_env_state.network.get_node_name(new_cur_node),
+                    new_cur_node))
+
+    if is_executed:
+        agent.mental_history.append(next_state)
+        agent.state = next_state
+
+
 class World(pomdp_py.POMDP):
     """A world describing the interaction between an agent and the environment.
 
@@ -113,8 +244,8 @@ class World(pomdp_py.POMDP):
     An Environment maintains the true state of the world.
     """
 
-    def __init__(self, transition_model, policy_model, name='World',
-                 history=[], state_no=None):
+    def __init__(self, history, transition_model, policy_model,
+                 state_no=None, name='World'):
 
         self.name = name
 
@@ -134,23 +265,21 @@ class World(pomdp_py.POMDP):
         cur_state = history[self.state_index]
 
         # Create a reward model.
-        reward_model = NullRewardModel()
-
-        # Create an observation model.
-        observation_model = FullObservationModel()
+        reward_model = MstRewardModel()
+        observation_model = MstObservationModel()
 
         # Initialise an agent.
         # The state is fully observable.
         # planner = TraversalPlanner(cur_state)
-        # planner = TraversalJumpingPlanner(cur_state)
-
-        # mental_state = MentalState(
-        #     cur_state.network.graph, cur_node=planner.cur_node)
-        agent = TaskAgent(cur_state, policy_model, transition_model,
-                          observation_model=observation_model, 
-                          reward_model=reward_model)
-        # mental_state=mental_state)
-        # agent.planner = planner
+        planner = TraversalJumpingPlanner(cur_state)
+        
+        mental_state = MentalState(
+            cur_state.network.graph, cur_node=planner.cur_node)
+        agent = RobotAgent(
+            cur_state, policy_model, transition_model=transition_model,
+            observation_model=observation_model, reward_model=reward_model,
+            mental_state=mental_state)
+        agent.planner = planner
 
         # Initialise an environment.
         env = pomdp_py.Environment(cur_state, transition_model, reward_model)
@@ -158,13 +287,13 @@ class World(pomdp_py.POMDP):
         # Construct an instance from the agent and the environment.
         super().__init__(agent, env, name=name)
 
-        # # Update the agent.
-        # if self.num_states == 0:
-        #     self.act(ObserveAction(agent=Agent.ROBOT))
+        # Update the agent.
+        if self.num_states == 0:
+            self.act(ObserveAction(agent=Robot))
 
-        # # Have the robot make a plan and update its beliefs.
-        # robot_action = self.agent.planner.plan(self.agent)
-        # update_belief(self.agent, robot_action, is_executed=False)
+        # Have the robot make a plan and update its beliefs.
+        robot_action = self.agent.planner.plan(self.agent)
+        update_belief(self.agent, robot_action, is_executed=False)
 
     def __str__(self):
         return self.__repr__()
@@ -195,7 +324,7 @@ class World(pomdp_py.POMDP):
 
     @property
     def num_states(self):
-        """Number of states in the history."""
+        """Number of states in the history"""
         return len(self._history) // 2 + 1
         # return len(self.agent.history)
 
@@ -203,17 +332,22 @@ class World(pomdp_py.POMDP):
     def cur_state(self):
         """Current state of the environment."""
         return self._history[self.state_index]
+        # Similarly from observation history
+        # if self.state_no == 0:
+        #     return None
+        # else:
+        #     return self.agent.history[self.state_no-1][1].state
 
-    # @property
-    # def cur_mental_state(self):
-    #     """Current mental state of the agent in the environment."""
-    #     index = self.state_no - 1
-    #     if index >= 0 and index < len(self.agent.mental_history):
-    #         return self.agent.mental_history[index]
-    #     else:
-    #         return self.agent.mental_history[0]
+    @property
+    def cur_mental_state(self):
+        """Current mental state of the agent in the environment."""
+        index = self.state_no - 1
+        if index >= 0 and index < len(self.agent.mental_history):
+            return self.agent.mental_history[index]
+        else:
+            return self.agent.mental_history[0]
 
-    def act(self, action):
+    def act(self, action, verbose=False):
         """TODO: docstring for act of World"""
         # Validation: check if the action is feasible.
         if action not in self.agent.all_actions:
@@ -245,7 +379,7 @@ class World(pomdp_py.POMDP):
         self.agent.update_history(action, real_observation)
         # problem.agent.update_history(real_action, real_observation)
         self.agent.policy_model.update(state, next_state, action)
-        # update_belief(self.agent, action, real_observation)
+        update_belief(self.agent, action, real_observation)
 
         # TODO: run a belief update function.
         # Fully observable: immediate access to the state.
@@ -255,9 +389,29 @@ class World(pomdp_py.POMDP):
         # Move to the new state.
         self.state_no = self.num_states
 
-        # # Update the agent.
-        # robot_action = self.agent.planner.plan(self.agent)
-        # update_belief(self.agent, robot_action, is_executed=False)
+        # Update the agent.
+        robot_action = self.agent.planner.plan(self.agent)
+        update_belief(self.agent, robot_action, is_executed=False)
+
+        # Print info.
+        if verbose:
+            print()
+            print("---acting---")
+            # print("==== Step %d ====" % (self._step+1))
+            # self._step = self._step + 1
+            print("True state: %s" % str(state))
+            print("Action: %s" % repr(action))
+            # print("Belief: %s" % str(cur_belief))
+            # print(">> Observation: %s" % str(real_observation))
+            print("Reward: %s" % str(env_reward))
+            # print("Reward (Cumulative): %s" % str(self._total_reward))
+            # print("Reward (Cumulative Discounted): %s" %
+            #       str(self._total_discounted_reward))
+            print("Next state: %s" % str(next_state))
+
+            print("New Belief: %s" % str(new_belief))
+            print("------------")
+            print()
 
         # Action successfully taken.
         return True
@@ -266,46 +420,46 @@ class World(pomdp_py.POMDP):
 class IntroWorld(World):
     """TODO"""
 
-    def __init__(self, history, name='IntroWorld', **kwargs):
+    def __init__(self, state, name='IntroWorld', **kwargs):
         transition_model = IntroTransitionModel()
         policy_model = IntroPolicyModel()
 
         super().__init__(
-            history=history, transition_model=transition_model,
+            state, transition_model=transition_model,
             policy_model=policy_model, name=name, **kwargs)
 
 
 class TutorialWorld(World):
     """TODO"""
 
-    def __init__(self, history, name='TutorialWorld', **kwargs):
+    def __init__(self, state, name='TutorialWorld', **kwargs):
         transition_model = TutorialTransitionModel()
         policy_model = TutorialPolicyModel()
 
         super().__init__(
-            history=history, transition_model=transition_model,
+            state, transition_model=transition_model,
             policy_model=policy_model, name=name, **kwargs)
 
 
 class IndividualWorld(World):
     """TODO"""
 
-    def __init__(self, history, name='IndividualWorld', **kwargs):
+    def __init__(self, state, name='IndividualWorld', **kwargs):
         transition_model = IndividualTransitionModel()
         policy_model = IndividualPolicyModel()
 
         super().__init__(
-            history=history, transition_model=transition_model,
+            state, transition_model=transition_model,
             policy_model=policy_model, name=name, **kwargs)
 
 
 class CollaborativeWorld(World):
     """TODO"""
 
-    def __init__(self, history, name='CollaborativeWorld', **kwargs):
+    def __init__(self, state, name='CollaborativeWorld', **kwargs):
         transition_model = CollaborativeTransitionModel()
         policy_model = CollaborativePolicyModel()
 
         super().__init__(
-            history=history, transition_model=transition_model,
+            state, transition_model=transition_model,
             policy_model=policy_model, name=name, **kwargs)

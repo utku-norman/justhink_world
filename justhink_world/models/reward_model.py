@@ -4,32 +4,7 @@ from ..domain.action import PickAction, SubmitAction
 EPSILON = 1e-9
 
 
-class NullRewardModel(pomdp_py.RewardModel):
-    def _reward_func(self, state, action, next_state):
-        return 0
-
-    def sample(self, state, action, next_state, normalized=False, **kwargs):
-        # deterministic
-        return self._reward_func(state, action, next_state)
-
-    def argmax(self, state, action, next_state, normalized=False, **kwargs):
-        """Returns the most likely reward"""
-        return self._reward_func(state, action, next_state)
-
-    def probability(self, reward, state, action, next_state,
-                    normalized=False, **kwargs):
-        if reward == self._reward_func(state, action, next_state):
-            return 1.0 - EPSILON
-        else:
-            return EPSILON
-
-    def get_distribution(self, state, action, next_state, **kwargs):
-        """Returns the underlying distribution of the model"""
-        reward = self._reward_func(state, action, next_state)
-        return pomdp_py.Histogram({reward: 1.0})
-
-
-class MstRewardModel(NullRewardModel):
+class MstRewardModel(pomdp_py.RewardModel):
 
     def _reward_func(self, state, action, next_state):
         reward = 0
@@ -50,3 +25,23 @@ class MstRewardModel(NullRewardModel):
                 reward = network.get_cost()
 
         return reward
+
+    def sample(self, state, action, next_state, normalized=False, **kwargs):
+        # deterministic
+        return self._reward_func(state, action, next_state)
+
+    def argmax(self, state, action, next_state, normalized=False, **kwargs):
+        """Returns the most likely reward"""
+        return self._reward_func(state, action, next_state)
+
+    def probability(self, reward, state, action, next_state,
+                    normalized=False, **kwargs):
+        if reward == self._reward_func(state, action, next_state):
+            return 1.0 - EPSILON
+        else:
+            return EPSILON
+
+    def get_distribution(self, state, action, next_state, **kwargs):
+        """Returns the underlying distribution of the model"""
+        reward = self._reward_func(state, action, next_state)
+        return pomdp_py.Histogram({reward: 1.0})

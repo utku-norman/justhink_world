@@ -1,5 +1,8 @@
 import pomdp_py
 
+# from .agent import Human, Robot
+# from ..domain.action import *
+
 
 def initialize_belief(prior={}, representation="histogram"):
     return pomdp_py.Histogram(prior)

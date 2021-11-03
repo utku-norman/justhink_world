@@ -26,7 +26,7 @@ class TraversalPlanner(object):
         """Select the next action by greedy traversal planning."""
         # Select greedy.
         self.state = agent.cur_belief.mpe()
-        # self.cur_node = agent.state.cur_node
+        self.cur_node = agent.state.cur_node
 
         # v = None
         # note_iter = iter(state.graph.nodes)

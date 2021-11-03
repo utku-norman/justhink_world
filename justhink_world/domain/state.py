@@ -5,11 +5,11 @@ import networkx as nx
 
 from ..tools.network import find_mst, is_subgraph_spanning, \
     compute_total_cost, compute_subgraph_cost
-from ..agent import Agent
+from ..agent import Human, Robot
 
 
 class EnvState(pomdp_py.State):
-    """A class to represent a situation, i.e. JUSThink world's environment's state.
+    """A class to represent a JUSThink world's environment's state.
 
     Contains information on the current solution (i.e. the network),
     the agents that can take actions (for turn-taking), the current attempt
@@ -25,7 +25,7 @@ class EnvState(pomdp_py.State):
             and image file names of the nodes etc.
         agents (frozenset, optional):
             the set of "active" agents that can are allowed to take actions
-            in the environment (default frozenset({Agent.HUMAN, Agent.ROBOT}))
+            in the environment (default frozenset({Human, Robot}))
         attempt_no (int, optional):
             the current attempt number starting from 1 up to and including
             max_attempts (default 1). Can do infinitely many submissions,
@@ -54,7 +54,7 @@ class EnvState(pomdp_py.State):
     """
 
     def __init__(
-            self, network, agents=frozenset({Agent.HUMAN, Agent.ROBOT}),
+            self, network, agents=frozenset({Human, Robot}),
             attempt_no=1, max_attempts=None, step_no=1, is_submitting=False,
             is_paused=False, is_terminal=False, is_highlighted=False):
         self.network = network
@@ -62,10 +62,9 @@ class EnvState(pomdp_py.State):
         self.attempt_no = attempt_no
         self.max_attempts = max_attempts
         self.is_submitting = is_submitting
+        self.step_no = step_no
         self.is_paused = is_paused
         self.is_terminal = is_terminal
-
-        self.step_no = step_no
         self.is_highlighted = is_highlighted
 
     def __hash__(self):
@@ -109,7 +108,7 @@ class EnvState(pomdp_py.State):
             s += ', attempt={}/{}'.format(
                 self.attempt_no, self.max_attempts)
         if len(self.agents) > 0:
-            s += ', {}'.format(''.join(self.agents))  # [a.name for a in ]))
+            s += ', {}'.format(''.join([a.name for a in self.agents]))
         if self.is_paused:
             s += ', paused'
         if self.is_terminal:
@@ -232,13 +231,12 @@ class NetworkState(object):
         Returns:
             int: id of a node e.g. 1, from the node's name e.g. "Montreux"
         """
-        found_id = None
+        node_id = None
         for node_id in self.graph.nodes:
             node_name = self.graph.nodes[node_id][self._node_name_key]
-            if name.lower() in node_name.lower():
-                found_id = node_id
+            if name in node_name:
                 break
-        return found_id
+        return node_id
 
     def get_edge_ids(self, edge) -> tuple:
         """Get the ids of the nodes of an edge.
@@ -317,3 +315,69 @@ class NetworkState(object):
             bool: True for MST, False otherwise.
         """
         return self.is_spanning() and (self.get_cost() == self.get_mst_cost())
+
+
+class MentalState(object):
+    """TODO: docstring for MentalState"""
+
+    def __init__(self, graph, cur_node=None, agents=set({Human, Robot})):
+        if Human in agents:
+            self.beliefs = {
+                'me': {
+                    'world': self._create_view(graph),
+                    'you': {
+                        'world': self._create_view(graph),
+                        'me': {
+                            'world': self._create_view(graph),
+                        }
+                    },
+                }
+            }
+        else:
+            self.beliefs = {
+                'me': {
+                    'world': self._create_view(graph),
+                }
+            }
+        self.cur_node = cur_node
+
+    def _create_view(self, from_graph):
+        """TODO"""
+        # About choices.
+        d = {
+            'is_optimal': None,
+            'is_selected': False,
+            'is_suggested': False,
+        }
+
+        graph = nx.Graph()
+        for u, v in from_graph.edges():
+            graph.add_edge(u, v, **d)
+
+        # About strategies.
+        graph.graph['me'] = None
+        graph.graph['you'] = None
+
+        return graph
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return 'MentalState({})'.format(self.get_beliefs())
+
+    def get_beliefs(self):
+        """TODO: docsring for get_beliefs"""
+        belief_list = list()
+
+        pairs = [('world', self.beliefs['me']),
+                 ('you', self.beliefs['me']['you']),
+                 ('me-by-you', self.beliefs['me']['you']['me'])]
+
+        for key, beliefs in pairs:
+            for u, v, d in beliefs['world'].edges(data=True):
+                value = d['is_optimal']
+                if value is not None:
+                    belief_list.append((key, u, v, value))
+
+        return sorted(belief_list)

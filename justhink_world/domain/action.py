@@ -1,6 +1,6 @@
 import pomdp_py
 
-from ..agent.agent import Agent
+from ..agent.agent import Actor, Human, Admin
 from .state import EnvState
 
 
@@ -13,14 +13,14 @@ class Action(pomdp_py.Action):
         name (str):
             the string representation of the action built by
             the inheriting/actual action class
-        agent (Agent):
+        agent (Actor):
             the agent of the action, as the class itself
-            i.e. agent = Agent.HUMAN rather than agent = Agent.HUMAN()
+            i.e. agent = Human rather than agent = Human()
     """
 
     def __init__(self, name, agent):
         assert isinstance(name, str)
-        # assert issubclass(agent, Actor)
+        assert issubclass(agent, Actor)
 
         self.name = name
         self.agent = agent
@@ -45,11 +45,11 @@ class Action(pomdp_py.Action):
         return self.__repr__()
 
     def __repr__(self):
-        return 'Action({},{})'.format(self.name, self.agent)
+        return 'Action({},{})'.format(self.name, self.agent.name)
 
 
 class ResetAction(Action):
-    def __init__(self, agent=Agent.MANAGER):
+    def __init__(self, agent=Admin):
         super().__init__('reset', agent)
 
 
@@ -60,12 +60,12 @@ class SetStateAction(Action):
         state (EnvState):
             the state that he action will set the environment
         agent (Actor, optional):
-            the agent of the action (default Agent.HUMAN)
+            the agent of the action (default Human)
     """
 
-    def __init__(self, state, agent=Agent.MANAGER):
+    def __init__(self, state, agent=Admin):
         assert isinstance(state, EnvState)
-        # assert issubclass(agent, Actor)
+        assert issubclass(agent, Actor)
 
         self.state = state
 
@@ -75,7 +75,7 @@ class SetStateAction(Action):
 
 
 class SetPauseAction(Action):
-    def __init__(self, is_paused, agent=Agent.HUMAN):
+    def __init__(self, is_paused, agent=Human):
         assert isinstance(is_paused, bool)
         self.is_paused = is_paused
         name = 'set-paused({})'.format(is_paused)
@@ -83,14 +83,14 @@ class SetPauseAction(Action):
 
 
 class SuggestPickAction(Action):
-    def __init__(self, edge, agent=Agent.HUMAN):
+    def __init__(self, edge, agent=Human):
         self.edge = edge
         name = 'suggest-pick({},{})'.format(self.edge[0], self.edge[1])
         super().__init__(name, agent)
 
 
 class PickAction(Action):
-    def __init__(self, edge, agent=Agent.HUMAN):
+    def __init__(self, edge, agent=Human):
         self.edge = edge
         name = 'pick({},{})'.format(self.edge[0], self.edge[1])
         super().__init__(name, agent)
@@ -105,42 +105,42 @@ class PickAction(Action):
 
 
 class UnpickAction(Action):
-    def __init__(self, edge, agent=Agent.HUMAN):
+    def __init__(self, edge, agent=Human):
         self.edge = edge
         name = 'unpick({},{})'.format(self.edge[0], self.edge[1])
         super().__init__(name, agent)
 
 
 class ObserveAction(Action):
-    def __init__(self, agent=Agent.HUMAN):
+    def __init__(self, agent=Human):
         super().__init__('observe', agent)
 
 
 class AgreeAction(Action):
-    def __init__(self, agent=Agent.HUMAN):
+    def __init__(self, agent=Human):
         super().__init__('agree', agent)
 
 
 class DisagreeAction(Action):
-    def __init__(self, agent=Agent.HUMAN):
+    def __init__(self, agent=Human):
         super().__init__('disagree', agent)
 
 
 class ClearAction(Action):
-    def __init__(self, agent=Agent.HUMAN):
+    def __init__(self, agent=Human):
         super().__init__('clear', agent)
 
 
 class AttemptSubmitAction(Action):
-    def __init__(self, agent=Agent.HUMAN):
+    def __init__(self, agent=Human):
         super().__init__('attempt-submit', agent)
 
 
 class ContinueAction(Action):
-    def __init__(self, agent=Agent.HUMAN):
+    def __init__(self, agent=Human):
         super().__init__('continue', agent)
 
 
 class SubmitAction(Action):
-    def __init__(self, agent=Agent.HUMAN):
+    def __init__(self, agent=Human):
         super().__init__('submit', agent)
