@@ -5,7 +5,7 @@ import networkx as nx
 
 from ..tools.network import find_mst, is_subgraph_spanning, \
     compute_total_cost, compute_subgraph_cost
-from ..agent import Human, Robot
+from ..agent import Agent
 
 
 class EnvState(pomdp_py.State):
@@ -25,7 +25,7 @@ class EnvState(pomdp_py.State):
             and image file names of the nodes etc.
         agents (frozenset, optional):
             the set of "active" agents that can are allowed to take actions
-            in the environment (default frozenset({Human, Robot}))
+            in the environment (default frozenset({Agent.HUMAN, Agent.ROBOT}))
         attempt_no (int, optional):
             the current attempt number starting from 1 up to and including
             max_attempts (default 1). Can do infinitely many submissions,
@@ -54,7 +54,7 @@ class EnvState(pomdp_py.State):
     """
 
     def __init__(
-            self, network, agents=frozenset({Human, Robot}),
+            self, network, agents=frozenset({Agent.HUMAN, Agent.ROBOT}),
             attempt_no=1, max_attempts=None, step_no=1, is_submitting=False,
             is_paused=False, is_terminal=False, is_highlighted=False):
         self.network = network
@@ -93,6 +93,7 @@ class EnvState(pomdp_py.State):
         return self.__repr__()
 
     def __repr__(self):
+        # # compact
         # agents_str = ''.join([a.name[0] for a in self.agents]) \
         #     if len(self.agents) > 0 else 'x'
         # attempt_str = 'inf' if self.max_attempts is None else \
@@ -108,7 +109,7 @@ class EnvState(pomdp_py.State):
             s += ', attempt={}/{}'.format(
                 self.attempt_no, self.max_attempts)
         if len(self.agents) > 0:
-            s += ', {}'.format(''.join([a.name for a in self.agents]))
+            s += ', {}'.format(''.join(self.agents))  # [a.name for a in ]))
         if self.is_paused:
             s += ', paused'
         if self.is_terminal:
@@ -184,9 +185,12 @@ class NetworkState(object):
         #     0 if self.suggested_edge is None else 1,
         #     self.get_cost(), self.graph.number_of_nodes(),
         #     self.graph.number_of_edges(), self.is_spanning())
-        num_edges = self.subgraph.number_of_edges()
 
         extra_info = ''
+        num_nodes = self.subgraph.number_of_nodes()
+
+        if num_nodes > 0:
+            extra_info += ' where |V\'|={}'.format(num_nodes)
         if self.is_mst():
             extra_info += ' that minimally spans'
         elif self.is_spanning():
@@ -194,7 +198,8 @@ class NetworkState(object):
         extra_info += ' with cost={}'.format(self.get_cost())
 
         return 'Network(|E\'|={}{} in G(|V|={}, |E|={})){}'.format(
-            num_edges, '' if self.suggested_edge is None else '+1',
+            self.subgraph.number_of_edges(), 
+            '' if self.suggested_edge is None else '+1',
             self.graph.number_of_nodes(), self.graph.number_of_edges(),
             extra_info)
 
@@ -231,12 +236,13 @@ class NetworkState(object):
         Returns:
             int: id of a node e.g. 1, from the node's name e.g. "Montreux"
         """
-        node_id = None
+        found_id = None
         for node_id in self.graph.nodes:
             node_name = self.graph.nodes[node_id][self._node_name_key]
-            if name in node_name:
+            if name.lower() in node_name.lower():
+                found_id = node_id
                 break
-        return node_id
+        return found_id
 
     def get_edge_ids(self, edge) -> tuple:
         """Get the ids of the nodes of an edge.
@@ -320,8 +326,8 @@ class NetworkState(object):
 class MentalState(object):
     """TODO: docstring for MentalState"""
 
-    def __init__(self, graph, cur_node=None, agents=set({Human, Robot})):
-        if Human in agents:
+    def __init__(self, graph, cur_node=None, agents=set({Agent.HUMAN, Agent.ROBOT})):
+        if Agent.HUMAN in agents:
             self.beliefs = {
                 'me': {
                     'world': self._create_view(graph),

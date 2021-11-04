@@ -14,14 +14,14 @@ from .models.policy_model import IntroPolicyModel, TutorialPolicyModel, \
 from .models.transition_model import IntroTransitionModel, \
     TutorialTransitionModel, \
     IndividualTransitionModel, CollaborativeTransitionModel
-from .models.observation_model import MstObservationModel
+from .models.observation_model import FullObservationModel
 from .models.reward_model import MstRewardModel
 
 from .tools.read import make_network_resources, load_network
 from .tools.write import Bcolors
 
-from .agent import Human, Robot, RobotAgent
-from .agent.reasoning import TraversalPlanner, TraversalJumpingPlanner
+from .agent import Agent, ModellingAgent
+from .agent.reasoning import TraversalJumpingPlanner
 
 
 def list_worlds():
@@ -80,11 +80,11 @@ def create_world(name, history=None, state_no=None, verbose=False):
     if history is None:
         if world_type is IndividualWorld:
             init_state = EnvState(
-                network=network, agents=frozenset({Human}),
+                network=network, agents=frozenset({Agent.HUMAN}),
                 attempt_no=1, max_attempts=None, is_paused=False)
         elif world_type is CollaborativeWorld:
             init_state = EnvState(
-                network=network, agents=frozenset({Robot}),
+                network=network, agents=frozenset({Agent.ROBOT}),
                 attempt_no=1, max_attempts=4, is_paused=False)
         elif world_type is IntroWorld:
             init_state = EnvState(network=network)
@@ -132,9 +132,9 @@ def update_belief(
                 and set({u, v}) == set(suggested)
 
     if is_executed:
-        if action.agent is Human:
+        if action.agent is Agent.HUMAN:
             beliefs = next_state.beliefs['me']['you']
-        elif action.agent is Robot:
+        elif action.agent is Agent.ROBOT:
             beliefs = next_state.beliefs['me']['you']['me']
         else:
             return  # raise ValueError
@@ -194,7 +194,7 @@ def update_belief(
         print(beliefs, e)
 
     # If robot, update others as not believed to be true.
-    if action.agent is Robot:
+    if action.agent is Agent.ROBOT:
         for a in agent.planner.explanation.others:
             if isinstance(a, SuggestPickAction):
                 u, v = a.edge
@@ -266,7 +266,7 @@ class World(pomdp_py.POMDP):
 
         # Create a reward model.
         reward_model = MstRewardModel()
-        observation_model = MstObservationModel()
+        observation_model = FullObservationModel()
 
         # Initialise an agent.
         # The state is fully observable.
@@ -275,7 +275,7 @@ class World(pomdp_py.POMDP):
         
         mental_state = MentalState(
             cur_state.network.graph, cur_node=planner.cur_node)
-        agent = RobotAgent(
+        agent = ModellingAgent(
             cur_state, policy_model, transition_model=transition_model,
             observation_model=observation_model, reward_model=reward_model,
             mental_state=mental_state)
@@ -289,7 +289,7 @@ class World(pomdp_py.POMDP):
 
         # Update the agent.
         if self.num_states == 0:
-            self.act(ObserveAction(agent=Robot))
+            self.act(ObserveAction(agent=Agent.ROBOT))
 
         # Have the robot make a plan and update its beliefs.
         robot_action = self.agent.planner.plan(self.agent)

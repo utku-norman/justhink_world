@@ -411,5 +411,11 @@ class EnvironmentWindow(pyglet.window.Window):
 
 
 def show_state(state):
-    EnvironmentWindow(state)
-    pyglet.app.run()
+    window = EnvironmentWindow(state)
+
+    # Enter the main event loop.
+    try:
+        pyglet.app.run()
+    except KeyboardInterrupt:
+        window.close()
+        print('Window is closed.')

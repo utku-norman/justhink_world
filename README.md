@@ -234,7 +234,7 @@ show_world(world, screen_index=0)
 ##### Execute actions via Python commands (and visualise the world at its latest state).
 ```
 from justhink_world import create_world, show_world
-from justhink_world.agent import Human, Robot
+from justhink_world.agent import Agent
 from justhink_world.domain.action import SuggestPickAction, \
     AgreeAction, DisagreeAction
 
@@ -242,11 +242,11 @@ from justhink_world.domain.action import SuggestPickAction, \
 world = create_world('collaboration-1')
 
 # Act on the world.
-world.act(SuggestPickAction((3, 1), agent=Robot))
-world.act(AgreeAction(agent=Human))
-world.act(SuggestPickAction((1, 4), agent=Human))
-world.act(DisagreeAction(agent=Robot))
-world.act(SuggestPickAction((4, 5), agent=Robot))
+world.act(SuggestPickAction((3, 1), agent=Agent.ROBOT))
+world.act(AgreeAction(agent=Agent.HUMAN))
+world.act(SuggestPickAction((1, 4), agent=Agent.HUMAN))
+world.act(DisagreeAction(agent=Agent.ROBOT))
+world.act(SuggestPickAction((4, 5), agent=Agent.ROBOT))
 
 # Visualise the world, from the last state by default.
 show_world(world)

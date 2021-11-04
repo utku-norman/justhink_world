@@ -1,6 +1,6 @@
 from justhink_world.domain.action import SuggestPickAction, AttemptSubmitAction
 
-from justhink_world.agent import Robot
+from justhink_world.agent import Agent
 
 from pqdict import PQDict
 
@@ -41,15 +41,15 @@ class TraversalPlanner(object):
         expl = BetterThanExplanation()
         if len(min_nodes) == 0:
             expl = ConnectedExplanation()
-            expl.best = {AttemptSubmitAction(agent=Robot)}
+            expl.best = {AttemptSubmitAction(agent=Agent.ROBOT)}
         else:
-            expl.best = {SuggestPickAction((self.cur_node, u), agent=Robot)
+            expl.best = {SuggestPickAction((self.cur_node, u), agent=Agent.ROBOT)
                          for u in min_nodes}
-            expl.others = {SuggestPickAction((self.cur_node, u), agent=Robot)
+            expl.others = {SuggestPickAction((self.cur_node, u), agent=Agent.ROBOT)
                            for u in other_nodes}
-            # expl.others = {SuggestPickAction((self.cur_node, u), agent=Robot)
+            # expl.others = {SuggestPickAction((self.cur_node, u), agent=Agent.ROBOT)
             #                for u in expl.others}
-            # expl.best = SuggestPickAction((self.cur_node, v), agent=Robot)
+            # expl.best = SuggestPickAction((self.cur_node, v), agent=Agent.ROBOT)
 
         # Choose the action.
         action = sorted(expl.best)[0]
@@ -109,15 +109,15 @@ class TraversalJumpingPlanner(object):
         expl = BetterThanExplanation()
         if len(min_nodes) == 0:
             expl = ConnectedExplanation()
-            expl.best = {AttemptSubmitAction(agent=Robot)}
+            expl.best = {AttemptSubmitAction(agent=Agent.ROBOT)}
         else:
-            expl.best = {SuggestPickAction((self.cur_node, u), agent=Robot)
+            expl.best = {SuggestPickAction((self.cur_node, u), agent=Agent.ROBOT)
                          for u in min_nodes}
-            expl.others = {SuggestPickAction((self.cur_node, u), agent=Robot)
+            expl.others = {SuggestPickAction((self.cur_node, u), agent=Agent.ROBOT)
                            for u in other_nodes}
-            # expl.others = {SuggestPickAction((self.cur_node, u), agent=Robot)
+            # expl.others = {SuggestPickAction((self.cur_node, u), agent=Agent.ROBOT)
             #                for u in expl.others}
-            # expl.best = SuggestPickAction((self.cur_node, v), agent=Robot)
+            # expl.best = SuggestPickAction((self.cur_node, v), agent=Agent.ROBOT)
 
         # Choose the action.
         action = sorted(expl.best)[0]

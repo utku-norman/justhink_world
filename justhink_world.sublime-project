@@ -3,8 +3,8 @@
 	[
 		{
 			"path": ".",
-			"folder_exclude_patterns": ["venv"],
-
+			"folder_exclude_patterns": ["venv", "__pycache__", "justhink_world.egg-info"],
+			"binary_file_patterns": ["*.png", "*.jpg", "*.gif", "*.svg", "*.pickle"],
 		}
 
 	]

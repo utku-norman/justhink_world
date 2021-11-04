@@ -8,10 +8,14 @@ from justhink_world.tools.graphics import Scene, Graphics, Surface, \
 
 
 def show_mind(world):
-    MentalWindow(world)
+    window = MentalWindow(world)
 
     # Enter the main event loop.
-    pyglet.app.run()
+    try:
+        pyglet.app.run()
+    except KeyboardInterrupt:
+        window.close()
+        print('Window is closed.')
 
 
 class MentalWindow(pyglet.window.Window):
