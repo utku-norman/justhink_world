@@ -352,7 +352,7 @@ class World(pomdp_py.POMDP):
         # Validation: check if the action is feasible.
         if action not in self.agent.all_actions:
             s = 'Invalid action {}: it not feasible (i.e. in {}).'.format(
-                action, self.agent.all_actions)
+                action, sorted(self.agent.all_actions))
             s += '\nIgnoring the action request.'
             print(Bcolors.fail(s))
             return False
