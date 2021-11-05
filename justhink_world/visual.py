@@ -31,16 +31,19 @@ def show_all(world, state_no=None):
         mental_window.cur_scene.graphics.prev_label.text = \
             world_window.graphics.prev_label.text
 
-        # Offset for the observe.
-        index = world.state_no - 2
-        if index < 0 or index > len(world.agent.history) - 1:
-            s = 'None'
-        else:
-            s = str(world.agent.history[index][1])
+        # # Offset for the observe.
+        # index = world.state_no - 2
+        # if index < 0 or index > len(world.agent.history) - 1:
+        #     s = 'None'
+        # else:
+        #     s = str(world.agent.history[index][1])
+        # s = str(world.agent.cur_state)
+        s = str(world.cur_state)
 
         mental_window.cur_scene.graphics.observes_label.text = s
-        mental_window.cur_scene.state = world_window.world.cur_mental_state
-        print('Showing state:', mental_window.cur_scene.state)
+        # mental_window.cur_scene.state = world_window.world.cur_mental_state
+        mental_window.cur_scene.state = world_window.world.agent.cur_state
+        # print('Showing state:', mental_window.cur_scene.state)
 
         mental_window.dispatch_event('on_update')
 
@@ -52,11 +55,15 @@ def show_all(world, state_no=None):
     @mental_window.event
     @world_window.event
     def on_key_press(symbol, modifiers):
-        # print('Key pressed in mental')
+        world_window.on_key_press(symbol, modifiers)
         if symbol == key.ESCAPE:
             mental_window.close()
             world_window.close()
             return True
+        mental_window.cur_scene.state = world_window.world.agent.cur_state
+        
+        # Event is handled: do not run another on_update.
+        return True
 
     # Enter the main event loop.
     try:
@@ -160,15 +167,19 @@ class WorldWindow(pyglet.window.Window):
             self.close()
         elif symbol == key.LEFT:
             self.world.state_no = self.world.state_no - 1
+            self.world.agent.state_no = self.world.agent.state_no - 1
             self.scene.state = self.world.cur_state
         elif symbol == key.RIGHT:
             self.world.state_no = self.world.state_no + 1
+            self.world.agent.state_no = self.world.agent.state_no + 1
             self.scene.state = self.world.cur_state
         elif symbol == key.HOME:
             self.world.state_no = 1
+            self.world.agent.state_no = 1
             self.scene.state = self.world.cur_state
         elif symbol == key.END:
             self.world.state_no = self.world.num_states
+            self.world.agent.state_no = self.world.agent.num_states
             self.scene.state = self.world.cur_state
         elif symbol == key.TAB:
             self.scene.toggle_role()
@@ -275,7 +286,8 @@ class WorldWindow(pyglet.window.Window):
 class WorldScene(EnvironmentScene):
     """TODO: docstring for WorldScene"""
 
-    def __init__(self, world, role=Agent.HUMAN, name=None, width=1920, height=1080):
+    def __init__(
+            self, world, role=Agent.HUMAN, name=None, width=1920, height=1080):
         if name is None:
             name = world.name
         super().__init__(

@@ -284,6 +284,14 @@ for action in sorted(world.agent.all_actions):
       u, v = world.env.state.network.get_edge_name(action.edge)
       action = action.__class__(edge=(u, v), agent=action.agent)
     print(action)
+
+action_list = []
+for action in sorted(world.agent.all_actions):
+    if hasattr(action, 'edge'):
+      u, v = world.env.state.network.get_edge_name(action.edge)
+      action = action.__class__(edge=(u, v), agent=action.agent)
+    print(action)
+    action_list.append(action)
 ```
 
 Get the node name from node id and vice versa.
@@ -300,6 +308,10 @@ Get the edge's node's names from node id tuple and vice versa.
 ```
 from justhink_world import create_world
 world = create_world('collaboration-1')
+
+
+
+world.env.state
 
 print(world.env.state.network.get_edge_name((1, 2)))  # Prints: ('Luzern', 'Zurich')
 
@@ -322,7 +334,7 @@ Show both activity and mental windows:
 from justhink_world import create_world, show_all
 
 world = create_world('collaboration-1')
-world = create_world('pretest-1')
+# world = create_world('pretest-1')
 
 show_all(world)
 ```

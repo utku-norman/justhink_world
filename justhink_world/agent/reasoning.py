@@ -5,57 +5,57 @@ from justhink_world.agent import Agent
 from pqdict import PQDict
 
 
-class TraversalPlanner(object):
-    """Define a greedy traversal planner.
+# class TraversalPlanner(object):
+#     """Define a greedy traversal planner.
 
-    It will produce a suboptimal result."""
+#     It will produce a suboptimal result."""
 
-    def __init__(self, state, start=None):
-        self.state = state
+#     def __init__(self, state, start=None):
+#         self.state = state
 
-        if start is None:
-            available_starts = sorted(state.network.graph.nodes())
-            self.cur_node = available_starts[0]
-        else:
+#         if start is None:
+#             available_starts = sorted(state.network.graph.nodes())
+#             self.cur_node = available_starts[0]
+#         else:
 
-            self.cur_node = start
+#             self.cur_node = start
 
-        self.explanation = None
+#         self.last_explanation = None
 
-    def plan(self, agent):
-        """Select the next action by greedy traversal planning."""
-        # Select greedy.
-        self.state = agent.cur_belief.mpe()
-        self.cur_node = agent.state.cur_node
+#     def plan(self, agent):
+#         """Select the next action by greedy traversal planning."""
+#         # Select greedy.
+#         self.state = agent.cur_belief.mpe()
+#         self.cur_node = agent.cur_state.cur_node
 
-        # v = None
-        # note_iter = iter(state.graph.nodes)
-        # while v is None and (len(state.graph.edges)
-        # < state.graph.number_of_edges()-1):
-        # expl, min_v, alternatives = get_greedy_neighbour(
-        min_nodes, other_nodes = get_greedy_neighbour(
-            self.state.network.graph, self.cur_node,
-            self.state.network.subgraph)
+#         # v = None
+#         # note_iter = iter(state.graph.nodes)
+#         # while v is None and (len(state.graph.edges)
+#         # < state.graph.number_of_edges()-1):
+#         # expl, min_v, alternatives = get_greedy_neighbour(
+#         min_nodes, other_nodes = get_greedy_neighbour(
+#             self.state.network.graph, self.cur_node,
+#             self.state.network.subgraph)
 
-        # Make an explanation in terms of actions.
-        expl = BetterThanExplanation()
-        if len(min_nodes) == 0:
-            expl = ConnectedExplanation()
-            expl.best = {AttemptSubmitAction(agent=Agent.ROBOT)}
-        else:
-            expl.best = {SuggestPickAction((self.cur_node, u), agent=Agent.ROBOT)
-                         for u in min_nodes}
-            expl.others = {SuggestPickAction((self.cur_node, u), agent=Agent.ROBOT)
-                           for u in other_nodes}
-            # expl.others = {SuggestPickAction((self.cur_node, u), agent=Agent.ROBOT)
-            #                for u in expl.others}
-            # expl.best = SuggestPickAction((self.cur_node, v), agent=Agent.ROBOT)
+#         # Make an explanation in terms of actions.
+#         expl = BetterThanExplanation()
+#         if len(min_nodes) == 0:
+#             expl = ConnectedExplanation()
+#             expl.best = {AttemptSubmitAction(agent=Agent.ROBOT)}
+#         else:
+#             expl.best = {SuggestPickAction((self.cur_node, u), agent=Agent.ROBOT)
+#                          for u in min_nodes}
+#             expl.others = {SuggestPickAction((self.cur_node, u), agent=Agent.ROBOT)
+#                            for u in other_nodes}
+#             # expl.others = {SuggestPickAction((self.cur_node, u), agent=Agent.ROBOT)
+#             #                for u in expl.others}
+#             # expl.best = SuggestPickAction((self.cur_node, v), agent=Agent.ROBOT)
 
-        # Choose the action.
-        action = sorted(expl.best)[0]
-        self.explanation = expl
+#         # Choose the action.
+#         action = sorted(expl.best)[0]
+#         self.last_explanation = expl
 
-        return action
+#         return action
 
 
 class TraversalJumpingPlanner(object):
@@ -74,13 +74,16 @@ class TraversalJumpingPlanner(object):
 
             self.cur_node = start
 
-        self.explanation = None
+        self.last_explanation = None
+        self.last_plan = None
 
-    def plan(self, agent):
+    def plan(self, state, cur_node):  # agent):
         """Select the next action by greedy traversal planning."""
         # Select greedy.
-        self.state = agent.cur_belief.mpe()
-        self.cur_node = agent.state.cur_node
+        # self.state = agent.cur_belief.mpe()
+        # self.cur_node = agent.cur_state.cur_node
+        self.state = state
+        self.cur_node = cur_node
 
         # v = None
         # note_iter = iter(state.graph.nodes)
@@ -97,7 +100,7 @@ class TraversalJumpingPlanner(object):
             for u in sorted(self.state.network.get_selected_nodes()):
                 # Move the current.
                 self.cur_node = u
-                agent.state.cur_node = u
+                # agent.cur_state.cur_node = u #############
                 # For each available action.
                 min_nodes, other_nodes = get_greedy_neighbour(
                     self.state.network.graph, self.cur_node,
@@ -121,7 +124,9 @@ class TraversalJumpingPlanner(object):
 
         # Choose the action.
         action = sorted(expl.best)[0]
-        self.explanation = expl
+
+        self.last_explanation = expl
+        self.last_plan = action
 
         return action
 
@@ -168,7 +173,7 @@ class PrimsPlanner():
             self.current = available_starts[0]
         else:
             self.current = start
-        self.explanation = None
+        self.last_explanation = None
 
     def plan(self, agent):
         # Select greedy.
@@ -186,7 +191,7 @@ class PrimsPlanner():
 
         # Choose the action.
         action = expl.best
-        self.explanation = expl
+        self.last_explanation = expl
 
         return action
 

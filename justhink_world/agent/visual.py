@@ -79,7 +79,7 @@ class MentalScene(Scene):
         super().__init__(world.name, width, height)
 
         # Create the graphics.
-        self.state = world.agent.state
+        self.state = world.agent.cur_state
         self._init_graphics(
             world.env.state.network.graph, width, height, max_level=max_level)
 
@@ -207,7 +207,7 @@ class MentalScene(Scene):
         # y = outer_pad[1]+height//6
         y = graphics.height - outer_pad[2] - 5 * y_pad
         graphics.thinks_heading_label = pyglet.text.Label(
-            '(robot thinks)', x=outer_pad[0], y=y, font_name='Sans',
+            '(robot believes)', x=outer_pad[0], y=y, font_name='Sans',
             font_size=font_size, batch=batch, group=groups[5])
         graphics.thinks_label = pyglet.text.Label(
             '', x=outer_pad[0]+x_pad, y=y, font_name='Sans', align='center',

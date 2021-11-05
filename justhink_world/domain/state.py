@@ -5,7 +5,7 @@ import networkx as nx
 
 from ..tools.network import find_mst, is_subgraph_spanning, \
     compute_total_cost, compute_subgraph_cost
-from ..agent import Agent
+# from ..agent import Agent
 
 
 class EnvState(pomdp_py.State):
@@ -23,9 +23,9 @@ class EnvState(pomdp_py.State):
             the selected edges etc.
             the layout of the network, that contains the node names, positions,
             and image file names of the nodes etc.
-        agents (frozenset, optional):
+        agents (frozenset):
             the set of "active" agents that can are allowed to take actions
-            in the environment (default frozenset({Agent.HUMAN, Agent.ROBOT}))
+            in the environment
         attempt_no (int, optional):
             the current attempt number starting from 1 up to and including
             max_attempts (default 1). Can do infinitely many submissions,
@@ -54,7 +54,7 @@ class EnvState(pomdp_py.State):
     """
 
     def __init__(
-            self, network, agents=frozenset({Agent.HUMAN, Agent.ROBOT}),
+            self, network, agents,  # =frozenset({Agent.HUMAN, Agent.ROBOT}),
             attempt_no=1, max_attempts=None, step_no=1, is_submitting=False,
             is_paused=False, is_terminal=False, is_highlighted=False):
         self.network = network
@@ -198,7 +198,7 @@ class NetworkState(object):
         extra_info += ' with cost={}'.format(self.get_cost())
 
         return 'Network(|E\'|={}{} in G(|V|={}, |E|={})){}'.format(
-            self.subgraph.number_of_edges(), 
+            self.subgraph.number_of_edges(),
             '' if self.suggested_edge is None else '+1',
             self.graph.number_of_nodes(), self.graph.number_of_edges(),
             extra_info)
@@ -321,69 +321,3 @@ class NetworkState(object):
             bool: True for MST, False otherwise.
         """
         return self.is_spanning() and (self.get_cost() == self.get_mst_cost())
-
-
-class MentalState(object):
-    """TODO: docstring for MentalState"""
-
-    def __init__(self, graph, cur_node=None, agents=set({Agent.HUMAN, Agent.ROBOT})):
-        if Agent.HUMAN in agents:
-            self.beliefs = {
-                'me': {
-                    'world': self._create_view(graph),
-                    'you': {
-                        'world': self._create_view(graph),
-                        'me': {
-                            'world': self._create_view(graph),
-                        }
-                    },
-                }
-            }
-        else:
-            self.beliefs = {
-                'me': {
-                    'world': self._create_view(graph),
-                }
-            }
-        self.cur_node = cur_node
-
-    def _create_view(self, from_graph):
-        """TODO"""
-        # About choices.
-        d = {
-            'is_optimal': None,
-            'is_selected': False,
-            'is_suggested': False,
-        }
-
-        graph = nx.Graph()
-        for u, v in from_graph.edges():
-            graph.add_edge(u, v, **d)
-
-        # About strategies.
-        graph.graph['me'] = None
-        graph.graph['you'] = None
-
-        return graph
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        return 'MentalState({})'.format(self.get_beliefs())
-
-    def get_beliefs(self):
-        """TODO: docsring for get_beliefs"""
-        belief_list = list()
-
-        pairs = [('world', self.beliefs['me']),
-                 ('you', self.beliefs['me']['you']),
-                 ('me-by-you', self.beliefs['me']['you']['me'])]
-
-        for key, beliefs in pairs:
-            for u, v, d in beliefs['world'].edges(data=True):
-                value = d['is_optimal']
-                if value is not None:
-                    belief_list.append((key, u, v, value))
-
-        return sorted(belief_list)

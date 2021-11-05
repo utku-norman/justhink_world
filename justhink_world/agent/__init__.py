@@ -1,1 +1,1 @@
-from .agent import Agent, ModellingAgent
+from .agent import Agent, TaskAgent, ModellingAgent
