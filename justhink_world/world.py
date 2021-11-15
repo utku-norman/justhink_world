@@ -99,7 +99,7 @@ def create_world(name, history=None, state_no=None, verbose=False):
         history = history
 
     # Construct the world.
-    world = world_type(history, name=name, state_no=state_no)
+    world = world_type(history, name=name, state_no=state_no, verbose=verbose)
 
     if verbose:
         print('Done!')
@@ -116,9 +116,11 @@ class World(pomdp_py.POMDP):
     """
 
     def __init__(self, history, transition_model, policy_model,
-                 state_no=None, name='World'):
+                 state_no=None, name='World', verbose=False):
 
         self.name = name
+
+        self.verbose = verbose
 
         # States.
         if not isinstance(history, list):
@@ -218,7 +220,7 @@ class World(pomdp_py.POMDP):
     #     else:
     #         return self.agent.mental_history[0]
 
-    def act(self, action, verbose=False):
+    def act(self, action):
         """TODO: docstring for act of World"""
         # Validation: check if the action is feasible.
         if action not in self.agent.all_actions:
@@ -240,16 +242,36 @@ class World(pomdp_py.POMDP):
         env_reward = self.env.state_transition(action)
         next_state = self.env.state
 
+        # Print info.
+        if self.verbose:
+            print()
+            print('--------event--------')
+            # print('==== Step %d ====' % (self._step+1))
+            # self._step = self._step + 1
+            print('State: {}'.format(state))
+            print('Action: {}'.format(action))
+            # print('Belief: %s' % str(cur_belief))
+            # print('>> Observation: %s' % str(observation))
+            # print('Reward: %s' % str(env_reward))
+            # print('Reward (Cumulative): %s' % str(self._total_reward))
+            # print('Reward (Cumulative Discounted): %s' %
+            #       str(self._total_discounted_reward))
+            print('Next state: {}'.format(next_state))
+
+            # print('New Belief: %s' % str(new_belief))
+            print('---------------------')
+            print()
+
         # Update the history.
         self._history.extend([action, next_state])
 
         # Update the agent.
-        real_observation = self.env.provide_observation(
+        observation = self.env.provide_observation(
             self.agent.observation_model, action)
 
-        # self.agent.update_history(action, real_observation)
+        # self.agent.update_history(action, observation)
         self.agent.policy_model.update(state, next_state, action)
-        self.agent.update_belief(real_observation, action)
+        self.agent.update_belief(observation, action, verbose=self.verbose)
 
         # # TODO: run a belief update function.
         # # Fully observable: immediate access to the state.
@@ -263,30 +285,11 @@ class World(pomdp_py.POMDP):
         # robot_action = self.agent.planner.plan(self.agent)
         # self.agent.update_belief(robot_action)  # , is_executed=False)
 
-        # Print info.
-        if verbose:
-            print()
-            print("---acting---")
-            # print("==== Step %d ====" % (self._step+1))
-            # self._step = self._step + 1
-            print("True state: %s" % str(state))
-            print("Action: %s" % repr(action))
-            # print("Belief: %s" % str(cur_belief))
-            # print(">> Observation: %s" % str(real_observation))
-            print("Reward: %s" % str(env_reward))
-            # print("Reward (Cumulative): %s" % str(self._total_reward))
-            # print("Reward (Cumulative Discounted): %s" %
-            #       str(self._total_discounted_reward))
-            print("Next state: %s" % str(next_state))
-
-            # print("New Belief: %s" % str(new_belief))
-            print("------------")
-            print()
-
         # # Action successfully taken.
         # return True
+        # print(next_state)
 
-        return real_observation
+        return observation
 
 
 class IntroWorld(World):
@@ -337,9 +340,9 @@ class CollaborativeWorld(World):
             policy_model=policy_model, name=name, **kwargs)
 
         action = ObserveAction(Agent.ROBOT)
-        real_observation = self.env.provide_observation(
+        observation = self.env.provide_observation(
             self.agent.observation_model, action)
-        self.agent.update_belief(real_observation, action)
+        self.agent.update_belief(observation, action)
 
 
 def update_choice_beliefs(beliefs, cur_env_state, action):
@@ -396,10 +399,18 @@ def update_choice_beliefs(beliefs, cur_env_state, action):
         print(beliefs, e)
 
 
-# def update_belief(agent, action=None, observation=None):
-def update_belief(agent, observation, action=None):
-    # , is_executed=True):
+def update_belief(agent, observation, action=None, verbose=False):
     """TODO: docstring for update_belief"""
+    if verbose:
+        # print()
+        print('----belief update----')
+        if isinstance(action, SuggestPickAction):
+            u, v = observation.state.network.get_edge_name(action.edge)
+            verbose_action = action.__class__(edge=(u, v), agent=action.agent)
+        else:
+            verbose_action = action
+        print('Action: {}'.format(verbose_action))
+        print('Observation: {}'.format(observation))
 
     # Get the current environment state as known by the agent.
     cur_env_state = agent.cur_belief.mpe()
@@ -459,12 +470,13 @@ def update_belief(agent, observation, action=None):
         _, new_cur_node = cur_env_state.network.suggested_edge
     if new_cur_node is not None:
         next_mental_state.cur_node = new_cur_node
-        print('Robot moved current to {} (Node {})'.format(
-            next_state.network.get_node_name(new_cur_node),
-            new_cur_node))
+        if verbose:
+            print('Robot moved current to {} (Node {})'.format(
+                next_state.network.get_node_name(new_cur_node),
+                new_cur_node))
 
     # Plan and update beliefs according to the plan.
-    planned_action = agent.planner.plan(next_state, next_mental_state.cur_node)
+    agent.planner.plan(next_state, next_mental_state.cur_node)
     # print('New plan: going to {}'.format(planned_action))
     beliefs = next_mental_state.beliefs['me']
     # update_choice_beliefs(beliefs, next_state, action)
@@ -500,3 +512,7 @@ def update_belief(agent, observation, action=None):
     if not isinstance(action, ObserveAction):
         agent.history.extend([action, next_mental_state])
         agent.state_no = agent.num_states
+    
+    if verbose:
+        print('---------------------')
+        print()

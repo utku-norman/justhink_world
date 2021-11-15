@@ -50,7 +50,6 @@ class ModellingAgent(TaskAgent):
             self, init_state, policy_model, transition_model,
             observation_model, reward_model, planner,
             history=None, state_no=None):
-        # , update_belief=None):
 
         # # self.planner = TraversalPlanner(cur_state)
         # self.planner = TraversalJumpingPlanner(init_state)
@@ -74,10 +73,6 @@ class ModellingAgent(TaskAgent):
         else:
             self.state_no = self.num_states
 
-        # # belief_update
-        # if update_belief is not None:
-        #     self.update_belief = update_belief
-
         super().__init__(
             init_state=init_state, policy_model=policy_model,
             transition_model=transition_model,
@@ -97,9 +92,15 @@ class ModellingAgent(TaskAgent):
 
         self._state_no = value
 
+    def get_state_index(self, state_no):
+        return (state_no - 1) * 2
+
+    def get_state(self, state_no):
+        return self._history[self.get_state_index(state_no)] 
+
     @property
     def state_index(self):
-        return (self.state_no - 1) * 2
+        return self.get_state_index(self.state_no)
 
     @property
     def history(self):
@@ -117,7 +118,8 @@ class ModellingAgent(TaskAgent):
     @property
     def cur_state(self):
         """Current state of the environment."""
-        return self._history[self.state_index]
+        # return self._history[self.state_index]
+        return self.get_state(self.state_no)
 
 
 class MentalState(object):
@@ -147,17 +149,20 @@ class MentalState(object):
         self.cur_node = cur_node
 
     def _create_view(self, from_graph):
-        """TODO"""
         # About choices.
-        d = {
+        data = {
             'is_optimal': None,
             'is_selected': False,
             'is_suggested': False,
         }
 
         graph = nx.Graph()
+        
+        for u, d in from_graph.nodes(data=True):
+            graph.add_node(u, text=d['text'])
+
         for u, v in from_graph.edges():
-            graph.add_edge(u, v, **d)
+            graph.add_edge(u, v, **data)
 
         # About strategies.
         graph.graph['me'] = None
@@ -183,6 +188,32 @@ class MentalState(object):
             for u, v, d in beliefs['world'].edges(data=True):
                 value = d['is_optimal']
                 if value is not None:
-                    belief_list.append((key, u, v, value))
+                    # # Simplest, less human readible.
+                    # belief = (key, u, v, value)
+
+                    # Verbose/propositional.
+                    s = 'I believe that'
+                    if key != 'world':
+                        s += ' you believe'
+                    if key == 'me-by-you':
+                        s += ' that I believe'
+                    # s += ' {} to {}'.format(u, v)
+                    s += ' {}-{}'.format(
+                        get_node_name(u, beliefs), 
+                        get_node_name(v, beliefs))
+                    if value == 1.0:
+                        s += ' is'
+                    elif value == 0.0:
+                        s += ' is not'
+                    else:
+                        s += ' is with p={}'.format(value)
+                    s += ' optimal.'
+
+                    belief = s
+                    belief_list.append(belief)
 
         return sorted(belief_list)
+
+
+def get_node_name(node, beliefs):
+    return beliefs['world'].nodes[node]['text'].split()[-1]
