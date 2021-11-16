@@ -4,7 +4,7 @@ import pyglet
 from pyglet.window import key
 
 from justhink_world.tools.graphics import Button, Graphics, check_node_hit, \
-    BLACKA
+    WHITEA, REDA
 
 from justhink_world.agent import Agent
 from justhink_world.agent.visual import MentalWindow
@@ -61,7 +61,7 @@ def show_all(world, state_no=None):
             world_window.close()
             return True
         mental_window.cur_scene.state = world_window.world.agent.cur_state
-        
+
         # Event is handled: do not run another on_update.
         return True
 
@@ -204,11 +204,11 @@ class WorldWindow(pyglet.window.Window):
         self.scene.on_update()
 
         # Update the window labels.
-        self._update_hist_label()
+        self._update_state_label()
+        self._update_state_no_label()
         self._update_role_label()
         self._update_next_label()
         self._update_prev_label()
-        self._update_paused_label()
 
     # Private methods.
 
@@ -217,32 +217,42 @@ class WorldWindow(pyglet.window.Window):
         graphics = Graphics(width, height)
         group = pyglet.graphics.OrderedGroup(5)
 
-        # History label.
-        graphics.hist_label = pyglet.text.Label(
-            '', x=20, y=height-120, anchor_y='center', color=BLACKA,
+        # State label.
+        graphics.state_label = pyglet.text.Label(
+            '', x=20, y=height-20, anchor_y='center', color=REDA,
+            font_name='Sans', font_size=20, batch=graphics.batch, group=group)
+
+        # Create a label for the state no.
+        graphics.state_no_label = pyglet.text.Label(
+            '', x=20, y=height-120, anchor_y='center', color=REDA,
             font_name='Sans', font_size=32, batch=graphics.batch, group=group)
 
         # Role label.
         graphics.role_label = pyglet.text.Label(
-            '', x=20, y=height-60, anchor_y='center', color=BLACKA,
+            '', x=20, y=height-60, anchor_y='center', color=REDA,
             font_name='Sans', font_size=32, batch=graphics.batch, group=group)
 
         # Next action if any label.
         graphics.next_label = pyglet.text.Label(
-            '', x=width//2, y=height-20, anchor_y='center', color=BLACKA,
-            font_name='Sans', font_size=24, batch=graphics.batch, group=group)
+            '', x=width//2, y=80, anchor_y='center', color=REDA,
+            font_name='Sans', font_size=20, batch=graphics.batch, group=group)
 
         # Previous action if any label.
         graphics.prev_label = pyglet.text.Label(
-            '', x=20, y=height-20, anchor_y='center', color=BLACKA,
-            font_name='Sans', font_size=24, batch=graphics.batch, group=group)
-
-        # Paused or not label.
-        graphics.paused_label = pyglet.text.Label(
-            '', x=width-300, y=height-60, anchor_y='center', color=BLACKA,
-            font_name='Sans', font_size=24, batch=graphics.batch, group=group)
+            '', x=20, y=80, anchor_y='center', color=REDA,
+            font_name='Sans', font_size=20, batch=graphics.batch, group=group)
 
         self.graphics = graphics
+
+    def _update_state_label(self):
+        self.graphics.state_label.text = 'State: {}'.format(
+            self.world.cur_state)
+        self._update_label_color(self.graphics.state_label)
+
+    def _update_state_no_label(self):
+        self.graphics.state_no_label.text = 'State: {}/{}'.format(
+            self.world.state_no, self.world.num_states)
+        self._update_label_color(self.graphics.state_no_label)
 
     def _update_role_label(self):
         self.graphics.role_label.text = 'Role: {}'.format(
@@ -256,13 +266,12 @@ class WorldWindow(pyglet.window.Window):
         self.graphics.prev_label.text = 'Previous: {}'.format(
             self._make_action_text(offset=-1))
 
-    def _update_paused_label(self):
-        self.graphics.paused_label.text = 'Paused: {}'.format(
-            self.world.cur_state.is_paused)
-
-    def _update_hist_label(self):
-        self.graphics.hist_label.text = 'State: {}/{}'.format(
-            self.world.state_no, self.world.num_states)
+    def _update_label_color(self, label):
+        if self.world.cur_state.is_terminal or self.world.cur_state.is_paused:
+            color = WHITEA
+        else:
+            color = REDA
+        label.color = color
 
     def _make_action_text(self, offset=1):
         index = self.world.state_index + offset

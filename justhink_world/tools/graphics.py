@@ -13,6 +13,8 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 WHITEA = (255, 255, 255, 255)
 BLACKA = (0, 0, 0, 255)
+REDA = (255, 0, 0, 255)
+BLUEA = (0, 0, 255, 255)
 
 
 class Scene(object):
