@@ -257,14 +257,17 @@ class WorldWindow(pyglet.window.Window):
     def _update_role_label(self):
         self.graphics.role_label.text = 'Role: {}'.format(
             self.scene._role)
+        self._update_label_color(self.graphics.role_label)
 
     def _update_next_label(self):
         self.graphics.next_label.text = 'Next: {}'.format(
             self._make_action_text(offset=1))
+        self._update_label_color(self.graphics.next_label)
 
     def _update_prev_label(self):
         self.graphics.prev_label.text = 'Previous: {}'.format(
             self._make_action_text(offset=-1))
+        self._update_label_color(self.graphics.prev_label)
 
     def _update_label_color(self, label):
         if self.world.cur_state.is_terminal or self.world.cur_state.is_paused:
@@ -350,9 +353,9 @@ class WorldScene(EnvironmentScene):
         action = None
 
         if self.state.is_submitting:
-            if self._check_confirm_hit(x, y):
+            if self.submit_box.check_yes_hit(x, y):
                 action = SubmitAction(agent=self._role)
-            elif self._check_continue_hit(x, y):
+            elif self.submit_box.check_no_hit(x, y):
                 action = ContinueAction(agent=self._role)
         else:
             # If can pick or suggest-pick an edge
@@ -496,16 +499,6 @@ class WorldScene(EnvironmentScene):
             action = ClearAction(agent=self._role)
 
         return action
-
-    def _check_confirm_hit(self, x, y):
-        """TODO docstring for _check_confirm_hit"""
-        return (-320 < x - self.graphics.width//2 < -40 and
-                -100 < y - self.graphics.height//2 < 60)
-
-    def _check_continue_hit(self, x, y):
-        """TODO"""
-        return (40 < x - self.graphics.width//2 < 320 and
-                -100 < y - self.graphics.height//2 < 60)
 
     def _update_feasible_actions(self):
         """TODO"""

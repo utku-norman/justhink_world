@@ -3,7 +3,7 @@ import pyglet
 
 from justhink_world.tools.read import load_image_from_reference
 from justhink_world.tools.graphics import Graphics, center_image, slide_x, \
-    WHITE, BLACK, WHITEA, BLACKA, ButtonWidget, Scene, create_edge_sprite
+    BLACK, WHITEA, BLACKA, ButtonWidget, Scene, create_edge_sprite, DialogBox
 
 
 class EnvironmentScene(Scene):
@@ -78,7 +78,7 @@ class EnvironmentScene(Scene):
         self._update_attempt_label()
 
         # Show or hide the confirm box.
-        self._update_submit_box()
+        self.submit_box.visible = self._state.is_submitting
 
     def _update_cost_label(self):
         cost = self.state.network.get_cost()
@@ -101,18 +101,6 @@ class EnvironmentScene(Scene):
     def _update_paused(self):
         self._set_paused(self._state.is_terminal)
 
-    def _update_submit_box(self):
-        if self._state.is_submitting:
-            self.graphics.confirm_rect.visible = True
-            self.graphics.confirm_text_label.text = 'Do you want to submit?'
-            self.graphics.yes_label.text = 'Ok'
-            self.graphics.no_label.text = 'Cancel'
-        else:
-            self.graphics.confirm_rect.visible = False
-            self.graphics.confirm_text_label.text = ''
-            self.graphics.yes_label.text = ''
-            self.graphics.no_label.text = ''
-
     def _set_paused(self, is_paused):
         self.graphics.paused_rect.visible = is_paused
 
@@ -123,6 +111,11 @@ class EnvironmentScene(Scene):
 
         # Create groups: higher the order, the more the foreground.
         groups = [pyglet.graphics.OrderedGroup(i) for i in range(16)]
+
+        self.submit_box = DialogBox(
+            main_text='Do you want to submit?', 
+            yes_text='Ok', no_text='Cancel', 
+            width=width, height=height, batch=batch)
 
         # Load a cloud.
         ref = image_source.joinpath('cloud.png')
@@ -157,28 +150,6 @@ class EnvironmentScene(Scene):
         graphics.attempt_label = pyglet.text.Label(
             '', x=20, y=height-280, anchor_y='center', color=BLACKA,
             font_name='Sans', font_size=32, group=groups[5], batch=batch)
-
-        # Create confirm box components.
-        graphics.confirm_text_label = pyglet.text.Label(
-            '', x=width//2, y=height//2+180, color=BLACKA, anchor_x='center',
-            anchor_y='center', font_name='Sans', font_size=48,
-            batch=batch, group=groups[11])
-
-        graphics.yes_label = pyglet.text.Label(
-            '', x=width//2-180, y=height//2-20, color=BLACKA,
-            anchor_x='center', anchor_y='center', font_name='Sans',
-            font_size=56, batch=batch, group=groups[11])
-
-        graphics.no_label = pyglet.text.Label(
-            '', x=width//2+180, y=height//2-20,  # width=width, height=50,
-            color=BLACKA, anchor_x='center', anchor_y='center',
-            font_name='Sans', font_size=56, batch=batch, group=groups[11])
-
-        graphics.confirm_rect = pyglet.shapes.Rectangle(
-            width//4, height//4+140, width//2, height//3,
-            color=WHITE, batch=batch, group=groups[10])
-        graphics.confirm_rect.opacity = 255
-        graphics.confirm_rect.visible = False
 
         # Cost label.
         graphics.cost_label = pyglet.text.Label(

@@ -95,7 +95,9 @@ class ModellingAgent(TaskAgent):
     def get_state_index(self, state_no):
         return (state_no - 1) * 2
 
-    def get_state(self, state_no):
+    def get_state(self, state_no=None):
+        if state_no is None:
+            state_no = self.num_states
         return self._history[self.get_state_index(state_no)] 
 
     @property
