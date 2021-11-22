@@ -16,7 +16,7 @@ BLUEA = (0, 0, 255, 255)
 class DialogBox(object):
     def __init__(
             self, main_text='', yes_text='', no_text='',
-            width_scaler=1.0/2, height_scaler=1.0/3,
+            width_scaler=1/2.0, height_scaler=1/3.0,
             width=1920, height=1080, visible=False,
             main_fontsize=48, response_fontsize=56, batch=None):
         self._main_text = main_text
@@ -33,7 +33,7 @@ class DialogBox(object):
         """Draw manually the components of the dialog box.
 
         If you are not passing another batch that is already being drawn."""
-        # self.graphics.background_rect.draw()
+        self.graphics.background_rect.draw()
         self.graphics.batch.draw()
 
     @property
@@ -47,14 +47,14 @@ class DialogBox(object):
             self._set_visible(value)
 
     def check_yes_hit(self, x, y):
-        x_centered = x + self.x_pad / 2 - self.graphics.width / 2
-        y_centered = y + self.y_pad / 2 - self.graphics.height / 2
+        x_centered = x + self.x_pad / 2.0 - self.graphics.width / 2.0
+        y_centered = y + self.y_pad / 2.0 - self.graphics.height / 2.0
         return (-self.yes_x_margin < x_centered < self.yes_x_margin and
                 -self.yes_y_margin < y_centered < self.yes_y_margin)
 
     def check_no_hit(self, x, y):
-        x_centered = x - self.x_pad / 2 - self.graphics.width / 2
-        y_centered = y + self.y_pad / 2 - self.graphics.height / 2
+        x_centered = x - self.x_pad / 2.0 - self.graphics.width / 2.0
+        y_centered = y + self.y_pad / 2.0 - self.graphics.height / 2.0
         return (-self.no_x_margin < x_centered < self.no_x_margin and
                 -self.no_y_margin < y_centered < self.no_y_margin)
 
@@ -76,29 +76,29 @@ class DialogBox(object):
         w = width * width_scaler        # width of the rectangle.
         h = height * height_scaler      # height of the rectangle.
         # Centering on the screen.
-        x = width / 2 - w / 2
-        y = height / 2 - h / 2
+        x = width / 2.0 - w / 2.0
+        y = height / 2.0 - h / 2.0
         # graphics.background_rect = FilledRectangle(x, y, w, h,  color=WHITEA)
         graphics.background_rect = Rectangle(
             x, y, w, h,  color=WHITE, batch=graphics.batch, group=groups[10])
         # shapes.Rectangle not present in pyglet versions < 1.5.
-        # graphics.background_rect = pyglet.shapes.Rectangle(
-        #     x, y, w, h,  color=WHITE, batch=graphics.batch, group=groups[10])
-        # graphics.background_rect.opacity = 255
-        # graphics.background_rect.visible = False
+        graphics.background_rect = pyglet.shapes.Rectangle(
+            x, y, w, h,  color=WHITE, batch=graphics.batch, group=groups[10])
+        graphics.background_rect.opacity = 255
+        graphics.background_rect.visible = False
 
         # Create the main text label.
         max_width = int(700 * width_scaler)
         print(max_width, width_scaler)
         graphics.main_label = pyglet.text.Label(
-            self._main_text, x=width/2, y=height/2+self.y_pad/2,
+            self._main_text, x=width/2.0, y=height/2.0+self.y_pad/2.0,
             color=BLACKA, anchor_x='center', anchor_y='center',
             font_name='Sans', font_size=main_fontsize, batch=graphics.batch,
             group=groups[11])
 
         # Create a yes/confirm label.
         graphics.yes_label = pyglet.text.Label(
-            self._yes_text, x=width/2-self.x_pad/2, y=height/2-self.y_pad/2,
+            self._yes_text, x=width/2.0-self.x_pad/2.0, y=height/2.0-self.y_pad/2.0,
             color=BLACKA, anchor_x='center', anchor_y='center',
             multiline=True, width=max_width, align='center',
             font_name='Sans', font_size=response_fontsize,
@@ -106,7 +106,7 @@ class DialogBox(object):
 
         # Create a no/reject label.
         graphics.no_label = pyglet.text.Label(
-            self._no_text, x=width/2+self.x_pad/2, y=height/2-self.y_pad/2,
+            self._no_text, x=width/2.0+self.x_pad/2.0, y=height/2.0-self.y_pad/2.0,
             color=BLACKA, anchor_x='center', anchor_y='center',
             font_name='Sans', font_size=response_fontsize,
             multiline=True, width=max_width, align='center',
@@ -227,7 +227,7 @@ def create_edge_sprite(
     if image_part.width > 0 and image_part.height > 0:
         center_image(image_part)
         s = pyglet.sprite.Sprite(
-            image_part, x=(ux+vx)/2, y=(uy+vy)/2, batch=batch, group=group)
+            image_part, x=(ux+vx)/2.0, y=(uy+vy)/2.0, batch=batch, group=group)
         s.rotation = -math.degrees(math.atan2(uy-vy, ux-vx))
         s.visible = visible
 

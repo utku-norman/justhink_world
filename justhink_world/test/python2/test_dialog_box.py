@@ -4,7 +4,7 @@ import pyglet
 from pyglet.window import key
 
 
-from justhink_world.tools.graphics import DialogBox
+from graphics import DialogBox
 
 
 def test_info_box():
@@ -50,10 +50,9 @@ def test_confirm_box():
         window.clear()
         window.label.draw()
 
+        if window.confirm_box.visible:
+            window.confirm_box.draw()
         window.batch.draw()
-
-        # if window.confirm_box.visible:
-        #     window.confirm_box.draw()
 
     @window.event
     def on_key_press(symbol, modifiers):
@@ -63,10 +62,11 @@ def test_confirm_box():
 
     @window.event
     def on_mouse_press(x, y, button, modifiers):
-        if window.confirm_box.check_yes_hit(x, y):
-            print('Pressed yes!')
-        elif window.confirm_box.check_no_hit(x, y):
-            print('Pressed no!')
+        if window.confirm_box.visible:
+            if window.confirm_box.check_yes_hit(x, y):
+                print('Pressed yes!')
+            elif window.confirm_box.check_no_hit(x, y):
+                print('Pressed no!')
 
     print('Showing window. Press T to toggle the dialog box.')
 
@@ -86,7 +86,7 @@ def test_select_box():
         yes_text="I think the robot's suggestion is useful.",
         no_text="I think the robot's suggestion is not useful.",
         width=window.width, height=window.height, response_fontsize=24,
-        width_scaler=3/5,  height_scaler=1/3,
+        width_scaler=3.0/5,  height_scaler=1.0/3,
         visible=True, batch=window.batch)
 
     @window.event
@@ -94,8 +94,8 @@ def test_select_box():
         window.clear()
         window.label.draw()
 
-        # if window.select_box.visible:
-        #     window.select_box.draw()
+        if window.select_box.visible:
+            window.select_box.draw()
         window.batch.draw()
 
     @window.event
@@ -106,10 +106,11 @@ def test_select_box():
 
     @window.event
     def on_mouse_press(x, y, button, modifiers):
-        if window.select_box.check_yes_hit(x, y):
-            print('Pressed yes!')
-        elif window.select_box.check_no_hit(x, y):
-            print('Pressed no!')
+        if window.select_box.visible:
+            if window.select_box.check_yes_hit(x, y):
+                print('Pressed yes!')
+            elif window.select_box.check_no_hit(x, y):
+                print('Pressed no!')
 
     print('Showing window. Press T to toggle the dialog box.')
 

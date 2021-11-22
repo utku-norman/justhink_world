@@ -9,41 +9,13 @@ BLACKA = (0, 0, 0, 255)
 REDA = (255, 0, 0, 255)
 BLUEA = (0, 0, 255, 255)
 
-
-class FilledRectangle(object):
-    '''A rectangle.'''
-
-    def __init__(self, x, y, width, height, color):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.color = color
-
-    def draw(self):
-        draw_filled_rectangle(self, self.color)
-
-
-def draw_filled_rectangle(rect, color=(0, 0, 0, 220)):
-    # Run blend to enable transparency.
-    pyglet.gl.glEnable(pyglet.gl.GL_BLEND)
-    pyglet.gl.glBlendFunc(pyglet.gl.GL_SRC_ALPHA,
-                          pyglet.gl.GL_ONE_MINUS_SRC_ALPHA)
-    # Draw the rectangle.
-    points = (rect.x, rect.y,                               # point0
-              rect.x + rect.width, rect.y,                  # point1
-              rect.x + rect.width, rect.y + rect.height,    # point2
-              rect.x, rect.y + rect.height)                 # point3
-    colors = color * 4  # color for point0-3
-    pyglet.graphics.draw(4, pyglet.gl.GL_QUADS,
-                         ('v2f', points), ('c4B', colors),
-                         group=pyglet.graphics.OrderedGroup(16))
+from shapes import Rectangle
 
 
 class DialogBox(object):
     def __init__(
             self, main_text='', yes_text='', no_text='',
-            width_scaler=1/2, height_scaler=1/3,
+            width_scaler=1/2.0, height_scaler=1/3.0,
             width=1920, height=1080, visible=False,
             main_fontsize=48, response_fontsize=56, batch=None):
         self._main_text = main_text
@@ -61,7 +33,7 @@ class DialogBox(object):
 
         If you are not passing another batch that is already being drawn."""
         self.graphics.background_rect.draw()
-        # self.graphics.batch.draw()
+        self.graphics.batch.draw()
 
     @property
     def visible(self):
@@ -74,14 +46,14 @@ class DialogBox(object):
             self._set_visible(value)
 
     def check_yes_hit(self, x, y):
-        x_centered = x + self.x_pad / 2 - self.graphics.width / 2
-        y_centered = y + self.y_pad / 2 - self.graphics.height / 2
+        x_centered = x + self.x_pad / 2.0 - self.graphics.width / 2.0
+        y_centered = y + self.y_pad / 2.0 - self.graphics.height / 2.0
         return (-self.yes_x_margin < x_centered < self.yes_x_margin and
                 -self.yes_y_margin < y_centered < self.yes_y_margin)
 
     def check_no_hit(self, x, y):
-        x_centered = x - self.x_pad / 2 - self.graphics.width / 2
-        y_centered = y + self.y_pad / 2 - self.graphics.height / 2
+        x_centered = x - self.x_pad / 2.0 - self.graphics.width / 2.0
+        y_centered = y + self.y_pad / 2.0 - self.graphics.height / 2.0
         return (-self.no_x_margin < x_centered < self.no_x_margin and
                 -self.no_y_margin < y_centered < self.no_y_margin)
 
@@ -103,26 +75,26 @@ class DialogBox(object):
         w = width * width_scaler        # width of the rectangle.
         h = height * height_scaler      # height of the rectangle.
         # Centering on the screen.
-        x = width / 2 - w / 2
-        y = height / 2 - h / 2
-        graphics.background_rect = FilledRectangle(x, y, w, h,  color=WHITEA)
+        x = width / 2.0 - w / 2.0
+        y = height / 2.0 - h / 2.0
+        # graphics.background_rect = FilledRectangle(x, y, w, h,  color=WHITEA)
         # shapes.Rectangle not present in pyglet versions < 1.5.
-        # graphics.background_rect = pyglet.shapes.Rectangle(
-        #     x, y, w, h,  color=WHITE, batch=graphics.batch, group=groups[10])
+        graphics.background_rect = Rectangle(x, y, w, h,  color=WHITE, group=groups[10])
+        # batch=graphics.batch
         # graphics.background_rect.opacity = 255
         # graphics.background_rect.visible = False
 
         # Create the main text label.
         max_width = 700 * width_scaler
         graphics.main_label = pyglet.text.Label(
-            self._main_text, x=width/2, y=height/2+self.y_pad/2,
+            self._main_text, x=width/2.0, y=height/2.0+self.y_pad/2.0,
             color=BLACKA, anchor_x='center', anchor_y='center',
             font_name='Sans', font_size=main_fontsize, batch=graphics.batch,
             group=groups[11])
 
         # Create a yes/confirm label.
         graphics.yes_label = pyglet.text.Label(
-            self._yes_text, x=width/2-self.x_pad/2, y=height/2-self.y_pad/2,
+            self._yes_text, x=width/2.0-self.x_pad/2.0, y=height/2.0-self.y_pad/2.0,
             color=BLACKA, anchor_x='center', anchor_y='center',
             multiline=True, width=max_width, align='center',
             font_name='Sans', font_size=response_fontsize,
@@ -130,7 +102,7 @@ class DialogBox(object):
 
         # Create a no/reject label.
         graphics.no_label = pyglet.text.Label(
-            self._no_text, x=width/2+self.x_pad/2, y=height/2-self.y_pad/2,
+            self._no_text, x=width/2.0+self.x_pad/2.0, y=height/2.0-self.y_pad/2.0,
             color=BLACKA, anchor_x='center', anchor_y='center',
             font_name='Sans', font_size=response_fontsize,
             multiline=True, width=max_width, align='center',
@@ -138,10 +110,10 @@ class DialogBox(object):
 
         # clickable margin.
         x_margin, y_margin = 40, 40
-        self.yes_x_margin = graphics.yes_label.content_width / 2 + x_margin
-        self.yes_y_margin = graphics.yes_label.content_height / 2 + x_margin
-        self.no_x_margin = graphics.no_label.content_width / 2 + y_margin
-        self.no_y_margin = graphics.no_label.content_height / 2 + y_margin
+        self.yes_x_margin = graphics.yes_label.content_width / 2.0 + x_margin
+        self.yes_y_margin = graphics.yes_label.content_height / 2.0 + x_margin
+        self.no_x_margin = graphics.no_label.content_width / 2.0 + y_margin
+        self.no_y_margin = graphics.no_label.content_height / 2.0 + y_margin
 
         self.graphics = graphics
 
