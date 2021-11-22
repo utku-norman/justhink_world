@@ -28,6 +28,8 @@ def test_info_box():
             print('The "T" key was pressed: toggle the dialog box.')
             window.info_box.visible = not window.info_box.visible
 
+    print('Showing window. Press T to toggle the dialog box.')
+
     pyglet.app.run()
 
 
@@ -39,7 +41,7 @@ def test_confirm_box():
         'Hi!', font_name='Times New Roman', font_size=36, x=window.width//2,
         y=window.height//2, anchor_x='center', anchor_y='center')
 
-    window.confirm_box = DialogBox(
+    window.box = DialogBox(
         main_text='Do you want to submit?',
         yes_text='Ok', no_text='Cancel',
         width=window.width, height=window.height, visible=True,
@@ -49,24 +51,20 @@ def test_confirm_box():
     def on_draw():
         window.clear()
         window.label.draw()
-
         window.batch.draw()
-
-        # if window.confirm_box.visible:
-        #     window.confirm_box.draw()
 
     @window.event
     def on_key_press(symbol, modifiers):
         if symbol == key.T:
             print('The "T" key was pressed: toggle the dialog box.')
-            window.confirm_box.visible = not window.confirm_box.visible
+            window.box.visible = not window.box.visible
 
     @window.event
     def on_mouse_press(x, y, button, modifiers):
-        if window.confirm_box.check_yes_hit(x, y):
-            print('Pressed yes!')
-        elif window.confirm_box.check_no_hit(x, y):
-            print('Pressed no!')
+        if window.box.check_yes_hit(x, y):
+            print('Pressed "{}"!'.format(window.box.graphics.yes_label.text))
+        elif window.box.check_no_hit(x, y):
+            print('Pressed "{}"!'.format(window.box.graphics.no_label.text))
 
     print('Showing window. Press T to toggle the dialog box.')
 
@@ -81,7 +79,7 @@ def test_select_box():
         'Hi!', font_name='Times New Roman', font_size=36, x=window.width//2,
         y=window.height//2, anchor_x='center', anchor_y='center')
 
-    window.select_box = DialogBox(
+    window.box = DialogBox(
         main_text='What do you think?',
         yes_text="I think the robot's suggestion is useful.",
         no_text="I think the robot's suggestion is not useful.",
@@ -99,14 +97,14 @@ def test_select_box():
     def on_key_press(symbol, modifiers):
         if symbol == key.T:
             print('The "T" key was pressed: toggle the dialog box.')
-            window.select_box.visible = not window.select_box.visible
+            window.box.visible = not window.box.visible
 
     @window.event
     def on_mouse_press(x, y, button, modifiers):
-        if window.select_box.check_yes_hit(x, y):
-            print('Pressed yes!')
-        elif window.select_box.check_no_hit(x, y):
-            print('Pressed no!')
+        if window.box.check_yes_hit(x, y):
+            print('Pressed "{}"!'.format(window.box.graphics.yes_label.text))
+        elif window.box.check_no_hit(x, y):
+            print('Pressed "{}"!'.format(window.box.graphics.no_label.text))
 
     print('Showing window. Press T to toggle the dialog box.')
 
@@ -115,8 +113,8 @@ def test_select_box():
 
 if __name__ == '__main__':
 
-    # test_info_box()
-
-    test_select_box()
+    test_info_box()
 
     test_confirm_box()
+
+    test_select_box()
