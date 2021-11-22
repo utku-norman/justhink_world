@@ -3,9 +3,7 @@ import pyglet
 
 from justhink_world.tools.read import load_image_from_reference
 from justhink_world.tools.graphics import Graphics, center_image, slide_x, \
-    BLACK, WHITEA, BLACKA, ButtonWidget, Scene, create_edge_sprite, DialogBox, \
-    Rectangle
-
+    BLACK, WHITEA, BLACKA, ButtonWidget, Scene, create_edge_sprite, DialogBox
 
 class EnvironmentScene(Scene):
     def __init__(self, state, name='EnvScene', width=1920, height=1080):
@@ -162,17 +160,17 @@ class EnvironmentScene(Scene):
             '', x=width//2, y=20, anchor_x='center', color=WHITEA,
             font_name='Sans', font_size=24, batch=batch, group=groups[8])
 
-        graphics.status_rect = Rectangle(
+        graphics.status_rect = pyglet.shapes.Rectangle(
             0, 0, width, 60, color=BLACK, batch=batch, group=groups[5])
         graphics.status_rect.opacity = 150
         graphics.status_rect.visible = False
 
-        graphics.paused_rect = Rectangle(
+        graphics.paused_rect = pyglet.shapes.Rectangle(
             0, 0, width, height, color=BLACK, batch=batch, group=groups[14])
         graphics.paused_rect.opacity = 100
         graphics.paused_rect.visible = False
 
-        graphics.observe_rect = Rectangle(
+        graphics.observe_rect = pyglet.shapes.Rectangle(
             0, 0, width, height, color=BLACK, batch=batch, group=groups[15])
         graphics.observe_rect.opacity = 170
         graphics.observe_rect.visible = False

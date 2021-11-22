@@ -4,8 +4,8 @@ from pyglet.window import key
 import networkx as nx
 
 from justhink_world.tools.graphics import Scene, Graphics, Surface, \
-    crop_edge, create_ellipse, transform_position, BorderedRectangle, \
-    WHITE, WHITEA, BLACK, Rectangle
+    crop_edge, create_ellipse, transform_position, \
+    WHITE, WHITEA, BLACK
 
 
 def show_mind(world):
@@ -226,7 +226,7 @@ class MentalScene(Scene):
         # Create level rectangles and labels.
         level = 0
         p = 30  # 45
-        rect = BorderedRectangle(
+        rect = pyglet.shapes.BorderedRectangle(
             x=outer_pad[0]-p, y=outer_pad[3]-p, width=width+1.8*p,
             height=height-4*y_pad+2*p, border=10, color=BLACK,
             border_color=(100, 100, 100), batch=batch, group=groups[0])
@@ -242,7 +242,7 @@ class MentalScene(Scene):
 
         level = 1
         x = outer_pad[0]+width//3-p
-        rect = BorderedRectangle(
+        rect = pyglet.shapes.BorderedRectangle(
             x=x, y=outer_pad[3]-p, width=2*width//3+1.8*p,
             height=height-5*y_pad+2*p, border=10, color=BLACK,
             border_color=(100, 100, 100), batch=batch, group=groups[0])
@@ -258,7 +258,7 @@ class MentalScene(Scene):
         level = 2
         if level <= max_level:
             x = outer_pad[0]+2*width//3-p
-            rect = BorderedRectangle(
+            rect = pyglet.shapes.BorderedRectangle(
                 x=x, y=outer_pad[3]-p, width=width//3+1.8*p,
                 height=height-6*y_pad+2*p, border=10, color=BLACK,
                 border_color=(100, 100, 100), batch=batch, group=groups[0])
@@ -278,7 +278,7 @@ class MentalScene(Scene):
         #     font_name='Sans', font_size=font_size,
         #     anchor_x='center', anchor_y='bottom', bold=True, batch=batch)
         # p = 30
-        # r = BorderedRectangle(
+        # r = pyglet.shapes.BorderedRectangle(
         #     x=outer_pad[0]+width//3-p, y=outer_pad[3]-p, border=10,
         #     width=2*width//3+1.8*p, height=height+2*p, color=(0, 0, 0),
         #     border_color=(100, 100, 100), batch=batch, group=groups[0])
@@ -291,7 +291,7 @@ class MentalScene(Scene):
         #     font_name='Sans',  font_size=font_size, anchor_x='center',
         #     anchor_y='bottom',  batch=batch)
         # p = 15
-        # r = BorderedRectangle(
+        # r = pyglet.shapes.BorderedRectangle(
         #     x=outer_pad[0]+2*width//3-p, y=outer_pad[3]-p,
         #     width=width//3+1.8*p, height=height+2*p,
         #     border=10, color=(0, 0, 0), border_color=(100, 100, 100),
@@ -462,7 +462,7 @@ def create_label(
     anchor_y = 'center'
     s = scale
     width, height = s*font_size, s*font_size
-    rect = Rectangle(x-width//2, y-height//2,
+    rect = pyglet.shapes.Rectangle(x-width//2, y-height//2,
                      width, height,
                      color=(0, 0, 0),
                      batch=batch,

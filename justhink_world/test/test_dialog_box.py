@@ -93,9 +93,6 @@ def test_select_box():
     def on_draw():
         window.clear()
         window.label.draw()
-
-        # if window.select_box.visible:
-        #     window.select_box.draw()
         window.batch.draw()
 
     @window.event
