@@ -346,6 +346,9 @@ class WorldScene(EnvironmentScene):
         if self._cross_shown:
             self.graphics.cross_sprite.draw()
 
+        if self.submit_box.visible:
+            self.submit_box.draw()
+
     def on_mouse_press(self, x, y, button, modifiers, win):
         if self.state.is_paused:
             return

@@ -3,6 +3,8 @@ import math
 
 import pyglet
 
+from .shapes import Rectangle, BorderedRectangle
+
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 WHITEA = (255, 255, 255, 255)
@@ -31,6 +33,7 @@ class DialogBox(object):
         """Draw manually the components of the dialog box.
 
         If you are not passing another batch that is already being drawn."""
+        # self.graphics.background_rect.draw()
         self.graphics.batch.draw()
 
     @property
@@ -46,13 +49,13 @@ class DialogBox(object):
     def check_yes_hit(self, x, y):
         x_centered = x + self.x_pad / 2 - self.graphics.width / 2
         y_centered = y + self.y_pad / 2 - self.graphics.height / 2
-        return (-self.yes_x_margin < x_centered < self.yes_x_margin and 
+        return (-self.yes_x_margin < x_centered < self.yes_x_margin and
                 -self.yes_y_margin < y_centered < self.yes_y_margin)
 
     def check_no_hit(self, x, y):
         x_centered = x - self.x_pad / 2 - self.graphics.width / 2
         y_centered = y + self.y_pad / 2 - self.graphics.height / 2
-        return (-self.no_x_margin < x_centered < self.no_x_margin and 
+        return (-self.no_x_margin < x_centered < self.no_x_margin and
                 -self.no_y_margin < y_centered < self.no_y_margin)
 
     def _init_graphics(
@@ -66,8 +69,8 @@ class DialogBox(object):
         if self._yes_text == '' and self._no_text == '':
             self.y_pad = 0
         else:
-            self.y_pad = 180
-        self.x_pad = 360
+            self.y_pad = 600 * height_scaler
+        self.x_pad = 900 * width_scaler
 
         # Create the background rectangle (Rectangle or BorderedRectangle).
         w = width * width_scaler        # width of the rectangle.
@@ -75,34 +78,41 @@ class DialogBox(object):
         # Centering on the screen.
         x = width / 2 - w / 2
         y = height / 2 - h / 2
-        graphics.background_rect = pyglet.shapes.Rectangle(
+        # graphics.background_rect = FilledRectangle(x, y, w, h,  color=WHITEA)
+        graphics.background_rect = Rectangle(
             x, y, w, h,  color=WHITE, batch=graphics.batch, group=groups[10])
-        graphics.background_rect.opacity = 255
-        graphics.background_rect.visible = False
+        # shapes.Rectangle not present in pyglet versions < 1.5.
+        # graphics.background_rect = pyglet.shapes.Rectangle(
+        #     x, y, w, h,  color=WHITE, batch=graphics.batch, group=groups[10])
+        # graphics.background_rect.opacity = 255
+        # graphics.background_rect.visible = False
 
         # Create the main text label.
+        max_width = 700 * width_scaler
         graphics.main_label = pyglet.text.Label(
-            self._main_text, x=width/2, y=height/2+self.y_pad/2, 
-            color=BLACKA, anchor_x='center', anchor_y='center', 
-            font_name='Sans', font_size=main_fontsize, batch=graphics.batch, 
+            self._main_text, x=width/2, y=height/2+self.y_pad/2,
+            color=BLACKA, anchor_x='center', anchor_y='center',
+            font_name='Sans', font_size=main_fontsize, batch=graphics.batch,
             group=groups[11])
 
         # Create a yes/confirm label.
         graphics.yes_label = pyglet.text.Label(
-            self._yes_text, x=width/2-self.x_pad/2, y=height/2-self.y_pad/2, 
+            self._yes_text, x=width/2-self.x_pad/2, y=height/2-self.y_pad/2,
             color=BLACKA, anchor_x='center', anchor_y='center',
-            font_name='Sans', font_size=response_fontsize, 
+            multiline=True, width=max_width, align='center',
+            font_name='Sans', font_size=response_fontsize,
             batch=graphics.batch, group=groups[11])
 
         # Create a no/reject label.
         graphics.no_label = pyglet.text.Label(
-            self._no_text, x=width/2+self.x_pad/2, y=height/2-self.y_pad/2, 
-            color=BLACKA, anchor_x='center', anchor_y='center', 
-            font_name='Sans', font_size=response_fontsize, 
+            self._no_text, x=width/2+self.x_pad/2, y=height/2-self.y_pad/2,
+            color=BLACKA, anchor_x='center', anchor_y='center',
+            font_name='Sans', font_size=response_fontsize,
+            multiline=True, width=max_width, align='center',
             batch=graphics.batch, group=groups[11])
 
         # clickable margin.
-        x_margin, y_margin = 40, 40 
+        x_margin, y_margin = 40, 40
         self.yes_x_margin = graphics.yes_label.content_width / 2 + x_margin
         self.yes_y_margin = graphics.yes_label.content_height / 2 + x_margin
         self.no_x_margin = graphics.no_label.content_width / 2 + y_margin
@@ -333,16 +343,6 @@ def center_image(image):
     return image
 
 
-class Rectangle(object):
-    """Draws a rectangle into a batch."""
-
-    def __init__(self, x1, y1, x2, y2, batch, group):
-        self.vertex_list = batch.add(4, pyglet.gl.GL_QUADS, group,
-                                     ('v2i', [x1, y1, x2, y1, x2, y2, x1, y2]),
-                                     ('c4B', [192, 192, 192, 255] * 4)
-                                     )
-
-
 class Surface(object):
     def __init__(self, width, height,
                  x=0, y=0,
@@ -466,3 +466,42 @@ class ButtonWidget(Button):
             s = self.sprites[self.state]
             d = (s.x - x)**2 + (s.y - y)**2
             return d < self.dist
+
+
+# class Rectangle(object):
+#     """Draws a rectangle into a batch."""
+
+#     def __init__(self, x1, y1, x2, y2, batch, group):
+#         self.vertex_list = batch.add(4, pyglet.gl.GL_QUADS, group,
+#                                      ('v2i', [x1, y1, x2, y1, x2, y2, x1, y2]),
+#                                      ('c4B', [192, 192, 192, 255] * 4)
+#                                      )
+
+
+# class FilledRectangle(object):
+#     '''A rectangle.'''
+
+#     def __init__(self, x, y, width, height, color):
+#         self.x = x
+#         self.y = y
+#         self.width = width
+#         self.height = height
+#         self.color = color
+
+#     def draw(self):
+#         draw_filled_rectangle(self, self.color)
+
+
+# def draw_filled_rectangle(rect, color=(0, 0, 0, 220)):
+#     # Run blend to enable transparency.
+#     pyglet.gl.glEnable(pyglet.gl.GL_BLEND)
+#     pyglet.gl.glBlendFunc(pyglet.gl.GL_SRC_ALPHA,
+#                           pyglet.gl.GL_ONE_MINUS_SRC_ALPHA)
+#     # Draw the rectangle.
+#     points = (rect.x, rect.y,                               # point0
+#               rect.x + rect.width, rect.y,                  # point1
+#               rect.x + rect.width, rect.y + rect.height,    # point2
+#               rect.x, rect.y + rect.height)                 # point3
+#     colors = color * 4  # color for point0-3
+#     pyglet.graphics.draw(4, pyglet.gl.GL_QUADS,
+#                          ('v2f', points), ('c4B', colors))
