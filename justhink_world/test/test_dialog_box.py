@@ -86,7 +86,7 @@ def test_select_box():
         yes_text="I think the robot's suggestion is useful.",
         no_text="I think the robot's suggestion is not useful.",
         width=window.width, height=window.height, response_fontsize=24,
-        width_scaler=3/5,  height_scaler=1/3,
+        width_scaler=3.0/5,  height_scaler=1.0/3,
         visible=True, batch=window.batch)
 
     @window.event

@@ -16,7 +16,7 @@ BLUEA = (0, 0, 255, 255)
 class DialogBox(object):
     def __init__(
             self, main_text='', yes_text='', no_text='',
-            width_scaler=1/2, height_scaler=1/3,
+            width_scaler=1.0/2, height_scaler=1.0/3,
             width=1920, height=1080, visible=False,
             main_fontsize=48, response_fontsize=56, batch=None):
         self._main_text = main_text
@@ -88,7 +88,8 @@ class DialogBox(object):
         # graphics.background_rect.visible = False
 
         # Create the main text label.
-        max_width = 700 * width_scaler
+        max_width = int(700 * width_scaler)
+        print(max_width, width_scaler)
         graphics.main_label = pyglet.text.Label(
             self._main_text, x=width/2, y=height/2+self.y_pad/2,
             color=BLACKA, anchor_x='center', anchor_y='center',

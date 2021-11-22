@@ -463,10 +463,10 @@ def create_label(
     s = scale
     width, height = s*font_size, s*font_size
     rect = Rectangle(x-width//2, y-height//2,
-                                   width, height,
-                                   color=(0, 0, 0),
-                                   batch=batch,
-                                   group=groups[0])
+                     width, height,
+                     color=(0, 0, 0),
+                     batch=batch,
+                     group=groups[0])
 
     label = pyglet.text.Label(
         str(text), x=x, y=y, font_name='Sans', font_size=font_size,
