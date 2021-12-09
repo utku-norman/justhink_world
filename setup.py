@@ -27,7 +27,6 @@ setup(
         "pomdp_py",
         "networkx",
         "pyglet",
-        "pathlib",
         "importlib_resources",
         "pqdict",
     ],
