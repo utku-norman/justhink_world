@@ -29,6 +29,7 @@ setup(
         "pyglet",
         "importlib_resources",
         "pqdict",
+        "matplotlib==2.*",
     ],
     zip_safe=False,
 )
