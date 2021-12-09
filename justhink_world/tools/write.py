@@ -24,3 +24,7 @@ class Bcolors:
     @staticmethod
     def warn(string):
         return f"{Bcolors.WARNING}" + string + f"{Bcolors.ENDC}"
+
+    @staticmethod
+    def ok(string):
+        return f"{Bcolors.OKCYAN}" + string + f"{Bcolors.ENDC}"

@@ -185,16 +185,26 @@ class EnvironmentScene(Scene):
 
         # Create node images.
         for u, d in graphics.layout.nodes(data=True):
+            # Main/default image.
             ref = image_source.joinpath(d['image_file'])
             image = center_image(load_image_from_reference(ref))
             d['sprite'] = pyglet.sprite.Sprite(
                 image, d['x'], d['y'], batch=batch, group=groups[2])
-
+            # Selected image.
             ref = image_source.joinpath(d['higlight_image_file'])
             image = center_image(load_image_from_reference(ref))
             d['selected_sprite'] = pyglet.sprite.Sprite(
                 image, d['x'], d['y'], batch=batch, group=groups[3])
             d['selected_sprite'].visible = False
+            # Highlighted image.
+            # TODO: check for existence.
+            # Quick fix not to query for the json but constrtuct immediately.
+            file = d['higlight_image_file'].replace('selected', 'highlighted')
+            ref = image_source.joinpath(file)
+            image = center_image(load_image_from_reference(ref))
+            d['highlighted_sprite'] = pyglet.sprite.Sprite(
+                image, d['x'], d['y'], batch=batch, group=groups[4])
+            d['highlighted_sprite'].visible = False
 
         # Create edge images.
         ref = image_source.joinpath('railroad_selected.png')
@@ -282,7 +292,7 @@ class EnvironmentScene(Scene):
                 d['gold_y'] = d['y']
 
             sprite = pyglet.sprite.Sprite(
-                animation, batch=batch, group=groups[4],
+                animation, batch=batch, group=groups[5],
                 x=d['gold_x']-animation.get_max_width(),
                 y=d['gold_y']-animation.get_max_height())
             sprite.scale = 2

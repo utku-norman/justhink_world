@@ -318,9 +318,6 @@ class Graphics(object):
         self.width = width
         self.height = height
 
-        # self._temp_from = None
-        # self._temp_to = None
-
         self.buttons = {}
 
         if batch is None:

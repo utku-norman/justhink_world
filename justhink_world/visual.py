@@ -16,6 +16,12 @@ from justhink_world.domain.action import SetPauseAction,  \
     AttemptSubmitAction, ContinueAction, SubmitAction
 
 
+class DrawingMode(object):
+    """TODO: docstring for DrawingMode"""
+    DRAG = 'D'
+    CLICK = 'C'
+
+
 def show_all(world, state_no=None):
     """TODO docstring for show_all"""
     world_window = WorldWindow(world, state_no=state_no)
@@ -74,11 +80,13 @@ def show_all(world, state_no=None):
         print('Window is closed.')
 
 
-def show_world(world, state_no=None, screen_index=-1):
+def show_world(world, state_no=None, screen_index=-1, drawing_mode='drag'):
     """TODO docstring for show_world
 
     By default showing the last state."""
-    window = WorldWindow(world, state_no=state_no, screen_index=screen_index)
+    window = WorldWindow(
+        world, state_no=state_no, screen_index=screen_index,
+        drawing_mode=drawing_mode)
 
     # Enter the main event loop.
     try:
@@ -93,7 +101,7 @@ class WorldWindow(pyglet.window.Window):
 
     def __init__(
             self, world, state_no=None, caption='World', width=1920,
-            height=1080, screen_index=0):
+            height=1080, screen_index=0, drawing_mode=None):
         assert isinstance(world, IndividualWorld) or \
             isinstance(world, CollaborativeWorld)
 
@@ -109,7 +117,16 @@ class WorldWindow(pyglet.window.Window):
         if state_no is not None:
             self.world.state_no = state_no
 
-        self.scene = scene_type(world=self.world, width=width, height=height)
+        if drawing_mode == None or drawing_mode == 'drag':
+            drawing_mode = DrawingMode.DRAG
+        elif drawing_mode == 'click':
+            drawing_mode = DrawingMode.CLICK
+        else:
+            raise ValueError
+
+        self.scene = scene_type(
+            world=self.world, width=width, height=height,
+            drawing_mode=drawing_mode)
 
         # style = pyglet.window.Window.WINDOW_STYLE_DEFAULT
         style = pyglet.window.Window.WINDOW_STYLE_BORDERLESS
@@ -202,7 +219,7 @@ class WorldWindow(pyglet.window.Window):
         """TODO docstring for on_update"""
         # Update the scene.
         self.scene.on_update()
-
+        
         # Update the window labels.
         self._update_state_label()
         self._update_state_no_label()
@@ -299,12 +316,12 @@ class WorldScene(EnvironmentScene):
     """TODO: docstring for WorldScene"""
 
     def __init__(
-            self, world, role=Agent.HUMAN, name=None, width=1920, height=1080):
+            self, world, role=Agent.HUMAN, name=None, width=1920, height=1080,
+            drawing_mode=DrawingMode.DRAG):
         if name is None:
             name = world.name
         super().__init__(
             world.cur_state, name=name, height=height, width=width)
-        # world.env.state, name=name, height=height, width=width)
 
         self._role = role
         self._policy_model = world.agent.policy_model
@@ -315,26 +332,61 @@ class WorldScene(EnvironmentScene):
 
         self._update_feasible_actions()
 
-        self._temp_from = None
-        self._temp_to = None
+        self._draw_from = None
+        self._draw_to = None
+
+        self._drawing_mode = drawing_mode
 
         self._cross_shown = False
 
     @property
-    def temp_from(self):
-        return self._temp_from
+    def draw_from(self):
+        return self._draw_from
 
     @property
-    def temp_to(self):
-        return self._temp_to
+    def draw_to(self):
 
-    @temp_from.setter
-    def temp_from(self, value):
-        self._temp_from = value
+        return self._draw_to
 
-    @temp_to.setter
-    def temp_to(self, value):
-        self._temp_to = value
+    @draw_from.setter
+    def draw_from(self, node):
+        # Ignore setting if already at that value.
+        if self._draw_from == node:
+            return
+
+        # Manager highlight for the old and new nodes.
+        self._set_drawing_node_higlights(self._draw_from, node)
+
+        # Set the new value.
+        self._draw_from = node
+
+    @draw_to.setter
+    def draw_to(self, node):
+        # Ignore setting if already at that value.
+        if self._draw_to == node:
+            return
+
+        # Manager highlight for the old and new nodes.
+        self._set_drawing_node_higlights(self._draw_to, node)
+
+        # Set the new value.
+        self._draw_to = node
+
+    def _set_drawing_node_higlights(self, node, new_node):
+        selected_nodes = self.state.network.get_selected_nodes()
+        node_data = self.graphics.layout.nodes
+
+        # For the old node, if it was a node.
+        if node is not None:
+            node_data[node]['selected_sprite'].visible = node in selected_nodes
+            node_data[node]['highlighted_sprite'].visible = False
+
+        # For the new node, if it is a node.
+        if new_node is not None:
+            # node_data[new_node]['selected_sprite'].visible = \
+            #     new_node is not None or new_node in selected_nodes
+            node_data[new_node]['selected_sprite'].visible = False
+            node_data[new_node]['highlighted_sprite'].visible = True
 
     # GUI methods.
 
@@ -361,12 +413,15 @@ class WorldScene(EnvironmentScene):
             elif self.submit_box.check_no_hit(x, y):
                 action = ContinueAction(agent=self._role)
         else:
-            # If can pick or suggest-pick an edge
+            # If can pick or suggest-pick an edge.
             action = self._check_buttons(x, y)
 
             if self._role in self.state.agents:
                 if self._pick_action_type in self._action_types:
-                    self._process_drawing(x, y)
+                    if self._drawing_mode == DrawingMode.DRAG:
+                        self._process_drag_drawing_on_mouse_press(x, y)
+                    elif self._drawing_mode == DrawingMode.CLICK:
+                        self._process_click_drawing_on_mouse_press(x, y)
                 else:
                     # Put a cross at the node.
                     u = check_node_hit(self.graphics.layout, x, y)
@@ -376,22 +431,32 @@ class WorldScene(EnvironmentScene):
                             x=node_data[u]['x'], y=node_data[u]['y'])
                         self._cross_shown = True
 
-        if action in self._actions:
+        # if action in self._actions:
+        if action is not None:
             win.execute_action(action)
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers, win):
         if self.state.is_paused:
             return
 
-        if self.temp_from is not None:  # i.e. drawing
-            self._process_drawing(x, y)
+        if self._role in self.state.agents:
+            if self._drawing_mode == DrawingMode.DRAG:
+                action = self._process_drag_drawing_on_mouse_drag(x, y)
+            elif self._drawing_mode == DrawingMode.CLICK:
+                action = self._process_click_drawing_on_mouse_drag(x, y)
+
+            if action is not None:
+                win.execute_action(action)
 
     def on_mouse_release(self, x, y, button, modifiers, win):
         if self.state.is_paused:
             return
 
         if self._role in self.state.agents:
-            action = self._process_drawing_done(x, y)
+            if self._drawing_mode == DrawingMode.DRAG:
+                action = self._process_drag_drawing_on_mouse_release(x, y)
+            elif self._drawing_mode == DrawingMode.CLICK:
+                action = self._process_click_drawing_on_mouse_release(x, y)
 
             if action is not None:
                 win.execute_action(action)
@@ -405,6 +470,8 @@ class WorldScene(EnvironmentScene):
     def on_update(self):
         """TODO docstring for on_update of WorldScene"""
         super().on_update()
+
+        self._clear_drawing()
 
         self._update_feasible_actions()
 
@@ -420,66 +487,186 @@ class WorldScene(EnvironmentScene):
         else:
             raise NotImplementedError
 
-        self._reset_drawing()
+        # self._clear_drawing()
 
     # Private methods.
 
-    def _process_drawing(self, x, y):
-        """TODO docstring for _process_drawing"""
-        # Check if a node is pressed.
+    # def _process_mouse_press_drawing(self, x, y):
+    #     """TODO docstring for _process_mouse_press_drawing"""
+    #     # Check if a node is pressed.
+    #     node = check_node_hit(self.graphics.layout, x, y)
+
+    #     # Get data on the nodes, e.g. their sprites and positions.
+    #     node_data = self.graphics.layout.nodes
+
+    #     # Check if the starts a new drawing: there is not from node yet.
+    #     if self.draw_from is None:
+    #         if node is not None:
+    #             self.draw_from = node
+    #             node_data[node]['selected_sprite'].visible = True
+
+    #     # If the agent is already drawing from a node.
+    #     else:
+    #         # Get the list of selected nodes.
+    #         selected = self.state.network.get_selected_nodes()
+
+    #         # If mouse is on a new node that is not already selected.
+    #         if node is not None and node not in selected and \
+    #                 node != self.draw_from:
+    #             # Se as the draw-to node and highlight.
+    #             self.draw_to = node
+    #             node_data[node]['selected_sprite'].visible = True
+
+    #             # Put a cross if the edge is not possible or alre. selected.
+    #             u, v = self.draw_from, node
+    #             is_selected = self.state.network.subgraph.has_edge(u, v)
+    #             has_edge = self.graphics.layout.has_edge(u, v)
+    #             if not has_edge or is_selected:
+    #                 self.graphics.cross_sprite.update(
+    #                     x=(node_data[u]['x']+node_data[v]['x'])/2,
+    #                     y=(node_data[u]['y']+node_data[v]['y'])/2)
+    #                 self._cross_shown = True
+    #             else:
+    #                 self._cross_shown = False
+
+    #         # Reset the previous drawing-to node if a new node is pressed.
+    #         elif self.draw_to is not None and self.draw_to not in selected:
+    #             node_data[self.draw_to]['selected_sprite'].visible = False
+    #             self.draw_to = None
+    #             self._cross_shown = False
+
+    #         # Update the temporary drawing edge to the new mouse position.
+    #         if self._drawing_mode == DrawingMode.DRAG:
+    #             d = node_data[self.draw_from]
+    #             self.graphics.temp_suggested_sprite = create_edge_sprite(
+    #                 self.temp_edge_image, d['x'], d['y'], x, y)
+
+    # def _process_mouse_press_drawing(self, x, y):
+    #     """TODO docstring for _process_mouse_press_drawing"""
+
+    #     # If draw an edge by dragging.
+    #     if self._drawing_mode == DrawingMode.DRAG:
+    #         self._process_drag_drawing_on_mouse_press(x, y)
+    #     elif self._drawing_mode == DrawingMode.CLICK:
+    #         self._process_click_drawing_on_mouse_press(x, y)
+
+    #     # # Adjust selected sprites.
+    #     # node_data = self.graphics.layout.nodes
+    #     # for node in [self.draw_from, self.draw_to]:
+    #     #     if node is not None:
+    #     #         # self.state.network.get_selected_nodes()
+    #     #         node_data[node]['selected_sprite'].visible = False
+
+    def _process_drag_drawing_on_mouse_press(self, x, y):
+        # Check if a node is pressed: returns a node, or None if not a node.
         node = check_node_hit(self.graphics.layout, x, y)
 
+        # Set as the draw-from node.
+        self.draw_from = node
+
+    def _process_drag_drawing_on_mouse_drag(self, x, y):
+        # Check if a node is dragged onto: a node, or None if not a node.
+        node = check_node_hit(self.graphics.layout, x, y)
+
+        # Get data on the nodes, e.g. their sprites and positions.
         node_data = self.graphics.layout.nodes
 
-        # Check if the agent started drawing from a node.
-        if self.temp_from is None:
-            if node is not None:
-                d = node_data[node]
-                self.temp_from = (d['x'], d['y'], node)
-                d['selected_sprite'].visible = True
+        # If currently drawing by dragging.
+        if self.draw_from is not None:
+            # Clear the edge if dragged onto the draw-from node.
+            if node == self.draw_from:
+                self.graphics.temp_suggested_sprite = None
+            else:
+                # Create a edge if drawing out.
+                d = node_data[self.draw_from]
+                self.graphics.temp_suggested_sprite = create_edge_sprite(
+                    self.temp_edge_image, d['x'], d['y'], x, y)
 
-        # If the agent is already drawing from a node.
+                # Set draw-to.
+                self.draw_to = node
+
+        # Put a cross if the edge is not possible or already selected.
+        # Do not put if on the same node.
+        u, v = self.draw_from, node
+        if u is not None and v is not None and not u == v:
+            is_selected = self.state.network.subgraph.has_edge(u, v)
+            has_edge = self.graphics.layout.has_edge(u, v)
+            if not has_edge or is_selected:
+                self.graphics.cross_sprite.update(
+                    x=(node_data[u]['x']+node_data[v]['x'])/2,
+                    y=(node_data[u]['y']+node_data[v]['y'])/2)
+                self._cross_shown = True
         else:
-            selected = self.state.network.get_selected_nodes()
+            self._cross_shown = False
 
-            # If mouse is on a new node that is not already selected.
-            if node is not None and node not in selected and \
-                    node != self.temp_from[2]:
-                self.temp_to = node
-                d = node_data[node]
-                d['selected_sprite'].visible = True
+        return None
 
-                # Put a cross on edge if this picking the edge is not feasible.
-                from_node = self.temp_from[2]
-                u, v = from_node, node
-                is_selected = self.state.network.subgraph.has_edge(u, v)
-                has_edge = self.graphics.layout.has_edge(u, v)
+    def _process_drag_drawing_on_mouse_release(self, x, y):
+        """TODO docstring for _process_drag_drawing_on_mouse_release"""
+        action = None
 
-                # if has_edge and (from_node != node) and not is_selected:
-                if not has_edge or is_selected:
-                    self.graphics.cross_sprite.update(
-                        x=(node_data[u]['x']+node_data[v]['x'])/2,
-                        y=(node_data[u]['y']+node_data[v]['y'])/2)
-                    self._cross_shown = True
-                else:
-                    self._cross_shown = False
+        # Check if a node is pressed: node iself or None.
+        node = check_node_hit(self.graphics.layout, x, y)
 
-            # If mouse was on a node and no longer is on a node,
-            # reset the previous drawing-to node.
-            elif self.temp_to is not None \
-                    and self.temp_to not in selected:
-                d = node_data[self.temp_to]
-                d['selected_sprite'].visible = False
-                self.temp_to = None
-                self._cross_shown = False
+        # Make a pick action if released on a node
+        # and was drawing from a different node.
+        if node is not None and self.draw_from is not None \
+                and node != self.draw_from:
+            edge = self.draw_from, node
 
-            # Update the temporary drawing edge to the new mouse position.
-            # if self.temp_from is not None:
-            self.graphics.temp_suggested_sprite = create_edge_sprite(
-                self.temp_edge_image, self.temp_from[0],
-                self.temp_from[1], x, y)
+            action = self._pick_action_type(edge, agent=self._role)
 
-    # Private methods.
+        self._clear_drawing()
+
+        return action
+
+    def _process_click_drawing_on_mouse_press(self, x, y):
+        # Check if a node is pressed: node iself or None.
+        node = check_node_hit(self.graphics.layout, x, y)
+
+        # Clear draw-from node if it is the draw-from node or it is not a node.
+        if node is None or node == self.draw_from:
+            self.draw_from = None
+
+        # Set as draw-from node if it is a node and draw-from is not set yet.
+        elif node is not None and self.draw_from is None:
+            self.draw_from = node
+        
+        # Set as draw-to node if it is a node other than the draw-from node.
+        elif node is not None and node != self.draw_from:
+            self.draw_to = node
+
+    def _process_click_drawing_on_mouse_drag(self, x, y):
+        self.draw_from = check_node_hit(self.graphics.layout, x, y)
+
+    def _process_click_drawing_on_mouse_release(self, x, y):
+        """TODO docstring for _process_drag_drawing_on_mouse_release"""
+        action = None
+
+        # Check if a node is pressed: node iself or None.
+        node = check_node_hit(self.graphics.layout, x, y)
+
+        # Make a pick action if it is released on the draw-to node.
+        if self.draw_to is not None and node == self.draw_to:
+            edge = self.draw_from, self.draw_to
+            action = self._pick_action_type(edge, agent=self._role)
+
+            # Save the current draw-to.
+            current = self.draw_to
+            
+            self._clear_drawing()
+
+            # Set the draw-to as the draw-from for chain drawings.
+            self.draw_from = current
+
+        return action
+
+    def _clear_drawing(self):
+        """TODO docstring for _clear_drawing"""
+        self.draw_to = None
+        self.draw_from = None
+        self.graphics.temp_suggested_sprite = None
+        self._cross_shown = False
 
     def _check_buttons(self, x, y):
         """TODO docstring for _check_buttons"""
@@ -532,47 +719,6 @@ class WorldScene(EnvironmentScene):
 
     def _update_status_label(self):
         pass
-
-    def _process_drawing_done(self, x, y):
-        """TODO docstring for _process_drawing_done"""
-        action = None
-
-        # Check if an edge is drawn.
-        if self.temp_from is not None:
-            # Drawing action.
-            to_node = check_node_hit(self.graphics.layout, x, y)
-            if to_node is not None:
-                from_node = self.temp_from[2]
-                edge = from_node, to_node
-                is_selected = self.state.network.subgraph.has_edge(*edge)
-                has_edge = self.graphics.layout.has_edge(*edge)
-
-                if has_edge and (from_node != to_node) and not is_selected:
-                    action = self._pick_action_type(edge, agent=self._role)
-
-        # Clear selection.
-        selected = self.state.network.get_selected_nodes()
-        if self.temp_from is not None \
-                and self.temp_from[2] not in selected:
-            node_data = self.graphics.layout.nodes[self.temp_from[2]]
-            node_data['selected_sprite'].visible = False
-
-        if self.temp_to is not None \
-                and self.temp_to not in selected:
-            node_data = self.graphics.layout.nodes[self.temp_to]
-            node_data['selected_sprite'].visible = False
-            self.temp_to = None
-
-        self._reset_drawing()
-
-        return action
-
-    def _reset_drawing(self):
-        """TODO docstring for _reset_drawing"""
-        self.temp_from = None
-        self.temp_to = None
-        self.graphics.temp_suggested_sprite = None
-        self._cross_shown = False
 
 
 class IntroWorldScene(WorldScene):

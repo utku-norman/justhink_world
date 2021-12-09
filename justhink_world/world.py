@@ -227,7 +227,7 @@ class World(pomdp_py.POMDP):
             s = 'Invalid action {}: it not feasible (i.e. in {}).'.format(
                 action, sorted(self.agent.all_actions))
             s += '\nIgnoring the action request.'
-            print(Bcolors.fail(s))
+            print(Bcolors.ok(s))
             return None  # False
 
         # Relocate in history if not at the last state.
