@@ -471,7 +471,7 @@ class WorldScene(EnvironmentScene):
         """TODO docstring for on_update of WorldScene"""
         super().on_update()
 
-        self._clear_drawing()
+        self._clear_drawing(clear_draw_from=False)
 
         self._update_feasible_actions()
 
@@ -487,7 +487,7 @@ class WorldScene(EnvironmentScene):
         else:
             raise NotImplementedError
 
-        # self._clear_drawing()
+        self._clear_drawing()
 
     # Private methods.
 
@@ -661,10 +661,11 @@ class WorldScene(EnvironmentScene):
 
         return action
 
-    def _clear_drawing(self):
+    def _clear_drawing(self, clear_draw_from=True):
         """TODO docstring for _clear_drawing"""
+        if clear_draw_from:
+            self.draw_from = None
         self.draw_to = None
-        self.draw_from = None
         self.graphics.temp_suggested_sprite = None
         self._cross_shown = False
 
