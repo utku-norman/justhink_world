@@ -182,25 +182,36 @@ class WorldWindow(pyglet.window.Window):
         """TODO docstring for on_key_press"""
         if symbol == key.ESCAPE:
             self.close()
+
         elif symbol == key.LEFT:
             self.world.state_no = self.world.state_no - 1
             self.world.agent.state_no = self.world.agent.state_no - 1
             self.scene.state = self.world.cur_state
+
         elif symbol == key.RIGHT:
             self.world.state_no = self.world.state_no + 1
             self.world.agent.state_no = self.world.agent.state_no + 1
             self.scene.state = self.world.cur_state
+
         elif symbol == key.HOME:
             self.world.state_no = 1
             self.world.agent.state_no = 1
             self.scene.state = self.world.cur_state
+
         elif symbol == key.END:
             self.world.state_no = self.world.num_states
             self.world.agent.state_no = self.world.agent.num_states
             self.scene.state = self.world.cur_state
+
         elif symbol == key.TAB:
             self.scene.toggle_role()
             self.scene.state = self.world.cur_state
+
+        elif symbol == key.A and modifiers & key.MOD_CTRL:
+            action = self.get_agent_action()
+            print('Executing planned action {}'.format(action))
+            self.execute_action(action)
+
         elif symbol == key.P:
             is_paused = self.world.cur_state.is_paused
             self.execute_action(SetPauseAction(not is_paused, Agent.MANAGER))
@@ -208,6 +219,22 @@ class WorldWindow(pyglet.window.Window):
         self.dispatch_event('on_update')
 
     # Custom public methods.
+    def get_agent_action(self):
+        agent = self.world.agent
+        action = agent.planner.last_plan
+        if action is None:
+            agent.planner.plan(
+                self.world.cur_state, self.world.agent.planner.cur_node)
+            action = agent.planner.last_plan
+
+        action.agent = self.scene._role  # Reapproriate the role.
+        # Reapproriate a pick type of action.
+        if isinstance(action, SuggestPickAction) \
+                or isinstance(action, PickAction):
+            action = self.scene._pick_action_type(
+                action.edge, action.agent)
+
+        return action
 
     def execute_action(self, action):
         """TODO docstring for execute_action"""

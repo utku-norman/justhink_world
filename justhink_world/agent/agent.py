@@ -1,5 +1,3 @@
-# import copy
-
 import networkx as nx
 
 import pomdp_py
