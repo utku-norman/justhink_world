@@ -102,7 +102,8 @@ class WorldWindow(pyglet.window.Window):
 
     def __init__(
             self, world, state_no=None, caption='World', width=1920,
-            height=1080, screen_index=0, drawing_mode=None, scene_type=None):
+            height=1080, screen_index=0, drawing_mode=None, scene_type=None,
+            visible=True):
         # assert isinstance(world, IndividualWorld) or \
         #     isinstance(world, CollaborativeWorld)
 
@@ -134,7 +135,8 @@ class WorldWindow(pyglet.window.Window):
 
         # style = pyglet.window.Window.WINDOW_STYLE_DEFAULT
         style = pyglet.window.Window.WINDOW_STYLE_BORDERLESS
-        super().__init__(width, height, caption, style=style, fullscreen=False)
+        super().__init__(width, height, caption, style=style, fullscreen=False,
+            visible=visible)
 
         self._init_graphics(width, height)
 
