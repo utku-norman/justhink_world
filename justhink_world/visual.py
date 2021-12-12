@@ -101,16 +101,17 @@ class WorldWindow(pyglet.window.Window):
 
     def __init__(
             self, world, state_no=None, caption='World', width=1920,
-            height=1080, screen_index=0, drawing_mode=None):
+            height=1080, screen_index=0, drawing_mode=None, scene_type=None):
         assert isinstance(world, IndividualWorld) or \
             isinstance(world, CollaborativeWorld)
 
-        if isinstance(world, IndividualWorld):
-            scene_type = IndividualWorldScene
-        elif isinstance(world, CollaborativeWorld):
-            scene_type = CollaborativeWorldScene
-        else:
-            raise NotImplementedError
+        if scene_type is None:
+            if isinstance(world, IndividualWorld):
+                scene_type = IndividualWorldScene
+            elif isinstance(world, CollaborativeWorld):
+                scene_type = CollaborativeWorldScene
+            else:
+                raise NotImplementedError
 
         self.world = world
         # # TODO try except
