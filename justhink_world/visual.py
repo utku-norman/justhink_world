@@ -383,13 +383,15 @@ class WorldScene(EnvironmentScene):
     def set_draw_from(self, node):
         # Ignore setting if already at that value.
         if self._draw_from == node:
-            return
+            return False
 
         # Manager highlight for the old and new nodes.
         self._set_drawing_node_higlights(self._draw_from, node)
 
         # Set the new value.
         self._draw_from = node
+
+        return True
 
     @draw_to.setter
     def draw_to(self, value):
@@ -398,13 +400,15 @@ class WorldScene(EnvironmentScene):
     def set_draw_to(self, node):
         # Ignore setting if already at that value.
         if self._draw_to == node:
-            return
+            return False
 
         # Manager highlight for the old and new nodes.
         self._set_drawing_node_higlights(self._draw_to, node)
 
         # Set the new value.
         self._draw_to = node
+
+        return True
 
     def _set_drawing_node_higlights(self, node, new_node):
         selected_nodes = self.state.network.get_selected_nodes()
