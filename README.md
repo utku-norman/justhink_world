@@ -171,6 +171,18 @@ show_world(world)
 # show_world(world, screen_index=0)
 ```
 
+
+
+From the viewpoint of the robot.
+```
+from justhink_world import create_world, show_world
+
+world = create_world('robot-individual-1')
+
+show_world(world, drawing_mode='click')
+```
+
+
 ##### Execute actions via Python commands (and visualise the world at its latest state).
 ```
 from justhink_world import create_world, show_world

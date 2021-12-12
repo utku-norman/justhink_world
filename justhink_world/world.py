@@ -34,6 +34,8 @@ def list_worlds():
     for i in range(1, 3):
         names.append('collaboration-{}'.format(i))
     names.append('bye')
+    for i in range(1, 2):
+        names.append('robot-individual-{}'.format(i))
 
     return names
 
@@ -66,8 +68,10 @@ def create_world(name, history=None, state_no=None, verbose=False):
     elif 'collaboration' in name:
         world_type = CollaborativeWorld
     # elif 'test' in name:
+    elif 'robot-individual' in name:
+        world_type = RobotIndividualWorld
     else:
-        world_type = IndividualWorld
+        world_type = HumanIndividualWorld
     # else:
         # raise NotImplementedError
 
@@ -78,9 +82,13 @@ def create_world(name, history=None, state_no=None, verbose=False):
 
     # Construct the initial state.
     if history is None:
-        if world_type is IndividualWorld:
+        if world_type is HumanIndividualWorld:
             init_state = EnvState(
                 network=network, agents=frozenset({Agent.HUMAN}),
+                attempt_no=1, max_attempts=None, is_paused=False)
+        elif world_type is RobotIndividualWorld:
+            init_state = EnvState(
+                network=network, agents=frozenset({Agent.ROBOT}),
                 attempt_no=1, max_attempts=None, is_paused=False)
         elif world_type is CollaborativeWorld:
             init_state = EnvState(
@@ -319,13 +327,32 @@ class TutorialWorld(World):
 class IndividualWorld(World):
     """TODO"""
 
-    def __init__(self, state, name='IndividualWorld', **kwargs):
-        transition_model = IndividualTransitionModel()
-        policy_model = IndividualPolicyModel()
+    def __init__(
+            self, state, name='IndividualWorld', agent=Agent.HUMAN, **kwargs):
+        transition_model = IndividualTransitionModel()  # agent=agent)
+        policy_model = IndividualPolicyModel(agent=agent)
 
         super().__init__(
             state, transition_model=transition_model,
             policy_model=policy_model, name=name, **kwargs)
+
+
+class HumanIndividualWorld(IndividualWorld):
+    """TODO"""
+
+    def __init__(self, state, **kwargs):
+        kwargs['name'] = 'HumanIndividualWorld'
+        kwargs['agent'] = Agent.HUMAN
+        super().__init__(state, **kwargs)
+
+
+class RobotIndividualWorld(IndividualWorld):
+    """TODO"""
+
+    def __init__(self, state, **kwargs):
+        kwargs['name'] = 'RobotIndividualWorld'
+        kwargs['agent'] = Agent.ROBOT
+        super().__init__(state, **kwargs)
 
 
 class CollaborativeWorld(World):
@@ -512,7 +539,7 @@ def update_belief(agent, observation, action=None, verbose=False):
     if not isinstance(action, ObserveAction):
         agent.history.extend([action, next_mental_state])
         agent.state_no = agent.num_states
-    
+
     if verbose:
         print('---------------------')
         print()

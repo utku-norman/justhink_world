@@ -5,7 +5,7 @@ from ..domain.action import PickAction, SuggestPickAction, \
     SubmitAction, \
     AgreeAction, DisagreeAction, \
     ClearAction, AttemptSubmitAction, ContinueAction, \
-    SetPauseAction, ResetAction
+    SetPauseAction  # , ResetAction
 
 from ..agent.agent import Agent
 
@@ -44,6 +44,12 @@ class PolicyModel(pomdp_py.RolloutPolicy):
 
 
 class IndividualPolicyModel(PolicyModel):
+
+    def __init__(self, agent=Agent.HUMAN, **kwargs):
+
+        super().__init__(**kwargs)
+        self.agent = agent
+
     """TODO"""
 
     def update_available_actions(self, state):
@@ -58,24 +64,24 @@ class IndividualPolicyModel(PolicyModel):
                 # Can pick the remaining edges.
                 for u, v in state.network.graph.edges():
                     if not state.network.subgraph.has_edge(u, v):
-                        actions.add(PickAction((u, v)))
-                        actions.add(PickAction((v, u)))
+                        actions.add(PickAction((u, v), agent=self.agent))
+                        actions.add(PickAction((v, u), agent=self.agent))
 
                 # Can clear if there is at least one edge.
                 if state.network.subgraph.number_of_edges() > 0:
-                    actions.add(ClearAction())
+                    actions.add(ClearAction(agent=self.agent))
 
                 # Can attempt to submit any time.
-                actions.add(AttemptSubmitAction())
+                actions.add(AttemptSubmitAction(agent=self.agent))
 
             # Confirming a submission.
             else:
-                actions.add(ContinueAction())
-                actions.add(SubmitAction())
+                actions.add(ContinueAction(agent=self.agent))
+                actions.add(SubmitAction(agent=self.agent))
 
         actions.add(SetPauseAction(True, Agent.MANAGER))
         actions.add(SetPauseAction(False, Agent.MANAGER))
-        actions.add(ResetAction(Agent.MANAGER))
+        # actions.add(ResetAction(Agent.MANAGER))
         
         self.actions = actions
 
@@ -125,7 +131,7 @@ class CollaborativePolicyModel(PolicyModel):
 
         actions.add(SetPauseAction(True, Agent.MANAGER))
         actions.add(SetPauseAction(False, Agent.MANAGER))
-        actions.add(ResetAction(Agent.MANAGER))
+        # actions.add(ResetAction(Agent.MANAGER))
 
         self.actions = actions
 
@@ -153,6 +159,6 @@ class TutorialPolicyModel(PolicyModel):
         # if state.step_no == 3 and num_edges == 1:
         actions.add(SubmitAction(agent=Agent.HUMAN))
 
-        actions.add(ResetAction(Agent.MANAGER))
+        # actions.add(ResetAction(Agent.MANAGER))
 
         self.actions = actions

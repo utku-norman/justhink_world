@@ -6,8 +6,9 @@ import networkx as nx
 
 from ..domain.action import PickAction, SuggestPickAction, \
     SetPauseAction, SetStateAction, ObserveAction, \
-    AgreeAction, DisagreeAction, ClearAction, ResetAction, \
+    AgreeAction, DisagreeAction, ClearAction, \
     AttemptSubmitAction, ContinueAction, SubmitAction
+    # ResetAction, \
 
 # from ..domain.state import Button
 from ..agent import Agent
@@ -54,10 +55,10 @@ class TutorialTransitionModel(TransitionModel):
     def sample(self, state, action):
         next_state = copy.deepcopy(state)
 
-        if isinstance(action, ResetAction):
-            next_state.step_no = 0
-            next_state.is_highlighted = False
-            next_state.network.subgraph = nx.Graph()
+        # if isinstance(action, ResetAction):
+        #     next_state.step_no = 0
+        #     next_state.is_highlighted = False
+        #     next_state.network.subgraph = nx.Graph()
 
         num_edges = state.network.subgraph.number_of_edges()
 
@@ -98,14 +99,14 @@ class IndividualTransitionModel(TransitionModel):
             next_state.is_paused = action.is_paused
             return next_state
 
-        elif isinstance(action, ResetAction):
-            next_state.network.subgraph = nx.Graph()
-            next_state.agents = frozenset({Agent.HUMAN})
-            next_state.attempt_no = 1
-            next_state.is_submitting = False
-            next_state.is_paused = False
-            next_state.is_terminal = False
-            next_state.is_highlighted = False
+        # elif isinstance(action, ResetAction):
+        #     next_state.network.subgraph = nx.Graph()
+        #     next_state.agents = frozenset({Agent.HUMAN})
+        #     next_state.attempt_no = 1
+        #     next_state.is_submitting = False
+        #     next_state.is_paused = False
+        #     next_state.is_terminal = False
+        #     next_state.is_highlighted = False
 
         # Like a wait action to fill observation.
         elif isinstance(action, ObserveAction):
@@ -163,14 +164,14 @@ class CollaborativeTransitionModel(TransitionModel):
             next_state.is_paused = action.is_paused
             return next_state
 
-        elif isinstance(action, ResetAction):
-            next_state.network.subgraph = nx.Graph()
-            next_state.agents = frozenset({Agent.ROBOT})
-            next_state.attempt_no = 1
-            next_state.is_submitting = False
-            next_state.is_paused = False
-            next_state.is_terminal = False
-            next_state.is_highlighted = False
+        # elif isinstance(action, ResetAction):
+        #     next_state.network.subgraph = nx.Graph()
+        #     next_state.agents = frozenset({Agent.ROBOT})
+        #     next_state.attempt_no = 1
+        #     next_state.is_submitting = False
+        #     next_state.is_paused = False
+        #     next_state.is_terminal = False
+        #     next_state.is_highlighted = False
 
         # Like a wait action to fill observation.
         elif isinstance(action, ObserveAction):

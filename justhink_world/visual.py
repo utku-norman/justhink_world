@@ -10,7 +10,8 @@ from justhink_world.agent import Agent
 from justhink_world.agent.visual import MentalWindow
 from justhink_world.env.visual import EnvironmentScene, create_edge_sprite
 
-from justhink_world.world import IndividualWorld, CollaborativeWorld
+from justhink_world.world import HumanIndividualWorld, RobotIndividualWorld, \
+    CollaborativeWorld
 from justhink_world.domain.action import SetPauseAction,  \
     PickAction, SuggestPickAction, ClearAction, AgreeAction, DisagreeAction, \
     AttemptSubmitAction, ContinueAction, SubmitAction
@@ -102,12 +103,14 @@ class WorldWindow(pyglet.window.Window):
     def __init__(
             self, world, state_no=None, caption='World', width=1920,
             height=1080, screen_index=0, drawing_mode=None, scene_type=None):
-        assert isinstance(world, IndividualWorld) or \
-            isinstance(world, CollaborativeWorld)
+        # assert isinstance(world, IndividualWorld) or \
+        #     isinstance(world, CollaborativeWorld)
 
         if scene_type is None:
-            if isinstance(world, IndividualWorld):
-                scene_type = IndividualWorldScene
+            if isinstance(world, HumanIndividualWorld):
+                scene_type = HumanIndividualWorldScene
+            elif isinstance(world, RobotIndividualWorld):
+                scene_type = RobotIndividualWorldScene
             elif isinstance(world, CollaborativeWorld):
                 scene_type = CollaborativeWorldScene
             else:
@@ -803,11 +806,11 @@ class TutorialWorldScene(WorldScene):
         # self.graphics.cost_label.visible = False
 
 
-class IndividualWorldScene(WorldScene):
-    """TODO: docstring for IndividualWorldScene"""
+class HumanIndividualWorldScene(WorldScene):
+    """TODO: docstring for HumanIndividualWorldScene"""
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(role=Agent.HUMAN, **kwargs)
 
         self.temp_edge_image = self.graphics.edge_selected_image
         self._pick_action_type = PickAction
@@ -816,6 +819,21 @@ class IndividualWorldScene(WorldScene):
         # Hide node names if any.
         for u, d in self.graphics.layout.nodes(data=True):
             d['label'].text = ''
+
+
+class RobotIndividualWorldScene(WorldScene):
+    """TODO: docstring for RobotIndividualWorldScene"""
+
+    def __init__(self, **kwargs):
+        super().__init__(role=Agent.ROBOT, **kwargs)
+
+        self.temp_edge_image = self.graphics.edge_selected_image
+        self._pick_action_type = PickAction
+        self._submit_action_type = AttemptSubmitAction
+
+        # # Hide node names if any.
+        # for u, d in self.graphics.layout.nodes(data=True):
+        #     d['label'].text = ''
 
 
 class CollaborativeWorldScene(WorldScene):
