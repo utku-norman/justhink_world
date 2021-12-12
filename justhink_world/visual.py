@@ -377,7 +377,10 @@ class WorldScene(EnvironmentScene):
         return self._draw_to
 
     @draw_from.setter
-    def draw_from(self, node):
+    def draw_from(self, value):
+        self.set_draw_from(value)
+
+    def set_draw_from(self, node):
         # Ignore setting if already at that value.
         if self._draw_from == node:
             return
@@ -389,7 +392,10 @@ class WorldScene(EnvironmentScene):
         self._draw_from = node
 
     @draw_to.setter
-    def draw_to(self, node):
+    def draw_to(self, value):
+        self.set_draw_to(value)
+
+    def set_draw_to(self, node):
         # Ignore setting if already at that value.
         if self._draw_to == node:
             return
