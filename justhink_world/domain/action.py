@@ -49,9 +49,9 @@ class Action(pomdp_py.Action):
         return 'Action({},{})'.format(self.name, self.agent)
 
 
-# class ResetAction(Action):
-#     def __init__(self, agent=Agent.MANAGER):
-#         super().__init__('reset', agent)
+class ResetAction(Action):
+    def __init__(self, agent=Agent.MANAGER):
+        super().__init__('reset', agent)
 
 
 class SetStateAction(Action):

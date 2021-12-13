@@ -5,7 +5,7 @@ from ..domain.action import PickAction, SuggestPickAction, \
     SubmitAction, \
     AgreeAction, DisagreeAction, \
     ClearAction, AttemptSubmitAction, ContinueAction, \
-    SetPauseAction  # , ResetAction
+    SetPauseAction, ResetAction
 
 from ..agent.agent import Agent
 
@@ -81,7 +81,7 @@ class IndividualPolicyModel(PolicyModel):
 
         actions.add(SetPauseAction(True, Agent.MANAGER))
         actions.add(SetPauseAction(False, Agent.MANAGER))
-        # actions.add(ResetAction(Agent.MANAGER))
+        actions.add(ResetAction(Agent.MANAGER))
         
         self.actions = actions
 
@@ -131,7 +131,7 @@ class CollaborativePolicyModel(PolicyModel):
 
         actions.add(SetPauseAction(True, Agent.MANAGER))
         actions.add(SetPauseAction(False, Agent.MANAGER))
-        # actions.add(ResetAction(Agent.MANAGER))
+        actions.add(ResetAction(Agent.MANAGER))
 
         self.actions = actions
 
@@ -159,6 +159,6 @@ class TutorialPolicyModel(PolicyModel):
         # if state.step_no == 3 and num_edges == 1:
         actions.add(SubmitAction(agent=Agent.HUMAN))
 
-        # actions.add(ResetAction(Agent.MANAGER))
+        actions.add(ResetAction(Agent.MANAGER))
 
         self.actions = actions
