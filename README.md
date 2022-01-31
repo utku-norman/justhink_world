@@ -82,8 +82,10 @@ git clone https://github.com/utku-norman/justhink_world.git
 2) Create a new [virtual environment](https://docs.python.org/3/tutorial/venv.html) and activate it (can do so in the same folder. Note that the folder name `venv` is [git-ignored](https://git-scm.com/docs/gitignore)):
 ```
 cd justhink_world
-python3 -m venv venv
-source venv/bin/activate
+
+python3 -m venv .venv --prompt JUSThink-env
+
+source .venv/bin/activate
 ```
 
 If you do not have `venv`, first install it by: `sudo apt install python3-venv`
