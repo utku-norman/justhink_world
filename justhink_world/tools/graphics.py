@@ -63,11 +63,11 @@ class DialogBox(object):
         # Create groups: higher the order, the more the foreground.
         groups = [pyglet.graphics.OrderedGroup(i) for i in range(16)]
 
-        # Set the distance between main label and yes/no labels (in pixels ).
+        # Set the distance between main label and yes/no labels (in pixels).
         if self._yes_text == '' and self._no_text == '':
             self.y_pad = 0
         else:
-            self.y_pad = 600 * height_scaler
+            self.y_pad = 500 * height_scaler
         self.x_pad = 900 * width_scaler
 
         # Create the background rectangle (Rectangle or BorderedRectangle).
@@ -86,6 +86,7 @@ class DialogBox(object):
         graphics.main_label = pyglet.text.Label(
             self._main_text, x=width/2, y=height/2+self.y_pad/2,
             color=BLACKA, anchor_x='center', anchor_y='center',
+            multiline=True, width=w, align='center',
             font_name='Sans', font_size=main_fontsize, batch=graphics.batch,
             group=groups[11])
 

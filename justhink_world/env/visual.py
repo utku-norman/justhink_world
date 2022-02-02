@@ -112,9 +112,18 @@ class EnvironmentScene(Scene):
         groups = [pyglet.graphics.OrderedGroup(i) for i in range(16)]
 
         self.submit_box = DialogBox(
-            main_text='Do you want to submit?', 
-            yes_text='Ok', no_text='Cancel', 
+            main_text=('Did you connect all of the mines'
+                       '\nto each other by some path,'
+                       '\nand spend as little as possible,'
+                       '\nat the same time?'), 
+            yes_text='Yes', no_text='No', height_scaler=1/2,
+            main_fontsize=36, response_fontsize=56, 
             width=width, height=height, batch=batch)
+
+        # self.submit_box = DialogBox(
+        #     main_text='Do you want to submit?', 
+        #     yes_text='Ok', no_text='Cancel', 
+        #     width=width, height=height, batch=batch)
 
         # Load a cloud.
         ref = image_source.joinpath('cloud.png')
