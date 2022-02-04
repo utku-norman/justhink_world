@@ -136,7 +136,7 @@ class WorldWindow(pyglet.window.Window):
         # style = pyglet.window.Window.WINDOW_STYLE_DEFAULT
         style = pyglet.window.Window.WINDOW_STYLE_BORDERLESS
         super().__init__(width, height, caption, style=style, fullscreen=False,
-            visible=visible)
+                         visible=visible)
 
         self._init_graphics(width, height)
 
@@ -252,7 +252,7 @@ class WorldWindow(pyglet.window.Window):
         """TODO docstring for on_update"""
         # Update the scene.
         self.scene.on_update()
-        
+
         # Update the window labels.
         self._update_state_label()
         self._update_state_no_label()
@@ -604,8 +604,25 @@ class WorldScene(EnvironmentScene):
         # Check if a node is pressed: returns a node, or None if not a node.
         node = check_node_hit(self.graphics.layout, x, y)
 
-        # Set as the draw-from node.
-        self.draw_from = node
+        # Set as the draw-from node, if an action exists from that node.
+        # is_selectable = False
+        if node is not None:
+            is_possible = False
+            # Draw from only if there is an action available from there.
+            for action in self._actions:
+                if hasattr(action, 'edge') and node in action.edge:
+                    # is_selectable = True
+                    # print('###', action, node)
+                    self.draw_from = node
+                    is_possible = True
+                    break
+
+            # Put a cross at the node if cannot draw from that node.
+            if not is_possible:
+                node_data = self.graphics.layout.nodes
+                self.graphics.cross_sprite.update(
+                    x=node_data[node]['x'], y=node_data[node]['y'])
+                self._cross_shown = True
 
     def _process_drag_drawing_on_mouse_drag(self, x, y):
         # Check if a node is dragged onto: a node, or None if not a node.
@@ -632,9 +649,13 @@ class WorldScene(EnvironmentScene):
         # Do not put if on the same node.
         u, v = self.draw_from, node
         if u is not None and v is not None and not u == v:
-            is_selected = self.state.network.subgraph.has_edge(u, v)
-            has_edge = self.graphics.layout.has_edge(u, v)
-            if not has_edge or is_selected:
+            # is_selected = self.state.network.subgraph.has_edge(u, v)
+            # has_edge = self.graphics.layout.has_edge(u, v)
+            is_possible = \
+                PickAction((u, v), agent=self._role) in self._actions \
+                or SuggestPickAction((u, v), agent=self._role) in self._actions
+            # if not has_edge or is_selected:
+            if not is_possible:
                 self.graphics.cross_sprite.update(
                     x=(node_data[u]['x']+node_data[v]['x'])/2,
                     y=(node_data[u]['y']+node_data[v]['y'])/2)
@@ -674,7 +695,7 @@ class WorldScene(EnvironmentScene):
         # Set as draw-from node if it is a node and draw-from is not set yet.
         elif node is not None and self.draw_from is None:
             self.draw_from = node
-        
+
         # Set as draw-to node if it is a node other than the draw-from node.
         elif node is not None and node != self.draw_from:
             self.draw_to = node
@@ -696,7 +717,7 @@ class WorldScene(EnvironmentScene):
 
             # Save the current draw-to.
             current = self.draw_to
-            
+
             self._clear_drawing()
 
             # Set the draw-to as the draw-from for chain drawings.

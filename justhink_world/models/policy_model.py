@@ -61,9 +61,21 @@ class IndividualPolicyModel(PolicyModel):
             # If not confirming a submission (i.e. normal gameplay).
             if not state.is_submitting:
 
-                # Can pick the remaining edges.
-                for u, v in state.network.graph.edges():
-                    if not state.network.subgraph.has_edge(u, v):
+                # # Can pick the remaining edges.
+                # for u, v in state.network.graph.edges():
+                #     if not state.network.subgraph.has_edge(u, v):
+                #         actions.add(PickAction((u, v), agent=self.agent))
+                #         actions.add(PickAction((v, u), agent=self.agent))
+
+                # Can pick edges outgoing from connected nodes, or all edges.
+                if state.network.subgraph.number_of_edges() > 0:
+                    for u in state.network.subgraph.nodes():
+                        for v in state.network.graph.neighbors(u):
+                            if not state.network.subgraph.has_edge(u, v):
+                                actions.add(PickAction((u, v), agent=self.agent))
+                                actions.add(PickAction((v, u), agent=self.agent))
+                else:
+                    for u, v in state.network.graph.edges():
                         actions.add(PickAction((u, v), agent=self.agent))
                         actions.add(PickAction((v, u), agent=self.agent))
 
@@ -83,6 +95,7 @@ class IndividualPolicyModel(PolicyModel):
         actions.add(SetPauseAction(False, Agent.MANAGER))
         actions.add(ResetAction(Agent.MANAGER))
         
+        # print(actions)
         self.actions = actions
 
 
@@ -103,13 +116,30 @@ class CollaborativePolicyModel(PolicyModel):
 
                     # If no edge is currently suggested.
                     if state.network.suggested_edge is None:
-                        # The agent can suggest picking a non-selected edge.
-                        for u, v in state.network.graph.edges():
-                            if not state.network.subgraph.has_edge(u, v):
-                                action = SuggestPickAction((u, v), agent=agent)
-                                actions.add(action)
-                                action = SuggestPickAction((v, u), agent=agent)
-                                actions.add(action)
+                        # # The agent can suggest picking a non-selected edge.
+                        # for u, v in state.network.graph.edges():
+                        #     if not state.network.subgraph.has_edge(u, v):
+                        #         actions.add(
+                        #             SuggestPickAction((u, v), agent=agent))
+                        #         actions.add(
+                        #             SuggestPickAction((v, u), agent=agent))
+
+                        # Can pick edges outgoing from connected nodes
+                        # , or all edges if no edges are selected yet.
+                        if state.network.subgraph.number_of_edges() > 0:
+                            for u in state.network.subgraph.nodes():
+                                for v in state.network.graph.neighbors(u):
+                                    if not state.network.subgraph.has_edge(u, v):
+                                        actions.add(
+                                            SuggestPickAction((u, v), agent=agent))
+                                        actions.add(
+                                            SuggestPickAction((v, u), agent=agent))
+                        else:
+                            for u, v in state.network.graph.edges():
+                                actions.add(
+                                    SuggestPickAction((u, v), agent=agent))
+                                actions.add(
+                                    SuggestPickAction((v, u), agent=agent))
 
                         # The agent can submit.
                         actions.add(AttemptSubmitAction(agent=agent))

@@ -249,8 +249,11 @@ from justhink_world import create_world, show_world
 # Create a world.
 world = create_world('collaboration-1')
 
-# Visualise the world on the current screen.
-show_world(world, screen_index=0)
+# Visualise the world
+show_world(world)
+
+## Visualise the world on the current screen.
+# show_world(world, screen_index=0)
 ```
 
 ##### Execute actions via Python commands (and visualise the world at its latest state).

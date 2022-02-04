@@ -131,11 +131,11 @@ class MentalState(object):
         if Agent.HUMAN in agents:
             self.beliefs = {
                 'me': {
-                    'world': self._create_view(graph),
+                    'world': self._create_view(graph, level=0),
                     'you': {
-                        'world': self._create_view(graph),
+                        'world': self._create_view(graph, level=1),
                         'me': {
-                            'world': self._create_view(graph),
+                            'world': self._create_view(graph, level=2),
                         }
                     },
                 }
@@ -143,18 +143,24 @@ class MentalState(object):
         else:
             self.beliefs = {
                 'me': {
-                    'world': self._create_view(graph),
+                    'world': self._create_view(graph, level=0),
                 }
             }
         self.cur_node = cur_node
 
-    def _create_view(self, from_graph):
+    def _create_view(self, from_graph, level=0):
         # About choices.
         data = {
             'is_optimal': None,
             'is_selected': False,
             'is_suggested': False,
         }
+        if level == 0:
+            data['n_robot_disagree'] = 0
+            data['n_human_disagree'] = 0
+            data['n_robot_agree'] = 0
+            data['n_human_agree'] = 0
+            data['is_aligned'] = False
 
         graph = nx.Graph()
         

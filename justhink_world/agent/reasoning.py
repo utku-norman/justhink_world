@@ -163,51 +163,97 @@ def get_greedy_neighbour(graph, u, excluded_subgraph):
 class PrimsPlanner():
     """Define a Prim's (or JPD (Jarnik/Prim/Dijkstra)) planner."""
 
-    def __init__(self, world, start=None):
-        self.world = world
+    def __init__(self, state, start=None):
+        self.state = state
 
         if start is None:
-            available_starts = sorted(
-                self.world.env.state.network.graph.nodes())
-            # print('Available starting points: {}'.format(available_starts))
-            self.current = available_starts[0]
+            available_starts = sorted(state.network.graph.nodes())
+            self.cur_node = available_starts[0]
         else:
-            self.current = start
-        self.last_explanation = None
 
-    def plan(self, agent):
+            self.cur_node = start
+
+        self.last_explanation = None
+        self.last_plan = None
+
+    def plan(self, state, cur_node):  # agent):
+        """Select the next action by Prim's planning."""
         # Select greedy.
-        state = self.world.agent.cur_belief.mpe()
-        expl, e = get_prims_pick(
-            state.graph, self.current, state.edges)
+        # self.state = agent.cur_belief.mpe()
+        # self.cur_node = agent.cur_state.cur_node
+        self.state = state
+        self.cur_node = cur_node
+
+        expl, min_edges = get_prims_pick(
+            self.state.network.graph, self.cur_node, 
+            self.state.network.subgraph.edges())
 
         # Refine the explanation in terms of actions.
-        if e is None:
-            expl.best = AttemptSubmitAction()
-            expl = ConnectedExplanation()
+        if min_edges is None:
+            expl.best = AttemptSubmitAction(agent=Agent.ROBOT)
+            expl = ConnectedExplanation(agent=Agent.ROBOT)
         else:
-            expl.best = SuggestPickAction(e)
-            expl.others = {SuggestPickAction(edge) for edge in expl.others}
+            expl.best = {SuggestPickAction(e, agent=Agent.ROBOT) 
+                         for e in min_edges}
+            expl.others = {SuggestPickAction(e, agent=Agent.ROBOT)
+                           for e in expl.others}
 
         # Choose the action.
-        action = expl.best
+        action = sorted(expl.best)[0]
+
         self.last_explanation = expl
+        self.last_plan = action
 
         return action
 
-    def update(self, agent, action, observation):
-        """Update the current node"""
-        if isinstance(action, SuggestPickAction):
-            if self.current == action.edge[1]:
-                self.current = action.edge[0]
-            else:
-                self.current = action.edge[1]
+    # def __init__(self, world, start=None):
+    #     self.world = world
+
+    #     if start is None:
+    #         available_starts = sorted(
+    #             self.world.env.state.network.graph.nodes())
+    #         # print('Available starting points: {}'.format(available_starts))
+    #         self.current = available_starts[0]
+    #     else:
+    #         self.current = start
+    #     self.last_explanation = None
+
+    # def plan(self, agent):
+    #     # Select greedy.
+    #     state = self.world.agent.cur_belief.mpe()
+    #     expl, e = get_prims_pick(
+    #         state.graph, self.current, state.edges)
+
+    #     # Refine the explanation in terms of actions.
+    #     if e is None:
+    #         expl.best = AttemptSubmitAction()
+    #         expl = ConnectedExplanation()
+    #     else:
+    #         expl.best = SuggestPickAction(e)
+    #         expl.others = {SuggestPickAction(edge) for edge in expl.others}
+
+    #     # Choose the action.
+    #     action = expl.best
+    #     self.last_explanation = expl
+    #     self.last_plan = action
+
+    #     return action
+
+    # def update(self, agent, action, observation):
+    #     """Update the current node"""
+    #     if isinstance(action, SuggestPickAction):
+    #         if self.current == action.edge[1]:
+    #             self.current = action.edge[0]
+    #         else:
+    #             self.current = action.edge[1]
 
 
 def get_prims_pick(graph, start, edges=frozenset(), weight_label='cost'):
     """Function receives a graph and a starting node, and return the next"""
     closed_set = {u for tup in edges for u in tup}
-    closed_set = closed_set.union({start})
+
+    if len(closed_set) == 0:
+        closed_set = closed_set.union({start})
 
     # Default explanation template.
     expl = BetterThanExplanation()
@@ -225,12 +271,25 @@ def get_prims_pick(graph, start, edges=frozenset(), weight_label='cost'):
     if len(pq) == 0:
         return expl, None
 
-    e, weight = pq.popitem()
+    min_edges = list()
 
-    expl.best = e
-    expl.others.discard(e)
+    edge, weight = pq.popitem()
+    expl.others.discard(edge)
 
-    return expl, e
+    min_weight = weight
+
+    min_edges.append(edge)
+    while len(pq) > 0:
+        edge, weight = pq.popitem()
+        expl.others.discard(edge)
+        if weight == min_weight:  # an alternative
+            min_edges.append(edge)
+        else:
+            break
+
+    expl.best = min_edges
+
+    return expl, min_edges
 
 
 class Explanation(object):
