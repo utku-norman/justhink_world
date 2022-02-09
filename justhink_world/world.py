@@ -96,7 +96,7 @@ def create_world(name, history=None, state_no=None, verbose=False, **kwargs):
         elif world_type is CollaborativeWorld:
             init_state = EnvState(
                 network=network, agents=frozenset({Agent.ROBOT}),
-                attempt_no=1, max_attempts=4, is_paused=False)
+                attempt_no=1, max_attempts=3, is_paused=False)
         elif world_type is IntroWorld:
             init_state = EnvState(
                 network=network, agents=frozenset())
@@ -350,7 +350,7 @@ class IndividualWorld(World):
 
     def __init__(
             self, state, name='IndividualWorld', agent=Agent.HUMAN, **kwargs):
-        transition_model = IndividualTransitionModel()  # agent=agent)
+        transition_model = IndividualTransitionModel()
         policy_model = IndividualPolicyModel(agent=agent)
 
         super().__init__(

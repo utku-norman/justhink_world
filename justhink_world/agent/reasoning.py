@@ -69,7 +69,10 @@ class TraversalJumpingPlanner(object):
 
         if start is None:
             available_starts = sorted(state.network.graph.nodes())
-            self.cur_node = available_starts[0]
+            if 3 in available_starts:
+                self.cur_node = 3
+            else:
+                self.cur_node = available_starts[0]
         else:
 
             self.cur_node = start
@@ -190,8 +193,8 @@ class PrimsPlanner():
 
         # Refine the explanation in terms of actions.
         if min_edges is None:
-            expl.best = AttemptSubmitAction(agent=Agent.ROBOT)
-            expl = ConnectedExplanation(agent=Agent.ROBOT)
+            expl = ConnectedExplanation()
+            expl.best = {AttemptSubmitAction(agent=Agent.ROBOT)}
         else:
             expl.best = {SuggestPickAction(e, agent=Agent.ROBOT) 
                          for e in min_edges}
@@ -307,8 +310,13 @@ class ConnectedExplanation(object):
 
 
 class BetterThanExplanation():
-    def __init__(self, best=None, others=set(), alternatives=set()):
+    def __init__(self, best=None, others=None, alternatives=None):
         """Action best is better than actions in others, with alternatives."""
+        if others is None:
+            others = set()
+        if alternatives is None:
+            alternatives = set()
+
         self.best = best
         self.others = others
         self.alternatives = alternatives

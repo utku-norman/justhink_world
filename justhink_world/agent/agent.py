@@ -127,7 +127,10 @@ class MentalState(object):
 
     def __init__(
             self, graph, cur_node=None,
-            agents=set({Agent.HUMAN, Agent.ROBOT})):
+            agents=None):
+        if agents is None:
+            agents = set({Agent.HUMAN, Agent.ROBOT})
+            
         if Agent.HUMAN in agents:
             self.beliefs = {
                 'me': {

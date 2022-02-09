@@ -54,7 +54,7 @@ class EnvState(pomdp_py.State):
     """
 
     def __init__(
-            self, network, agents,  # =frozenset({Agent.HUMAN, Agent.ROBOT}),
+            self, network, agents,
             attempt_no=1, max_attempts=None, step_no=1, is_submitting=False,
             is_paused=False, is_terminal=False, is_highlighted=False):
         self.network = network
@@ -146,10 +146,12 @@ class NetworkState(object):
             (default 'text')
     """
 
-    def __init__(self, graph, subgraph=nx.Graph(), suggested_edge=None,
+    def __init__(self, graph, subgraph=None, suggested_edge=None,
                  edge_weight_key='cost', node_name_key='text'):
         self.graph = graph
-        self.subgraph = subgraph
+
+        if subgraph is None:
+            self.subgraph = nx.Graph()
         self.suggested_edge = suggested_edge
 
         self._edge_weight_key = edge_weight_key
