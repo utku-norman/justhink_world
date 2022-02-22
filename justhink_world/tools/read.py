@@ -35,8 +35,8 @@ def load_graph_from_json(file):
     return network
 
 
-def load_all_logs(log_resource='justhink21_transition_lists.pickle'):
-
+def load_all_logs(log_resource='justhink22_transition_lists.pickle'):
+    # 'justhink21_transition_lists.pickle'
     # Create a container for the image resources.
     data_container = importlib_resources.files(
         'justhink_world.resources.data')
@@ -48,8 +48,20 @@ def load_all_logs(log_resource='justhink21_transition_lists.pickle'):
     return logs
 
 
+def list_all_logs():
+    """TODO: docstring for list_all_logs"""
+    try:
+        logs = load_all_logs()
+        for k, v in logs.items():
+            for kk, vv in v.items():
+                print((k, kk), end=', ')
+    except Exception as e:
+        print(e)
+        raise ValueError
+
+
 def load_log(sample_no, world_name):
-    """TODO"""
+    """TODO: docstring for load_log"""
     try:
         logs = load_all_logs()
         log_df = logs[sample_no][world_name]
@@ -87,8 +99,6 @@ def load_image_from_reference(ref):
     """Read pyglet image from importlib reference."""
     with importlib_resources.as_file(ref) as file:
         return pyglet.image.load(file)
-
-
 
 
 def make_network_resources(name):

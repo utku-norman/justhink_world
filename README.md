@@ -281,15 +281,25 @@ show_world(world)
 ```
 from justhink_world import create_world, load_log, show_world
 
+# Pick a sample (i.e. participant index) and activity.
+sample_no = 3
 world_name = 'collaboration-1'
 
-# Load the log table for a sample (i.e. participant index) and activity.
-history = load_log(sample_no=3, world_name=world_name)
+# Load the log.
+history = load_log(sample_no=sample_no, world_name=world_name)
 
 # Create a world with that history.
 world = create_world(world_name, history)
 
 show_world(world, state_no=1)
+```
+
+
+List available logs.
+```
+from justhink_world import list_all_logs
+
+list_all_logs()
 ```
 
 

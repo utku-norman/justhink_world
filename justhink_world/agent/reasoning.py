@@ -74,7 +74,6 @@ class TraversalJumpingPlanner(object):
             else:
                 self.cur_node = available_starts[0]
         else:
-
             self.cur_node = start
 
         self.last_explanation = None
@@ -171,9 +170,11 @@ class PrimsPlanner():
 
         if start is None:
             available_starts = sorted(state.network.graph.nodes())
-            self.cur_node = available_starts[0]
+            if 3 in available_starts:
+                self.cur_node = 3
+            else:
+                self.cur_node = available_starts[0]
         else:
-
             self.cur_node = start
 
         self.last_explanation = None
