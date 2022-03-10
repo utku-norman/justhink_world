@@ -152,6 +152,9 @@ class NetworkState(object):
 
         if subgraph is None:
             self.subgraph = nx.Graph()
+        else:
+            self.subgraph = subgraph
+
         self.suggested_edge = suggested_edge
 
         self._edge_weight_key = edge_weight_key
