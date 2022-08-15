@@ -238,7 +238,7 @@ class World(pomdp_py.POMDP):
 
         # Apply the state transition.
         state = copy.deepcopy(self.env.state)
-        # env_reward = self.env.state_transition(action) # not used
+        env_reward = self.env.state_transition(action)
         next_state = self.env.state
 
         # Print info.
