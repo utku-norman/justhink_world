@@ -395,7 +395,7 @@ Please report bugs and request features using the [Issue Tracker](https://github
 
 [1] U. Norman, A. Chin, B. Bruno, and P. Dillenbourg, “Efficacy of a ‘Misconceiving’ Robot to Improve Computational Thinking in a Collaborative Problem Solving Activity: A Pilot Study,” 2022. 31st IEEE International Conference on Robot & Human Interactive Communication (RO-MAN). Accessed: Jul. 01, 2022. [Online]. Available: https://infoscience.epfl.ch/record/294825
 
-[2] Zheng, K., & Tellex, S. (2020). pomdp_py: A Framework to Build and Solve POMDP Problems. arXiv preprint arXiv:2004.10099.
+[2] K. Zheng and S. Tellex, “pomdp_py: A Framework to Build and Solve POMDP Problems,” 2020. ICAPS 2020 Workshop on Planning and Robotics (PlanRob). [Online]. Available: https://icaps20subpages.icaps-conference.org/wp-content/uploads/2020/10/14-PlanRob_2020_paper_3.pdf
 
 
 [ROS]: http://www.ros.org
