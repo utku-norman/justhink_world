@@ -3,22 +3,17 @@ import networkx as nx
 import pomdp_py
 
 from .belief import initialize_belief
-# from .reasoning import TraversalJumpingPlanner
-
-# from ..domain.action import *
-# from .state import MentalState
-# import justhink_world.domain.action as action
 
 
 class Agent(object):
-    """TODO: docstring for Agent"""
+    """A class to represent symbolic names for the agents."""
     HUMAN = 'Human'
     ROBOT = 'Robot'
     MANAGER = 'Manager'
 
 
 class TaskAgent(pomdp_py.Agent, Agent):
-    """TODO: docstring for TaskAgent"""
+    """A class to represent an agent doing the activity."""
 
     def __init__(
             self, init_state, policy_model, transition_model,
@@ -42,15 +37,13 @@ class TaskAgent(pomdp_py.Agent, Agent):
 
 
 class ModellingAgent(TaskAgent):
-    """TODO: docstring for ModellingAgent"""
+    """A class to represent an agent with modelling capabilities."""
 
     def __init__(
             self, init_state, policy_model, transition_model,
             observation_model, reward_model, planner,
             history=None, state_no=None):
 
-        # # self.planner = TraversalPlanner(cur_state)
-        # self.planner = TraversalJumpingPlanner(init_state)
         self.planner = planner
 
         if history is None:
@@ -96,7 +89,7 @@ class ModellingAgent(TaskAgent):
     def get_state(self, state_no=None):
         if state_no is None:
             state_no = self.num_states
-        return self._history[self.get_state_index(state_no)] 
+        return self._history[self.get_state_index(state_no)]
 
     @property
     def state_index(self):
@@ -112,25 +105,24 @@ class ModellingAgent(TaskAgent):
 
     @property
     def num_states(self):
-        """Number of states in the history"""
+        """Number of states in the history."""
         return len(self._history) // 2 + 1
 
     @property
     def cur_state(self):
         """Current state of the environment."""
-        # return self._history[self.state_index]
         return self.get_state(self.state_no)
 
 
 class MentalState(object):
-    """TODO: docstring for MentalState"""
+    """A class to represent the mental state of an agent."""
 
     def __init__(
             self, graph, cur_node=None,
             agents=None):
         if agents is None:
             agents = set({Agent.HUMAN, Agent.ROBOT})
-            
+
         if Agent.HUMAN in agents:
             self.beliefs = {
                 'me': {
@@ -166,7 +158,7 @@ class MentalState(object):
             data['is_aligned'] = False
 
         graph = nx.Graph()
-        
+
         for u, d in from_graph.nodes(data=True):
             graph.add_node(u, text=d['text'])
 
@@ -186,7 +178,6 @@ class MentalState(object):
         return 'MentalState({})'.format(self.get_beliefs())
 
     def get_beliefs(self):
-        """TODO: docsring for get_beliefs"""
         belief_list = list()
 
         pairs = [('world', self.beliefs['me']),
@@ -197,7 +188,7 @@ class MentalState(object):
             for u, v, d in beliefs['world'].edges(data=True):
                 value = d['is_optimal']
                 if value is not None:
-                    # # Simplest, less human readible.
+                    # # Simplest in tuples; less human readable.
                     # belief = (key, u, v, value)
 
                     # Verbose/propositional.
@@ -206,9 +197,8 @@ class MentalState(object):
                         s += ' you believe'
                     if key == 'me-by-you':
                         s += ' that I believe'
-                    # s += ' {} to {}'.format(u, v)
                     s += ' {}-{}'.format(
-                        get_node_name(u, beliefs), 
+                        get_node_name(u, beliefs),
                         get_node_name(v, beliefs))
                     if value == 1.0:
                         s += ' is'

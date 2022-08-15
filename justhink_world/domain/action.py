@@ -1,7 +1,6 @@
 import pomdp_py
 
 from ..agent.agent import Agent
-# from justhink_world.agent.agent import Agent
 from .state import EnvState
 
 
@@ -21,7 +20,6 @@ class Action(pomdp_py.Action):
 
     def __init__(self, name, agent):
         assert isinstance(name, str)
-        # assert issubclass(agent, Actor)
 
         self.name = name
         self.agent = agent
@@ -55,7 +53,9 @@ class ResetAction(Action):
 
 
 class SetStateAction(Action):
-    """TODO
+    """An action to set the state of the world.
+
+    Used by a 'manager'; e.g. an experimenter/operator.
 
     Attributes:
         state (EnvState):
@@ -66,7 +66,6 @@ class SetStateAction(Action):
 
     def __init__(self, state, agent=Agent.MANAGER):
         assert isinstance(state, EnvState)
-        # assert issubclass(agent, Actor)
 
         self.state = state
 
@@ -95,14 +94,6 @@ class PickAction(Action):
         self.edge = edge
         name = 'pick({})'.format(format_edge(self.edge))
         super().__init__(name, agent)
-
-    # def __eq__(self, other):
-    #     """"Check if two actions are equivalent."""
-    #     u, v = self.edge
-    #     uu, vv = other.edge
-    #     return isinstance(other, PickAction) \
-    #         and (((u == uu) and (v == vv)) or ((u == vv) and (v == uu))) \
-    #         and self.agent == other.agent
 
 
 class UnpickAction(Action):

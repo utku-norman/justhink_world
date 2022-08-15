@@ -5,7 +5,6 @@ import networkx as nx
 
 from ..tools.network import find_mst, is_subgraph_spanning, \
     compute_total_cost, compute_subgraph_cost
-# from ..agent import Agent
 
 
 class EnvState(pomdp_py.State):
@@ -55,8 +54,13 @@ class EnvState(pomdp_py.State):
 
     def __init__(
             self, network, agents,
-            attempt_no=1, max_attempts=None, step_no=1, is_submitting=False,
-            is_paused=False, is_terminal=False, is_highlighted=False):
+            attempt_no=1,
+            max_attempts=None,
+            step_no=1,
+            is_submitting=False,
+            is_paused=False,
+            is_terminal=False,
+            is_highlighted=False):
         self.network = network
         self.agents = agents
         self.attempt_no = attempt_no
@@ -69,12 +73,19 @@ class EnvState(pomdp_py.State):
 
     def __hash__(self):
         return hash(
-            (self.network, self.agents, self.attempt_no, self.max_attempts,
-                self.step_no, self.is_submitting, self.is_paused,
-                self.is_terminal, self.is_highlighted))
+            (self.network,
+                self.agents,
+                self.attempt_no,
+                self.max_attempts,
+                self.step_no,
+                self.is_submitting,
+                self.is_paused,
+                self.is_terminal,
+                self.is_highlighted)
+        )
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) \
+        return isinstance(other, self.__class__)  \
             and self.__dict__ == other.__dict__
 
     def __deepcopy__(self, memo, shared_attribute_names={}):
@@ -93,23 +104,12 @@ class EnvState(pomdp_py.State):
         return self.__repr__()
 
     def __repr__(self):
-        # # compact
-        # agents_str = ''.join([a.name[0] for a in self.agents]) \
-        #     if len(self.agents) > 0 else 'x'
-        # attempt_str = 'inf' if self.max_attempts is None else \
-        # self.max_attempts
-        # s = 'EnvState('
-        # s += '{}@{}/{},a:{};p:{:d},t:{:d},s:{:d},h:{:d})'.format(
-        #     self.network, self.attempt_no, attempt_str, agents_str,
-        #     self.is_paused, self.is_terminal, self.is_submitting,
-        #     self.is_highlighted)
-
         s = 'Situation({}'.format(self.network)
         if self.max_attempts is not None:
             s += ', attempt={}/{}'.format(
                 self.attempt_no, self.max_attempts)
         if len(self.agents) > 0:
-            s += ', {}'.format(''.join(self.agents))  # [a.name for a in ]))
+            s += ', {}'.format(''.join(self.agents))
         if self.is_paused:
             s += ', paused'
         if self.is_terminal:
@@ -185,12 +185,6 @@ class NetworkState(object):
         return self.__repr__()
 
     def __repr__(self):
-        # return 'NetworkState(e:{}+{},c:{}|n:{},e:{};s:{:d})'.format(
-        #     self.subgraph.number_of_edges(),
-        #     0 if self.suggested_edge is None else 1,
-        #     self.get_cost(), self.graph.number_of_nodes(),
-        #     self.graph.number_of_edges(), self.is_spanning())
-
         extra_info = ''
         num_nodes = self.subgraph.number_of_nodes()
 
@@ -298,7 +292,7 @@ class NetworkState(object):
         """Get a minimum-spanning tree of the state's network.
 
         Returns:
-            nx.Graph: TODO
+            nx.Graph: A minimum spanning tree for the state's network.
         """
         return find_mst(self.graph, edge_weight_key=self._edge_weight_key)
 

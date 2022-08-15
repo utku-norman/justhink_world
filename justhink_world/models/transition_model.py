@@ -9,11 +9,7 @@ from ..domain.action import PickAction, SuggestPickAction, \
     AgreeAction, DisagreeAction, ClearAction, \
     AttemptSubmitAction, ContinueAction, SubmitAction, ResetAction
 
-# from ..domain.state import Button
 from ..agent import Agent
-
-
-# from justhink_world.tools.write import Bcolors
 
 EPSILON = 1e-9
 
@@ -27,7 +23,7 @@ class TransitionModel(pomdp_py.TransitionModel):
 
     def probability(self, next_state, state, action,
                     normalized=False, **kwargs):
-        """deterministic"""
+        """A deterministic model."""
         if next_state == self.sample(state, action):
             return 1.0 - EPSILON
         else:
@@ -42,7 +38,7 @@ class TransitionModel(pomdp_py.TransitionModel):
 
 
 class IntroTransitionModel(TransitionModel):
-    """TODO"""
+    """Transition model for the introduction: no action is available."""
 
     def sample(self, state, action):
         return state
@@ -122,7 +118,6 @@ class IndividualTransitionModel(TransitionModel):
                         and not network.subgraph.has_edge(u, v):
                     next_network.subgraph.add_edge(u, v)
                 next_state.is_submitting = False
-                # next_state.clear_button = Button.ENABLED
 
         # Clear action.
         elif isinstance(action, ClearAction):
@@ -172,23 +167,13 @@ class CollaborativeTransitionModel(TransitionModel):
             next_state.is_terminal = False
             next_state.is_highlighted = False
 
-        # Like a wait action to fill observation.
         elif isinstance(action, ObserveAction):
             return state
-
-        # # Validation.
-        # # If the agent can act.
-        # if action.agent not in state.agents:
-        #     s = 'Invalid action {}: {} is not an active agent ({}).'.format(
-        #         action, action.agent.name, [a for a in self.agents])
-        #     print(Bcolors.fail(s))
-        #     # raise ValueError
 
         next_state = copy.deepcopy(state)
         network = state.network
         next_network = next_state.network
 
-        # Normal actions
         if isinstance(action, SuggestPickAction):
             u, v = action.edge
 
@@ -225,30 +210,14 @@ class CollaborativeTransitionModel(TransitionModel):
             next_network.suggested_edge = None
             s = network.suggested_edge
             next_network.subgraph.add_edge(s[0], s[1])
-            # next_state.yes_button = Button.DISABLED
-            # next_state.no_button = Button.DISABLED
 
         # Disagree action.
         elif isinstance(action, DisagreeAction):
             next_network.suggested_edge = None
-            # next_state.yes_button = Button.DISABLED
-            # next_state.no_button = Button.DISABLED
-
-        # elif isinstance(action, SuggestSubmitAction):
-        #     if next_network.is_submitting:
-        #         next_state.is_terminal = True
-        #     else:
-        #         next_network.is_submitting = True
-
-        # elif isinstance(action, ClearSuggestSubmitAction):
-        #     next_state.is_submitting = False
 
         # Attempt to submit action.
         elif isinstance(action, AttemptSubmitAction):
             next_state.is_submitting = True
-            # # Maintain the agents that can act:
-            # # submit attempts result in swaps.
-            # next_state.agents = toggle_agent(state.agents)
 
         elif isinstance(action, ContinueAction):
             next_state.is_submitting = False

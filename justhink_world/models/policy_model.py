@@ -11,7 +11,7 @@ from ..agent.agent import Agent
 
 
 class PolicyModel(pomdp_py.RolloutPolicy):
-    """a PolicyModel:
+    """A base class to represent an action selection policy, that
     (1) determines the action space at a given history or state, and
     (2) samples an action from this space according
     to some probability distribution.
@@ -23,14 +23,11 @@ class PolicyModel(pomdp_py.RolloutPolicy):
     def sample(self, state, normalized=False, **kwargs):
         return random.sample(self.get_all_actions(**kwargs), 1)[0]
 
-    # def argmax(self, state, normalized=False, **kwargs):
-    #     raise NotImplementedError
-
     def update(self, state, next_state, action, **kwargs):
         self.update_available_actions(next_state)
 
     def get_all_actions(self, state=None, **kwargs):
-        """only the feasible actions"""
+        """Enumerate only the feasible actions."""
         if state is not None:
             self.update_available_actions(state)
         return self.actions
@@ -44,13 +41,14 @@ class PolicyModel(pomdp_py.RolloutPolicy):
 
 
 class IndividualPolicyModel(PolicyModel):
+    """A class to represent the available actions at a state in 
+        an individual world e.g. an evaluation test.
+    """
 
     def __init__(self, agent=Agent.HUMAN, **kwargs):
 
         super().__init__(**kwargs)
         self.agent = agent
-
-    """TODO"""
 
     def update_available_actions(self, state):
         actions = set()
@@ -61,19 +59,15 @@ class IndividualPolicyModel(PolicyModel):
             # If not confirming a submission (i.e. normal gameplay).
             if not state.is_submitting:
 
-                # # Can pick the remaining edges.
-                # for u, v in state.network.graph.edges():
-                #     if not state.network.subgraph.has_edge(u, v):
-                #         actions.add(PickAction((u, v), agent=self.agent))
-                #         actions.add(PickAction((v, u), agent=self.agent))
-
                 # Can pick edges outgoing from connected nodes, or all edges.
                 if state.network.subgraph.number_of_edges() > 0:
                     for u in state.network.subgraph.nodes():
                         for v in state.network.graph.neighbors(u):
                             if not state.network.subgraph.has_edge(u, v):
-                                actions.add(PickAction((u, v), agent=self.agent))
-                                actions.add(PickAction((v, u), agent=self.agent))
+                                actions.add(PickAction(
+                                    (u, v), agent=self.agent))
+                                actions.add(PickAction(
+                                    (v, u), agent=self.agent))
                 else:
                     for u, v in state.network.graph.edges():
                         actions.add(PickAction((u, v), agent=self.agent))
@@ -94,13 +88,14 @@ class IndividualPolicyModel(PolicyModel):
         actions.add(SetPauseAction(True, Agent.MANAGER))
         actions.add(SetPauseAction(False, Agent.MANAGER))
         actions.add(ResetAction(Agent.MANAGER))
-        
-        # print(actions)
+
         self.actions = actions
 
 
 class CollaborativePolicyModel(PolicyModel):
-    """TODO"""
+    """A class to represent the available actions at a state in 
+        a collaborative world.
+    """
 
     def update_available_actions(self, state):
         actions = set()
@@ -116,24 +111,19 @@ class CollaborativePolicyModel(PolicyModel):
 
                     # If no edge is currently suggested.
                     if state.network.suggested_edge is None:
-                        # # The agent can suggest picking a non-selected edge.
-                        # for u, v in state.network.graph.edges():
-                        #     if not state.network.subgraph.has_edge(u, v):
-                        #         actions.add(
-                        #             SuggestPickAction((u, v), agent=agent))
-                        #         actions.add(
-                        #             SuggestPickAction((v, u), agent=agent))
 
                         # Can pick edges outgoing from connected nodes
                         # , or all edges if no edges are selected yet.
                         if state.network.subgraph.number_of_edges() > 0:
                             for u in state.network.subgraph.nodes():
                                 for v in state.network.graph.neighbors(u):
-                                    if not state.network.subgraph.has_edge(u, v):
-                                        actions.add(
-                                            SuggestPickAction((u, v), agent=agent))
-                                        actions.add(
-                                            SuggestPickAction((v, u), agent=agent))
+                                    if not state.network.subgraph.has_edge(
+                                            u, v):
+                                        # Can select u to v an v to u.
+                                        for e in [(u, v), (v, u)]:
+                                            a = SuggestPickAction(
+                                                e, agent=agent)
+                                            actions.add(a)
                         else:
                             for u, v in state.network.graph.edges():
                                 actions.add(
@@ -186,7 +176,6 @@ class TutorialPolicyModel(PolicyModel):
         if state.step_no < 4 and num_edges > 0:
             actions.add(ClearAction(agent=Agent.HUMAN))
 
-        # if state.step_no == 3 and num_edges == 1:
         actions.add(SubmitAction(agent=Agent.HUMAN))
 
         actions.add(ResetAction(Agent.MANAGER))

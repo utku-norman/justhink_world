@@ -20,7 +20,7 @@ def show_mind(world):
 
 
 class MentalWindow(pyglet.window.Window):
-    """docstring for MentalWindow"""
+    """A class to manage the window that visualizes agent's mental model."""
 
     def __init__(self, world, caption="Robot's Mind", width=1920, height=1080,
                  offset=(1920, 0), screen_index=0, max_level=2):
@@ -73,8 +73,7 @@ class MentalWindow(pyglet.window.Window):
 
 
 class MentalScene(Scene):
-    """docstring for MentalWindow"""
-
+    """A class to visualize the mental model of the agent."""
     def __init__(self, world, width, height, max_level=2):
 
         super().__init__(world.name, width, height)
@@ -90,7 +89,6 @@ class MentalScene(Scene):
         self.graphics.batch.draw()
 
     def on_key_press(self, symbol, modifiers):
-        # print('Key pressed in mental')
         if symbol == key.ESCAPE:
             self.close()
 
@@ -129,11 +127,11 @@ class MentalScene(Scene):
                 s = '{:.1f}'.format(p) if p is not None else '?'
                 d[level]['label'].text = s
 
-                # is suggested.
+                # Update is suggested or not.
                 d[level]['suggested_sprite'].visible = \
                     beliefs['world'][u][v]['is_suggested']
 
-                # is selected.
+                # Update is selected or not.
                 d[level]['selected_sprite'].visible = \
                     beliefs['world'][u][v]['is_selected']
 
@@ -175,26 +173,14 @@ class MentalScene(Scene):
             layout.graph['max_x']-layout.graph['min_x'],
             layout.graph['max_y']-layout.graph['min_y'],
             layout.graph['min_x'], layout.graph['min_y'])
-        # graphics.surface = Surface(self.width, self.height, 0, 0)
         graphics.surface = fitted_surface
 
         # Construct a fitted surface.
         graphics.surfaces = dict()
-        graphics.rects = dict()  # so that they are not garbage collected
+        graphics.rects = dict()  # So that they are not garbage collected.
         graphics.labels = dict()
 
-        # # Initialise "says" texts.
-        # # y = outer_pad[1]+5*height//6
-        # y = height - outer_pad[2]
-        # graphics.says_label = pyglet.text.Label(
-        #     '(robot says)', x=outer_pad[0], y=y, font_name='Sans',
-        #     font_size=font_size, align='center', batch=batch)
-        # graphics.says_label = pyglet.text.Label(
-        #     '', x=outer_pad[0]+x_pad, y=y, font_name='Sans', multiline=True,
-        #     font_size=font_size, width=1500, batch=batch)
-
-        # Initialise "does" texts.
-        # y = outer_pad[1]+3*height//6
+        # Initialize "does" texts.
         x_pad, y_pad = (300, 60)
         y = graphics.height - outer_pad[2] - 3 * y_pad
         graphics.observes_heading_label = pyglet.text.Label(
@@ -204,8 +190,7 @@ class MentalScene(Scene):
             '', x=outer_pad[0]+x_pad, y=y, align='center', font_name='Sans',
             font_size=font_size, batch=batch)
 
-        # Initialise "thinks" texts.
-        # y = outer_pad[1]+height//6
+        # Initialize "thinks" texts.
         y = graphics.height - outer_pad[2] - 5 * y_pad
         graphics.thinks_heading_label = pyglet.text.Label(
             '(robot believes)', x=outer_pad[0], y=y, font_name='Sans',
@@ -213,15 +198,6 @@ class MentalScene(Scene):
         graphics.thinks_label = pyglet.text.Label(
             '', x=outer_pad[0]+x_pad, y=y, font_name='Sans', align='center',
             font_size=font_size, batch=batch, group=groups[1])
-        # l.text = '"I believe that choosing Montreux to Basel is correct."'
-
-        # Initialise belief visualisation.
-        # outer_pad = (250, 50, 60, 60)  # left, right, top, bottom
-        # h = self.height - (outer_pad[2] + outer_pad[3])
-        # p = 45
-
-        # Create level labels.
-        # outer_pad = (250, 50, 60, 60)  # left, right, top, bottom
 
         # Create level rectangles and labels.
         level = 0
@@ -271,100 +247,20 @@ class MentalScene(Scene):
             graphics.rects[level] = rect
             graphics.labels[level] = label
 
-        # level = 1
-        # l = pyglet.text.Label(
-        #     'L1: of the Other',
-        #     x=outer_pad[0]+(level)*(width//3)+width//6, y=height,
-        #     font_name='Sans', font_size=font_size,
-        #     anchor_x='center', anchor_y='bottom', bold=True, batch=batch)
-        # p = 30
-        # r = pyglet.shapes.BorderedRectangle(
-        #     x=outer_pad[0]+width//3-p, y=outer_pad[3]-p, border=10,
-        #     width=2*width//3+1.8*p, height=height+2*p, color=(0, 0, 0),
-        #     border_color=(100, 100, 100), batch=batch, group=groups[0])
-        # graphics.rects.append(r)
-
-        # level = 2
-        # x = outer_pad[0]+(level)*(width//3)+width//6
-        # l = pyglet.text.Label(
-        #     'L2: of the Self-by-Other', x=x, y=height, bold=True,
-        #     font_name='Sans',  font_size=font_size, anchor_x='center',
-        #     anchor_y='bottom',  batch=batch)
-        # p = 15
-        # r = pyglet.shapes.BorderedRectangle(
-        #     x=outer_pad[0]+2*width//3-p, y=outer_pad[3]-p,
-        #     width=width//3+1.8*p, height=height+2*p,
-        #     border=10, color=(0, 0, 0), border_color=(100, 100, 100),
-        #     batch=batch, group=groups[0])
-        # graphics.rects.append(r)
-
-        # # Create about labels.
-        # p = 45
-        # l = pyglet.text.Label(
-        #     'about the World', x=0, y=outer_pad[1]+height//6, bold=True,
-        #     width=outer_pad[0]-p, font_name='Sans', font_size=font_size,
-        #     anchor_y='center', align='center', multiline=True, batch=batch)
-
-        # l = pyglet.text.Label(
-        #     'about choices', x=0, y=outer_pad[1]+3*height//6, bold=True,
-        #     width=outer_pad[0]-p, font_name='Sans', font_size=font_size,
-        #     anchor_y='center', align='center', multiline=True, batch=batch)
-
-        # l = pyglet.text.Label(
-        #     'about strategies', x=0, y=outer_pad[1]+5*height//6, bold=True,
-        #     width=outer_pad[0]-p, font_name='Sans', font_size=font_size,
-        #     anchor_y='center', align='center', multiline=True, batch=batch)
-
-        # l = pyglet.text.Label(
-        #     'about other strategy',
-        #     font_name='Sans', font_size=font_size,
-        #     anchor_y='center',
-        #     width=outer_pad[0],
-        #     align='center', multiline=True,
-        #     x=0, y=outer_pad[1]+height//6,
-        #     batch=batch)
-
-        # p = 50
-        # pad = (100, 100, 30, 30)  # left, right, top, bottom
         pad = (30, 100, 60, 60)  # left, right, top, bottom
 
-        # probs = dict()
         for level in range(0, max_level+1):  # for each level
             d = dict()
 
-            # Initialise choice surface.
+            # Initialize choice surface.
             context = 'choice'
             s = Surface(
                 width//3, height//2, x=outer_pad[0]+level*(width//3),
                 y=outer_pad[1], pad=pad)
-            # y=outer_pad[1]+height//3, pad=pad)
             create_network_graphics(
                 graphics.layout, s, graphics.surface, key=level,
                 edge_font_size=18, scale=2.3, batch=batch)
             d[context] = s
-
-            # # Initialise strategy surface.
-            # context = 'strategy'
-            # s = Surface(
-            #     height=height//3, width=width//3, pad=pad,
-            #     x=outer_pad[0]+level*(width//3), y=outer_pad[1]+height//3+50)
-
-            # if key not in graphics.labels:
-            #     graphics.labels[level] = dict()
-
-            # target = 'self'
-            # text = make_strategy_text(None, target)
-            # graphics.labels[level][target] = pyglet.text.Label(
-            #     text, x=s.x+s.width//2, y=s.y+s.height//2+font_size,
-            #     font_name='Sans', font_size=font_size, anchor_x='center',
-            #     anchor_y='center', batch=batch, group=groups[5])
-
-            # target = 'other'
-            # text = make_strategy_text(None, target)
-            # graphics.labels[level][target] = pyglet.text.Label(
-            #     text, x=s.x+s.width//2, y=s.y+s.height//2-font_size,
-            #     font_name='Sans', font_size=font_size, anchor_x='center',
-            #     anchor_y='center', batch=batch, group=groups[5])
 
             # Set as the panels of the current level.
             graphics.surfaces[key] = d
@@ -397,7 +293,6 @@ def create_network_graphics(
             x, y, rx=rx, ry=ry, batch=batch, group=groups[2])
 
     # Create edge graphics.
-    # group_no = group_no + 1
     for u, v, d in layout.edges(data=True):
         if key not in d:
             d[key] = dict()
@@ -446,27 +341,17 @@ def create_edge(
 def create_label(
         ux, uy, vx, vy, text='?', font_size=26, scale=1.3, batch=None,
         groups=[None, None]):
-    # angle = math.atan2(uy-vy, ux-vx)
-    x = (ux + vx) // 2  # - s / 5
-    y = (uy + vy) // 2  # + math.fabs(s / 10)
-    # slope = (uy - vy) / (ux - vx)
-    # if slope > 0:
-    #     anchor_x = 'right'
-    #     x = x - 5
-    # else:
-    #     anchor_x = 'left'
-    #     x = x + 5
-    # anchor_y = 'bottom'
-
+    x = (ux + vx) // 2
+    y = (uy + vy) // 2
     anchor_x = 'center'
     anchor_y = 'center'
     s = scale
     width, height = s*font_size, s*font_size
     rect = pyglet.shapes.Rectangle(x-width//2, y-height//2,
-                     width, height,
-                     color=(0, 0, 0),
-                     batch=batch,
-                     group=groups[0])
+                                   width, height,
+                                   color=(0, 0, 0),
+                                   batch=batch,
+                                   group=groups[0])
 
     label = pyglet.text.Label(
         str(text), x=x, y=y, font_name='Sans', font_size=font_size,
@@ -491,4 +376,3 @@ def create_node_border(
 def make_strategy_text(p, agent='self'):
     p_text = '{:1.1f}'.format(p) if p is not None else 'NotImpl.'
     return 'P_{} = {}'.format(agent, p_text)
-    # return 'P_{}(correct) = {:1.1f}'.format(agent, p_text)

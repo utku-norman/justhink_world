@@ -5,6 +5,7 @@ from justhink_world.tools.read import load_image_from_reference
 from justhink_world.tools.graphics import Graphics, center_image, slide_x, \
     BLACK, WHITEA, BLACKA, ButtonWidget, Scene, create_edge_sprite, DialogBox
 
+
 class EnvironmentScene(Scene):
     def __init__(self, state, name='EnvScene', width=1920, height=1080):
         super().__init__(name=name, width=width, height=height)
@@ -37,8 +38,6 @@ class EnvironmentScene(Scene):
             d['selectable_sprite'].visible = not is_selected
             d['selected_sprite'].visible = is_selected
             d['suggested_sprite'].visible = is_suggested
-            # if is_suggested:
-            #     print('##### is_suggested', u, v)
 
         # Update the selected nodes.
         selected_nodes = self.state.network.get_selected_nodes()
@@ -115,15 +114,10 @@ class EnvironmentScene(Scene):
             main_text=('Did you connect all of the mines'
                        '\nto each other by some path,'
                        '\nand spend as little as possible,'
-                       '\nat the same time?'), 
+                       '\nat the same time?'),
             yes_text='Yes', no_text='No', height_scaler=1/2,
-            main_fontsize=36, response_fontsize=56, 
+            main_fontsize=36, response_fontsize=56,
             width=width, height=height, batch=batch)
-
-        # self.submit_box = DialogBox(
-        #     main_text='Do you want to submit?', 
-        #     yes_text='Ok', no_text='Cancel', 
-        #     width=width, height=height, batch=batch)
 
         # Load a cloud.
         ref = image_source.joinpath('cloud.png')
@@ -143,16 +137,6 @@ class EnvironmentScene(Scene):
         s = pyglet.sprite.Sprite(image, group=groups[12])
         s.scale = 0.5
         graphics.cross_sprite = s
-
-        # cow_img = pyglet.image.load(
-        # str(self._images_dir.joinpath('cloud.png')))
-        # self.cow = pyglet.sprite.Sprite(cow_img)
-
-        # self.cow.scale = 0.35
-        # self.cow.dx = 20.0
-        # self.cow.position = (220, height - 670)
-        # self.cow.min_x = self.cow.x
-        # self.cow.max_x = 400
 
         # Attempt label.
         graphics.attempt_label = pyglet.text.Label(
@@ -206,8 +190,7 @@ class EnvironmentScene(Scene):
                 image, d['x'], d['y'], batch=batch, group=groups[3])
             d['selected_sprite'].visible = False
             # Highlighted image.
-            # TODO: check for existence.
-            # Quick fix not to query for the json but constrtuct immediately.
+            # Quick fix not to query for the json, but construct immediately.
             file = d['higlight_image_file'].replace('selected', 'highlighted')
             ref = image_source.joinpath(file)
             image = center_image(load_image_from_reference(ref))
@@ -306,7 +289,7 @@ class EnvironmentScene(Scene):
                 y=d['gold_y']-animation.get_max_height())
             sprite.scale = 2
 
-        # Initialise the submit button.
+        # Initialize the submit button.
         button_pads, scale = (200, 180), 0.3
         c = image_source
         paths = {
@@ -334,7 +317,6 @@ class EnvironmentScene(Scene):
         graphics.buttons['clear'] = button
 
         # Yes button.
-        # button_pads, scale = (290, 160), 0.3
         button_pads, scale = (300, 170), 0.3
         paths = {
             ButtonWidget.ENABLED: c.joinpath('check_enabled.png'),
@@ -377,8 +359,6 @@ class EnvironmentWindow(pyglet.window.Window):
         self.set_location(active_screen.x, active_screen.y)
 
         self.dispatch_event('on_update')
-
-        # self.set_visible()
 
     def __str__(self):
         return self.__repr__()
