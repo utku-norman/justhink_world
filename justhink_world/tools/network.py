@@ -41,7 +41,6 @@ def find_mst(graph, edge_weight_key='cost') -> nx.Graph:
     Returns:
         bool: True for spanning, False otherwise.
     """
-    # TODO: catch exception if weight key is not available.
     return nx.minimum_spanning_tree(graph, weight=edge_weight_key)
 
 
@@ -56,7 +55,6 @@ def compute_total_cost(graph, edge_weight_key='cost') -> float:
     Returns:
         float: the cost.
     """
-    # TODO: catch exception if weight key is not available for that edge.
     return sum([d[edge_weight_key] for u, v, d in graph.edges(data=True)])
 
 
@@ -70,8 +68,6 @@ def compute_edgelist_cost(graph, edges, edge_weight_key='cost') -> float:
     Returns:
         float: the cost.
     """
-    # TODO: catch exception if weight key is not available for that edge.
-    # TODO: catch exception of an edge is not in the graph.
     return sum([graph[u][v][edge_weight_key] for u, v in edges])
 
 
@@ -85,8 +81,6 @@ def compute_subgraph_cost(graph, subgraph, edge_weight_key='cost') -> float:
     Returns:
         float: the cost.
     """
-    # TODO: catch exception if weight key is not available for that edge.
-    # TODO: catch exception of an edge is not in the graph.
     return compute_edgelist_cost(
         graph, subgraph.edges, edge_weight_key=edge_weight_key)
 

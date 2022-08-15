@@ -35,8 +35,15 @@ def load_graph_from_json(file):
     return network
 
 
-def load_all_logs(log_resource='justhink22_transition_lists.pickle'):
-    # 'justhink21_transition_lists.pickle'
+def load_all_logs(study_no=1):
+    print('Loading the logs from study {}'.format(study_no))
+    if study_no == 1:
+        log_resource = 'justhink21_transition_lists.pickle'
+    elif study_no == 2:
+        log_resource = 'justhink22_transition_lists.pickle'
+    else:
+        raise NotImplementedError
+
     # Create a container for the image resources.
     data_container = importlib_resources.files(
         'justhink_world.resources.data')
@@ -49,7 +56,7 @@ def load_all_logs(log_resource='justhink22_transition_lists.pickle'):
 
 
 def list_all_logs():
-    """TODO: docstring for list_all_logs"""
+    """List all available logs with sample numbers."""
     try:
         logs = load_all_logs()
         for k, v in logs.items():
@@ -61,7 +68,7 @@ def list_all_logs():
 
 
 def load_log(sample_no, world_name):
-    """TODO: docstring for load_log"""
+    """Load a log for a specific sample."""
     try:
         logs = load_all_logs()
         log_df = logs[sample_no][world_name]
