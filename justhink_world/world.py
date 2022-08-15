@@ -361,7 +361,6 @@ def update_choice_beliefs(beliefs, cur_env_state, action):
         if isinstance(action, PickAction) \
                 or isinstance(action, SuggestPickAction):
             u, v = action.edge
-            # print('### setting pick belief', action)
             beliefs['world'][u][v]['is_optimal'] = 1.0
 
         elif isinstance(action, AgreeAction):

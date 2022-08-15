@@ -142,7 +142,7 @@ def format_edge(edge):
     try:
         s = (int(edge[0]), int(edge[1]))
     except Exception as e:
-        print(e)
+        # print(e)
         s = (edge[0], edge[1])
     s = '{},{}'.format(s[0], s[1])
 
