@@ -86,14 +86,14 @@ class SetPauseAction(Action):
 class SuggestPickAction(Action):
     def __init__(self, edge, agent=Agent.HUMAN):
         self.edge = edge
-        name = 'suggest-pick({},{})'.format(self.edge[0], self.edge[1])
+        name = 'suggest-pick({})'.format(format_edge(self.edge))
         super().__init__(name, agent)
 
 
 class PickAction(Action):
     def __init__(self, edge, agent=Agent.HUMAN):
         self.edge = edge
-        name = 'pick({},{})'.format(self.edge[0], self.edge[1])
+        name = 'pick({})'.format(format_edge(self.edge))
         super().__init__(name, agent)
 
     # def __eq__(self, other):
@@ -108,7 +108,7 @@ class PickAction(Action):
 class UnpickAction(Action):
     def __init__(self, edge, agent=Agent.HUMAN):
         self.edge = edge
-        name = 'unpick({},{})'.format(self.edge[0], self.edge[1])
+        name = 'unpick({})'.format(format_edge(self.edge))
         super().__init__(name, agent)
 
 
@@ -145,3 +145,14 @@ class ContinueAction(Action):
 class SubmitAction(Action):
     def __init__(self, agent=Agent.HUMAN):
         super().__init__('submit', agent)
+
+
+def format_edge(edge):
+    try:
+        s = (int(edge[0]), int(edge[1]))
+    except Exception as e:
+        print(e)
+        s = (edge[0], edge[1])
+    s = '{},{}'.format(s[0], s[1])
+
+    return s
