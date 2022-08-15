@@ -310,8 +310,6 @@ def crop_edge(ux, uy, vx, vy, rx, ry):
 
 
 class Graphics(object):
-    """docstring for Graphics"""
-
     def __init__(self, width=1920, height=1080, from_graph=None, batch=None):
         if from_graph is not None:
             self.layout = copy.deepcopy(from_graph)

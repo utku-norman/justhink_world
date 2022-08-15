@@ -1,3 +1,4 @@
+from shapes import Rectangle
 import copy
 
 import pyglet
@@ -8,8 +9,6 @@ WHITEA = (255, 255, 255, 255)
 BLACKA = (0, 0, 0, 255)
 REDA = (255, 0, 0, 255)
 BLUEA = (0, 0, 255, 255)
-
-from shapes import Rectangle
 
 
 class DialogBox(object):
@@ -77,12 +76,8 @@ class DialogBox(object):
         # Centering on the screen.
         x = width / 2.0 - w / 2.0
         y = height / 2.0 - h / 2.0
-        # graphics.background_rect = FilledRectangle(x, y, w, h,  color=WHITEA)
-        # shapes.Rectangle not present in pyglet versions < 1.5.
-        graphics.background_rect = Rectangle(x, y, w, h,  color=WHITE, group=groups[10])
-        # batch=graphics.batch
-        # graphics.background_rect.opacity = 255
-        # graphics.background_rect.visible = False
+        graphics.background_rect = Rectangle(
+            x, y, w, h,  color=WHITE, group=groups[10])
 
         # Create the main text label.
         max_width = 700 * width_scaler
@@ -94,7 +89,8 @@ class DialogBox(object):
 
         # Create a yes/confirm label.
         graphics.yes_label = pyglet.text.Label(
-            self._yes_text, x=width/2.0-self.x_pad/2.0, y=height/2.0-self.y_pad/2.0,
+            self._yes_text, x=width/2.0-self.x_pad/2.0, 
+            y=height/2.0-self.y_pad/2.0,
             color=BLACKA, anchor_x='center', anchor_y='center',
             multiline=True, width=max_width, align='center',
             font_name='Sans', font_size=response_fontsize,
@@ -102,7 +98,8 @@ class DialogBox(object):
 
         # Create a no/reject label.
         graphics.no_label = pyglet.text.Label(
-            self._no_text, x=width/2.0+self.x_pad/2.0, y=height/2.0-self.y_pad/2.0,
+            self._no_text, x=width/2.0+self.x_pad/2.0, 
+            y=height/2.0-self.y_pad/2.0,
             color=BLACKA, anchor_x='center', anchor_y='center',
             font_name='Sans', font_size=response_fontsize,
             multiline=True, width=max_width, align='center',
@@ -134,17 +131,12 @@ class DialogBox(object):
 
 
 class Graphics(object):
-    """docstring for Graphics"""
-
     def __init__(self, width=1920, height=1080, from_graph=None, batch=None):
         if from_graph is not None:
             self.layout = copy.deepcopy(from_graph)
 
         self.width = width
         self.height = height
-
-        # self._temp_from = None
-        # self._temp_to = None
 
         self.buttons = {}
 
